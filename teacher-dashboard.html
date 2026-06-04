@@ -9,87 +9,131 @@
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="logo">
-                <h2>Edu Report</h2>
-                <p>Giáo viên</p>
+            <div class="sidebar-top">
+                <div class="logo">
+                    <h2>Edu Report</h2>
+                    <p>Giáo viên</p>
+                </div>
+                <nav class="menu">
+                    <ul>
+                        <li class="menu-item active" data-target="home-tab"><a href="#">Trang chủ</a></li>
+                        <li class="menu-item" data-target="profile-tab"><a href="#">Thông tin cá nhân</a></li>
+                        <li class="menu-item" data-target="class-tab"><a href="#">Lớp học</a></li>
+                        <li class="menu-item" data-target="schedule-tab"><a href="#">Lịch học</a></li>
+                    </ul>
+                </nav>
             </div>
-            <nav class="menu">
-                <ul>
-                    <li class="menu-item active" data-target="home-tab"><a href="#">Trang chủ</a></li>
-                    <li class="menu-item" data-target="profile-tab"><a href="#">Thông tin cá nhân</a></li>
-                    <li class="menu-item" data-target="class-tab"><a href="#">Lớp học</a></li>
-                    <li class="menu-item" data-target="schedule-tab"><a href="#">Lịch học</a></li>
-                </ul>
-            </nav>
             <div class="user-info">
-                <p class="user-name">Đang tải...</p>
-                <p class="email user-email">...</p>
-                <button id="btnLogout" class="btn-logout">Đăng xuất</button>
+                <p class="user-name" style="font-weight: bold;">Đang tải...</p>
+                <p class="email user-email" style="color: #666; font-size: 13px; margin-bottom: 15px;">...</p>
+                <button id="btnLogout" class="btn-logout"><span style="margin-right: 5px;">[→</span> Đăng xuất</button>
             </div>
         </aside>
 
         <main class="main-content">
-            
+            <!-- TAB 1: TRANG CHỦ -->
             <section id="home-tab" class="tab-section active-tab">
-                <header class="top-header">
-                    <h1 class="welcome-text">Chào mừng đến với Edu Report</h1>
-                </header>
-                
+                <header class="top-header"><h1 class="welcome-text">Chào mừng đến với Edu Report</h1></header>
                 <div class="stats-grid" style="justify-content: flex-start;">
-                    <div class="stat-card" style="flex: 0 1 300px;">
-                        <p class="stat-title">Tổng lớp học</p>
-                        <h2 class="stat-number" id="teacher-total-classes">0</h2>
-                        <p class="stat-desc">lớp đang giảng dạy</p>
-                    </div>
-                    <div class="stat-card" style="flex: 0 1 300px;">
-                        <p class="stat-title">Tổng sinh viên</p>
-                        <h2 class="stat-number" id="teacher-total-students">0</h2>
-                        <p class="stat-desc">sinh viên theo học</p>
-                    </div>
+                    <div class="stat-card" style="flex: 0 1 300px;"><p class="stat-title">Tổng lớp học</p><h2 class="stat-number" id="teacher-total-classes">0</h2><p class="stat-desc">lớp đang giảng dạy</p></div>
+                    <div class="stat-card" style="flex: 0 1 300px;"><p class="stat-title">Tổng sinh viên</p><h2 class="stat-number" id="teacher-total-students">0</h2><p class="stat-desc">sinh viên theo học</p></div>
                 </div>
-
                 <div class="study-container" style="margin-top: 30px;">
-                    <div class="schedule-section">
-                        <h3>Lớp học gần đây</h3>
-                        <ul id="recentClassList" class="schedule-list"></ul>
-                    </div>
+                    <div class="schedule-section"><h3>Lớp học gần đây</h3><ul id="recentClassList" class="schedule-list"></ul></div>
                 </div>
             </section>
 
+            <!-- TAB 2: THÔNG TIN CÁ NHÂN -->
             <section id="profile-tab" class="tab-section">
-                <header class="top-header">
-                    <h1>Hồ sơ giảng viên</h1>
-                </header>
+                <header class="top-header"><h1>Hồ sơ giảng viên</h1></header>
                 <div class="profile-card">
                     <div class="avatar-placeholder"></div>
                     <div class="profile-details">
                         <p><strong>Họ và tên:</strong> <span class="user-name"></span></p>
                         <p><strong>Email:</strong> <span class="user-email"></span></p>
                         <p><strong>Số điện thoại:</strong> 0987654321</p>
-                        <button class="btn-primary" style="margin-top: 15px; width: auto; padding: 10px 20px;">Chỉnh sửa hồ sơ</button>
                     </div>
                 </div>
             </section>
 
+            <!-- TAB 3: LỚP HỌC -->
             <section id="class-tab" class="tab-section">
                 <header class="top-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <h1>Lớp của bạn</h1>
-                    <button class="btn-primary" style="width: auto; padding: 8px 15px;">+ Tạo lớp học</button>
+                    <button id="btnShowCreateClass" class="btn-primary" style="width: auto; padding: 8px 15px;">+ Tạo lớp học</button>
                 </header>
-                <div id="fullClassList" class="charts-container" style="margin-top: 20px;">
-                    </div>
+                
+                <!-- Form Tạo Lớp -->
+                <div id="createClassFormContainer" style="display: none; background: #fff; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid #ddd;">
+                    <h3 style="margin-bottom: 15px;">Tạo lớp học mới</h3>
+                    <form id="createClassForm">
+                        <div class="input-group"><label>Chọn môn học</label><select id="newClassSubject" required style="width: 100%; padding: 10px;"></select></div>
+                        <div class="input-group"><label>Phòng học</label><input type="text" id="newClassRoom" required></div>
+                        <div class="input-group"><label>Thời gian</label><input type="text" id="newClassSchedule" required></div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button type="submit" class="btn-primary" style="flex: 1;">Lưu lớp</button>
+                            <button type="button" id="btnCancelCreateClass" class="btn-logout" style="flex: 1; border: 1px solid #ccc;">Hủy</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Form Sửa Lớp -->
+                <div id="editClassFormContainer" style="display: none; background: #fff; padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid #4CAF50;">
+                    <h3 style="margin-bottom: 15px; color: #4CAF50;">Chỉnh sửa lớp học</h3>
+                    <form id="editClassForm">
+                        <input type="hidden" id="editClassId">
+                        <div class="input-group"><label>Phòng học mới</label><input type="text" id="editClassRoom" required></div>
+                        <div class="input-group"><label>Thời gian học mới</label><input type="text" id="editClassSchedule" required></div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button type="submit" class="btn-primary" style="flex: 1; background: #4CAF50;">Cập nhật</button>
+                            <button type="button" id="btnCancelEditClass" class="btn-logout" style="flex: 1; border: 1px solid #ccc;">Hủy</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="fullClassList" class="charts-container" style="margin-top: 20px;"></div>
             </section>
 
+            <!-- TAB 4: LỊCH HỌC -->
             <section id="schedule-tab" class="tab-section">
                 <header class="top-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <h1>Lịch giảng dạy</h1>
-                    <button class="btn-primary" style="width: auto; padding: 8px 15px;">+ Thêm lịch học</button>
                 </header>
                 <div class="schedule-section" style="margin-top: 20px;">
                     <ul id="teacherScheduleList" class="schedule-list"></ul>
                 </div>
             </section>
 
+            <!-- TAB 5 (ẨN): CHI TIẾT LỚP HỌC -->
+            <section id="class-detail-tab" class="tab-section" style="display: none;">
+                <button onclick="document.getElementById('class-tab').classList.add('active-tab'); document.getElementById('class-detail-tab').style.display = 'none'; document.getElementById('class-tab').style.display = 'block';" style="background: none; border: none; color: #007bff; cursor: pointer; font-weight: bold; margin-bottom: 15px;">← Quay lại danh sách lớp</button>
+                <header class="top-header">
+                    <h1 id="detailClassName">Tên lớp</h1>
+                    <p id="detailClassInfo" style="margin-top: 5px; color: #ccc;">Mã lớp | Năm 2 | 0 sinh viên</p>
+                </header>
+
+                <div style="display: flex; gap: 20px; border-bottom: 1px solid #ddd; margin-bottom: 20px;">
+                    <button class="sub-tab-btn active" onclick="switchSubTab('students')">Danh sách Sinh viên</button>
+                    <button class="sub-tab-btn" onclick="switchSubTab('materials')">Tài liệu</button>
+                </div>
+
+                <!-- Sub-tab Sinh viên -->
+                <div id="sub-tab-students" class="sub-tab-content active">
+                    <table class="data-table">
+                        <thead><tr><th>Mã sinh viên</th><th>Họ và tên</th><th>Email</th></tr></thead>
+                        <tbody id="detailStudentList"></tbody>
+                    </table>
+                </div>
+
+                <!-- Sub-tab Tài liệu -->
+                <div id="sub-tab-materials" class="sub-tab-content" style="display: none;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <button class="btn-primary" onclick="addMaterial('Bài giảng')" style="width: auto; padding: 8px 15px;">↑ Upload bài giảng</button>
+                        <button class="btn-primary" onclick="addMaterial('Bài tập')" style="width: auto; padding: 8px 15px; background: #28a745;">↑ Cập nhật bài tập</button>
+                    </div>
+                    <ul id="detailMaterialList" class="schedule-list" style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd;"></ul>
+                </div>
+            </section>
         </main>
     </div>
     <script src="js/db.js"></script>
