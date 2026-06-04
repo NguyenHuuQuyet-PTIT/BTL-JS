@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edu Report - Giáo viên</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>Edu Report</h2>
+                <p>Giáo viên</p>
+            </div>
+            <nav class="menu">
+                <ul>
+                    <li class="menu-item active" data-target="home-tab"><a href="#">Trang chủ</a></li>
+                    <li class="menu-item" data-target="profile-tab"><a href="#">Thông tin cá nhân</a></li>
+                    <li class="menu-item" data-target="class-tab"><a href="#">Lớp học</a></li>
+                    <li class="menu-item" data-target="schedule-tab"><a href="#">Lịch học</a></li>
+                </ul>
+            </nav>
+            <div class="user-info">
+                <p class="user-name">Đang tải...</p>
+                <p class="email user-email">...</p>
+                <button id="btnLogout" class="btn-logout">Đăng xuất</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <section id="home-tab" class="tab-section active-tab">
+                <header class="top-header">
+                    <h1 class="welcome-text">Chào mừng đến với Edu Report</h1>
+                </header>
+                
+                <div class="stats-grid" style="justify-content: flex-start;">
+                    <div class="stat-card" style="flex: 0 1 300px;">
+                        <p class="stat-title">Tổng lớp học</p>
+                        <h2 class="stat-number" id="teacher-total-classes">0</h2>
+                        <p class="stat-desc">lớp đang giảng dạy</p>
+                    </div>
+                    <div class="stat-card" style="flex: 0 1 300px;">
+                        <p class="stat-title">Tổng sinh viên</p>
+                        <h2 class="stat-number" id="teacher-total-students">0</h2>
+                        <p class="stat-desc">sinh viên theo học</p>
+                    </div>
+                </div>
+
+                <div class="study-container" style="margin-top: 30px;">
+                    <div class="schedule-section">
+                        <h3>Lớp học gần đây</h3>
+                        <ul id="recentClassList" class="schedule-list"></ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="profile-tab" class="tab-section">
+                <header class="top-header">
+                    <h1>Hồ sơ giảng viên</h1>
+                </header>
+                <div class="profile-card">
+                    <div class="avatar-placeholder"></div>
+                    <div class="profile-details">
+                        <p><strong>Họ và tên:</strong> <span class="user-name"></span></p>
+                        <p><strong>Email:</strong> <span class="user-email"></span></p>
+                        <p><strong>Số điện thoại:</strong> 0987654321</p>
+                        <button class="btn-primary" style="margin-top: 15px; width: auto; padding: 10px 20px;">Chỉnh sửa hồ sơ</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="class-tab" class="tab-section">
+                <header class="top-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h1>Lớp của bạn</h1>
+                    <button class="btn-primary" style="width: auto; padding: 8px 15px;">+ Tạo lớp học</button>
+                </header>
+                <div id="fullClassList" class="charts-container" style="margin-top: 20px;">
+                    </div>
+            </section>
+
+            <section id="schedule-tab" class="tab-section">
+                <header class="top-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h1>Lịch giảng dạy</h1>
+                    <button class="btn-primary" style="width: auto; padding: 8px 15px;">+ Thêm lịch học</button>
+                </header>
+                <div class="schedule-section" style="margin-top: 20px;">
+                    <ul id="teacherScheduleList" class="schedule-list"></ul>
+                </div>
+            </section>
+
+        </main>
+    </div>
+    <script src="js/db.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
