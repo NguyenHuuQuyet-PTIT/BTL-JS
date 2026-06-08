@@ -1,36 +1,46 @@
 function initializeDatabase() {
     if (!localStorage.getItem('Users')) {
-        localStorage.setItem('Users', JSON.stringify([
-            { id: 'SV2021001', role: 'student', name: 'Nguyễn Văn A', email: 'A@gmail.com', password: '123' },
-            { id: 'SV2021002', role: 'student', name: 'Trần Thị B', email: 'tran.b@example.com', password: '123' },
-            { id: 'SV2021003', role: 'student', name: 'Lê Văn C', email: 'le.c@example.com', password: '123' },
-            { id: 'SV2021004', role: 'student', name: 'Phạm Thị D', email: 'pham.d@example.com', password: '123' },
-            { id: 'GV001', role: 'teacher', name: 'Trần Thị B', email: 'B@gmail.com', password: '123' }
-        ]));
+        let users = [
+            { id: 'GV001', role: 'teacher', name: 'Trần Thị B', email: 'gv1@gmail.com', password: '123' },
+            { id: 'GV002', role: 'teacher', name: 'TS. Trần Văn C', email: 'gv2@gmail.com', password: '123' },
+            { id: 'GV003', role: 'teacher', name: 'PGS. Lê Thị D', email: 'gv3@gmail.com', password: '123' }
+        ];
+        // Tạo 35 sinh viên
+        for(let i=1; i<=35; i++) {
+            let idStr = i < 10 ? '0'+i : i;
+            users.push({ id: `SV2025${idStr}`, role: 'student', name: `Sinh viên ${i}`, email: `sv${i}@gmail.com`, password: '123' });
+        }
+        localStorage.setItem('Users', JSON.stringify(users));
     }
+
     if (!localStorage.getItem('Subjects')) {
         localStorage.setItem('Subjects', JSON.stringify([
-            { id: 'SUB01', name: 'Lập trình Web' },
-            { id: 'SUB02', name: 'Cấu trúc dữ liệu và giải thuật' },
-            { id: 'SUB03', name: 'Cơ sở dữ liệu' },
-            { id: 'SUB04', name: 'Mạng máy tính' }
+            { id: 'SUB01', name: 'Lập trình Web' }, { id: 'SUB02', name: 'Cấu trúc dữ liệu' }, { id: 'SUB03', name: 'Cơ sở dữ liệu' }
         ]));
     }
+
     if (!localStorage.getItem('Classes')) {
-        localStorage.setItem('Classes', JSON.stringify([
+        let allStudents = [];
+        for(let i=1; i<=35; i++) allStudents.push(`SV2025${i<10?'0'+i:i}`);
+
+        let classes = [
             { 
-                id: 'CNTT101', subjectId: 'SUB01', teacherId: 'GV001', room: 'A101', schedule: 'Thứ 2 (07:00-09:00)', totalStudents: 4,
-                materials: [
-                    { id: 'M1', title: 'Bài giảng 1: Giới thiệu HTML & CSS', filename: 'bai-giang-1.pdf', date: '2024-02-01', type: 'Bài giảng' },
-                    { id: 'M2', title: 'Bài tập 1: Tạo trang web đơn giản', filename: 'bai-tap-1.pdf', date: '2024-02-05', type: 'Bài tập' }
-                ]
+                id: 'CNTT101', subjectId: 'SUB01', teacherId: 'GV001', room: 'A101', 
+                dayOfWeek: 'Thứ 2', startTime: '07:00', endTime: '09:00',
+                enrolledStudents: allStudents.slice(0, 15), // 15 SV lớp 1
+                sessions: [
+                    { id: 'SES_1', date: '2025-05-10', startTime: '07:00', endTime: '09:00', attendance: { 'SV202501': 'present', 'SV202502': 'late' } }
+                ],
+                grades: { 'SV202501': { cc: 10, gk: 8, ck: 9 } }
+            },
+            { 
+                id: 'CNTT102', subjectId: 'SUB02', teacherId: 'GV002', room: 'B205', 
+                dayOfWeek: 'Thứ 3', startTime: '09:00', endTime: '11:00',
+                enrolledStudents: allStudents.slice(10, 30), // 20 SV lớp 2
+                sessions: [], grades: {}
             }
-        ]));
-    }
-    if (!localStorage.getItem('AcademicRecords')) {
-        localStorage.setItem('AcademicRecords', JSON.stringify([
-            { studentId: 'SV2021001', subjectId: 'SUB01', midterm: 8.5, final: 9.0, average: 8.8 }
-        ]));
+        ];
+        localStorage.setItem('Classes', JSON.stringify(classes));
     }
 }
 initializeDatabase();

@@ -1,23 +1,26 @@
-function handleLogin(e) {
+document.getElementById('loginForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
     const role = document.querySelector('input[name="role"]:checked').value;
     
     const users = JSON.parse(localStorage.getItem('Users')) || [];
-    let found = false;
-
-    for (let i = 0; i < users.length; i++) {
-        if (users[i].email === email && users[i].password === pass && users[i].role === role) {
-            localStorage.setItem('currentUser', JSON.stringify(users[i]));
-            window.location.href = role === 'student' ? 'student-dashboard.html' : 'teacher-dashboard.html';
-            found = true; break;
+    let user = null;
+    for(let i=0; i<users.length; i++) {
+        if(users[i].email === email && users[i].password === pass && users[i].role === role) {
+            user = users[i]; break;
         }
     }
-    if (!found) alert("Sai thông tin đăng nhập hoặc phân quyền!");
-}
 
-function handleRegister(e) {
+    if (user) { 
+        localStorage.setItem('currentUser', JSON.stringify(user)); 
+        window.location.href = role === 'student' ? 'student-dashboard.html' : 'teacher-dashboard.html'; 
+    } else {
+        alert("Sai thông tin đăng nhập hoặc phân quyền!");
+    }
+});
+
+document.getElementById('registerForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
     const name = document.getElementById('reg-name').value;
     const email = document.getElementById('reg-email').value;
@@ -29,11 +32,9 @@ function handleRegister(e) {
 
     const users = JSON.parse(localStorage.getItem('Users')) || [];
     const newId = role === 'student' ? 'SV' + Date.now() : 'GV' + Date.now();
-    users.push({ id: newId, role, name, email, password: pass });
+    users.push({ id: newId, role: role, name: name, email: email, password: pass });
     localStorage.setItem('Users', JSON.stringify(users));
     
-    alert("Đăng ký thành công!"); window.location.href = 'index.html';
-}
-
-if(document.getElementById('loginForm')) document.getElementById('loginForm').addEventListener('submit', handleLogin);
-if(document.getElementById('registerForm')) document.getElementById('registerForm').addEventListener('submit', handleRegister);
+    alert("Đăng ký thành công! Vui lòng đăng nhập."); 
+    window.location.href = 'index.html';
+});

@@ -2,7 +2,6 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edu Report - Sinh viên</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,8 +11,7 @@
         <aside class="sidebar">
             <div class="sidebar-top">
                 <div class="logo">
-                    <h2>Edu Report</h2>
-                    <p>Sinh viên</p>
+                    <h2>Edu Report</h2><p>Sinh viên</p>
                 </div>
                 <nav class="menu">
                     <ul>
@@ -25,75 +23,71 @@
             </div>
             <div class="user-info">
                 <p class="user-name" style="font-weight: bold;">Đang tải...</p>
-                <p class="email user-email" style="color: #666; font-size: 13px; margin-bottom: 15px;">...</p>
-                <button id="btnLogout" class="btn-logout"><span style="margin-right: 5px;">[→</span> Đăng xuất</button>
+                <p class="email user-email" style="color: #666; font-size: 13px;">...</p>
+                <button id="btnLogout" class="btn-logout">[→ Đăng xuất</button>
             </div>
         </aside>
 
         <main class="main-content">
-            <!-- TAB 1: TRANG CHỦ -->
             <section id="home-tab" class="tab-section active-tab">
                 <header class="top-header"><h1 class="welcome-text">Chào mừng đến với Edu Report</h1></header>
                 <div class="stats-grid">
-                    <div class="stat-card"><p class="stat-title">Tổng môn học</p><h2 class="stat-number" id="stat-total-subjects">0</h2><p class="stat-desc">môn học đang theo dõi</p></div>
-                    <div class="stat-card"><p class="stat-title">Điểm trung bình</p><h2 class="stat-number" id="stat-gpa">0.0</h2><p class="stat-desc">trên thang điểm 10</p></div>
-                    <div class="stat-card"><p class="stat-title">Môn xuất sắc</p><h2 class="stat-number">1</h2><p class="stat-desc">môn đạt loại xuất sắc</p></div>
-                    <div class="stat-card"><p class="stat-title">Tỉ lệ chuyên cần</p><h2 class="stat-number">88.0%</h2><p class="stat-desc">tỉ lệ có mặt</p></div>
+                    <div class="stat-card"><p class="stat-title">Tổng môn học</p><h2 class="stat-number" id="stat-total-subjects">0</h2></div>
+                    <div class="stat-card"><p class="stat-title">Điểm trung bình</p><h2 class="stat-number" id="stat-gpa">0.0</h2></div>
+                    <div class="stat-card"><p class="stat-title">Môn xuất sắc</p><h2 class="stat-number">0</h2></div>
                 </div>
                 <div class="charts-container">
-                    <div class="chart-box"><h3>Thống kê chuyên cần</h3><canvas id="attendanceChart"></canvas></div>
-                    <div class="chart-box"><h3>Phân loại điểm</h3><canvas id="gradePieChart"></canvas></div>
+                    <div class="chart-box" style="max-width: 400px;">
+                        <h3>Thống kê chuyên cần</h3>
+                        <canvas id="attendanceChart" style="margin-top: 15px;"></canvas>
+                    </div>
                 </div>
             </section>
 
-            <!-- TAB 2: THÔNG TIN CÁ NHÂN -->
             <section id="profile-tab" class="tab-section">
                 <header class="top-header"><h1>Hồ sơ cá nhân</h1></header>
                 <div class="profile-card" style="flex-direction: column; align-items: flex-start;">
                     <div style="display: flex; gap: 30px; align-items: center;">
                         <div class="avatar-placeholder"></div>
-                        <div class="profile-details">
-                            <p><strong>Họ và tên:</strong> <span id="profName"></span></p>
-                            <p><strong>Email:</strong> <span id="profEmail"></span></p>
-                            <p><strong>Mã sinh viên:</strong> <span id="profId"></span></p>
-                            <p><strong>Ngày sinh:</strong> <span id="profDob">Chưa cập nhật</span></p>
-                            <p><strong>Số điện thoại:</strong> <span id="profPhone">Chưa cập nhật</span></p>
-                            <p><strong>Ngành:</strong> Công nghệ thông tin</p>
-                            <button id="btnEditProfile" class="btn-primary" style="margin-top: 15px; width: auto; padding: 10px 20px;">Chỉnh sửa hồ sơ</button>
+                        <div>
+                            <p><strong>Họ và tên:</strong> <span class="user-name"></span></p>
+                            <p><strong>Email:</strong> <span class="user-email"></span></p>
+                            <p><strong>Ngày sinh:</strong> <span id="profDob">15/05/2003</span></p>
+                            <p><strong>Số điện thoại:</strong> <span id="profPhone">0123456789</span></p>
+                            <button id="btnEditProfile" class="btn-primary" style="margin-top: 15px; width: auto;">Chỉnh sửa hồ sơ</button>
                         </div>
                     </div>
-                    <div id="editProfileFormContainer" style="display: none; width: 100%; max-width: 400px; margin-top: 20px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
-                        <h3 style="margin-bottom: 15px;">Cập nhật thông tin</h3>
+                    <div id="editProfileFormContainer" style="display: none; width: 100%; max-width: 400px; margin-top: 20px; border: 1px solid #ddd; padding: 20px;">
                         <form id="editProfileForm">
                             <div class="input-group"><label>Họ và tên</label><input type="text" id="editName" required></div>
                             <div class="input-group"><label>Số điện thoại</label><input type="text" id="editPhone"></div>
                             <div class="input-group"><label>Ngày sinh</label><input type="date" id="editDob"></div>
-                            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                                <button type="submit" class="btn-primary" style="flex: 1;">Lưu</button>
-                                <button type="button" id="btnCancelEdit" class="btn-logout" style="flex: 1; border: 1px solid #ccc;">Hủy</button>
+                            <div style="display: flex; gap: 10px;">
+                                <button type="submit" class="btn-primary" style="flex: 1;">Lưu thay đổi</button>
+                                <button type="button" id="btnCancelEdit" class="btn-logout" style="flex: 1; margin-top:0;">Hủy</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </section>
 
-            <!-- TAB 3: HỌC TẬP -->
             <section id="study-tab" class="tab-section">
-                <header class="top-header"><h1>Lịch học & Bảng điểm</h1></header>
-                <div class="study-container">
-                    <div class="schedule-section"><h3>Lịch học</h3><ul id="scheduleList" class="schedule-list"></ul></div>
-                    <div class="transcript-section">
-                        <h3>Bảng điểm</h3>
-                        <table class="data-table">
-                            <thead><tr><th>Môn học</th><th>Giữa kỳ</th><th>Cuối kỳ</th><th>Điểm TB</th></tr></thead>
-                            <tbody id="transcriptBody"></tbody>
-                        </table>
-                    </div>
-                </div>
+                <header class="top-header"><h1>Học tập & Điểm danh</h1></header>
+                
+                <h3 style="margin-bottom: 10px;">Bảng điểm tổng hợp</h3>
+                <table class="data-table" style="margin-bottom: 40px;">
+                    <thead><tr><th>Môn học</th><th>CC (20%)</th><th>GK (30%)</th><th>CK (50%)</th><th>Điểm TB</th></tr></thead>
+                    <tbody id="transcriptBody"></tbody>
+                </table>
+
+                <h3 style="margin-bottom: 10px;">Lịch sử Điểm danh chi tiết</h3>
+                <table class="data-table">
+                    <thead><tr><th>Môn học</th><th>Buổi học (Ngày & Giờ)</th><th>Trạng thái</th></tr></thead>
+                    <tbody id="attendanceHistoryBody"></tbody>
+                </table>
             </section>
         </main>
     </div>
-    <script src="js/db.js"></script>
-    <script src="js/main.js"></script>
+    <script src="js/db.js"></script><script src="js/main.js"></script>
 </body>
 </html>
