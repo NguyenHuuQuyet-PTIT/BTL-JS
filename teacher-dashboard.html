@@ -1,106 +1,32 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Giáo viên - Edu Report</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
+<head><meta charset="UTF-8"><title>Giáo viên - Edu Report</title><link rel="stylesheet" href="css/style.css"></head>
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-top">
-                <div class="logo"><h2>Edu Report</h2><p>Giáo viên</p></div>
-                <nav class="menu">
-                    <ul>
-                        <li class="menu-item active" data-target="home-tab"><a href="#">Trang chủ</a></li>
-                        <li class="menu-item" data-target="profile-tab"><a href="#">Thông tin cá nhân</a></li>
-                        <li class="menu-item" data-target="class-tab"><a href="#">Quản lý Lớp học</a></li>
-                    </ul>
-                </nav>
-            </div>
-            <div class="user-info">
-                <p class="user-name" style="font-weight: bold;">Đang tải...</p>
-                <p class="email user-email" style="color: #666; font-size: 13px;">...</p>
-                <button id="btnLogout" class="btn-logout">[→ Đăng xuất</button>
-            </div>
+            <div class="sidebar-top"><div class="logo"><h2>Edu Report</h2><p>Giáo viên</p></div><nav class="menu"><ul><li class="menu-item active" data-target="class-tab"><a href="#">Lớp học của tôi</a></li><li class="menu-item" data-target="profile-tab"><a href="#">Thông tin cá nhân</a></li></ul></nav></div>
+            <div><p class="user-name" style="font-weight:bold;"></p><button onclick="handleLogout()" class="btn-logout">[→ Đăng xuất</button></div>
         </aside>
-
         <main class="main-content">
-            <section id="home-tab" class="tab-section active-tab">
-                <header class="top-header"><h1 class="welcome-text">Chào mừng đến với Edu Report</h1></header>
-                <div class="stats-grid" style="justify-content: flex-start;">
-                    <div class="stat-card"><p class="stat-title">Tổng lớp học</p><h2 class="stat-number" id="teacher-total-classes">0</h2></div>
-                    <div class="stat-card"><p class="stat-title">Tổng sinh viên</p><h2 class="stat-number" id="teacher-total-students">0</h2></div>
-                </div>
+            <section id="class-tab" class="tab-section active-tab"><header class="top-header"><h1>Các lớp đang phụ trách</h1></header><div id="teacherClassList" class="charts-container"></div></section>
+            
+            <section id="class-detail-tab" class="tab-section">
+                <button onclick="document.getElementById('class-tab').classList.add('active-tab'); this.parentElement.classList.remove('active-tab');" class="action-btn" style="margin-bottom:15px; border:none; background:none;">← Quay lại danh sách lớp</button>
+                <header class="top-header"><h1 id="teacherDetailClassName"></h1><p id="teacherDetailClassInfo"></p></header>
+                <div class="sub-menu"><button onclick="switchTeacherSubTab('grades')" id="tc-tab-grades-btn" class="active">Nhập Điểm</button><button onclick="switchTeacherSubTab('sessions')" id="tc-tab-sessions-btn">Điểm danh</button></div>
+                <div id="tc-sub-grades"><table class="data-table"><thead><tr><th>Sinh viên</th><th>CC</th><th>GK</th><th>CK</th><th>TB</th><th>Hành động</th></tr></thead><tbody id="tcStudentGrades"></tbody></table></div>
+                <div id="tc-sub-sessions" style="display:none;"><div id="tcSessionList" class="charts-container"></div><div id="tcAttendanceView" style="display:none; margin-top:30px; border-top:2px solid #000; padding-top:20px;"><h3 id="tcAttSessionInfo" style="margin-bottom:15px;"></h3><table class="data-table"><thead><tr><th>Sinh viên</th><th>Trạng thái</th></tr></thead><tbody id="tcAttendanceList"></tbody></table><button class="btn-primary" style="margin-top:20px; width:auto;" onclick="teacherSaveAttendance()">Lưu bảng điểm danh</button></div></div>
             </section>
 
             <section id="profile-tab" class="tab-section">
-                <header class="top-header"><h1>Hồ sơ giảng viên</h1></header>
+                <header class="top-header"><h1>Hồ sơ cá nhân</h1></header>
                 <div class="profile-card">
                     <div class="avatar-placeholder"></div>
-                    <div><p><strong>Họ và tên:</strong> <span class="user-name"></span></p><p><strong>Email:</strong> <span class="user-email"></span></p></div>
+                    <div><p><strong>Mã GV:</strong> <span id="tcProfId"></span></p><p><strong>Họ tên:</strong> <span class="user-name"></span></p><p><strong>Email:</strong> <span class="user-email"></span></p><p><strong>Ngày sinh:</strong> <span id="tcProfDob"></span></p><p><strong>SĐT:</strong> <span id="tcProfPhone"></span></p><button id="btnShowEditProfileTc" class="btn-primary" style="margin-top:15px; width:auto; padding: 8px 15px;">Chỉnh sửa hồ sơ</button></div>
                 </div>
-            </section>
-
-            <section id="class-tab" class="tab-section">
-                <header class="top-header"><h1>Quản lý Lớp học</h1><button id="btnShowCreateClass" class="btn-primary" style="width:auto">+ Tạo lớp học</button></header>
-                
-                <div id="createClassFormContainer" style="display: none; background: #fff; padding: 20px; border: 1px solid #ddd; margin-bottom: 20px;">
-                    <h3>Tạo lớp học mới</h3>
-                    <form id="createClassForm" style="margin-top: 15px;">
-                        <div class="input-group"><label>Môn học</label><select id="newSub" required></select></div>
-                        <div class="input-group"><label>Phòng</label><input type="text" id="newRoom" required></div>
-                        <div style="display: flex; gap: 10px;">
-                            <div class="input-group" style="flex:1"><label>Thứ (Lịch dự kiến)</label><select id="newDay" required><option>Thứ 2</option><option>Thứ 3</option><option>Thứ 4</option><option>Thứ 5</option><option>Thứ 6</option><option>Thứ 7</option></select></div>
-                            <div class="input-group" style="flex:1"><label>Giờ bắt đầu</label><input type="time" id="newStart" required></div>
-                            <div class="input-group" style="flex:1"><label>Giờ kết thúc</label><input type="time" id="newEnd" required></div>
-                        </div>
-                        <div style="display:flex; gap:10px;">
-                            <button type="submit" class="btn-primary" style="flex:1">Lưu lớp</button>
-                            <button type="button" onclick="document.getElementById('createClassFormContainer').style.display='none'; document.getElementById('btnShowCreateClass').style.display='inline-block'" class="btn-logout" style="flex:1; margin-top:0">Hủy</button>
-                        </div>
-                    </form>
-                </div>
-
-                <div id="fullClassList" class="charts-container"></div>
-            </section>
-
-            <section id="class-detail-tab" class="tab-section">
-                <button onclick="document.getElementById('class-tab').classList.add('active-tab'); this.parentElement.classList.remove('active-tab');" class="action-btn" style="margin-bottom:15px; color:#007bff; border:none; background:none; font-size:16px;">← Quay lại danh sách lớp</button>
-                <header class="top-header"><h1 id="detailClassName">Tên lớp</h1><p id="detailClassInfo"></p></header>
-
-                <div class="sub-menu">
-                    <button onclick="switchClassSubTab('grades')" id="tab-grades-btn" class="active">Quản lý Điểm số</button>
-                    <button onclick="switchClassSubTab('sessions')" id="tab-sessions-btn">Buổi học & Điểm danh</button>
-                </div>
-
-                <div id="sub-grades">
-                    <table class="data-table">
-                        <thead><tr><th>Sinh viên</th><th>CC (20%)</th><th>GK (30%)</th><th>CK (50%)</th><th>TB</th><th>Hành động</th></tr></thead>
-                        <tbody id="detailStudentGrades"></tbody>
-                    </table>
-                </div>
-
-                <div id="sub-sessions" style="display:none;">
-                    <div style="background:#fff; padding:20px; border:1px solid #ddd; margin-bottom:20px;">
-                        <h4>+ Tạo buổi học mới</h4>
-                        <form id="createSessionForm" style="display:flex; gap:15px; margin-top:15px; align-items:flex-end;">
-                            <div class="input-group" style="margin-bottom:0"><label>Ngày</label><input type="date" id="newSesDate" required></div>
-                            <div class="input-group" style="margin-bottom:0"><label>Giờ bắt đầu</label><input type="time" id="newSesStart" required></div>
-                            <div class="input-group" style="margin-bottom:0"><label>Giờ kết thúc</label><input type="time" id="newSesEnd" required></div>
-                            <button type="submit" class="btn-primary" style="width:auto; padding:10px 20px;">Tạo buổi</button>
-                        </form>
-                    </div>
-                    <div id="sessionList" class="charts-container"></div>
-
-                    <div id="attendanceView" style="display:none; margin-top:30px; border-top:2px solid #000; padding-top:20px;">
-                        <h3 id="attSessionInfo" style="margin-bottom:15px;"></h3>
-                        <table class="data-table">
-                            <thead><tr><th>Sinh viên</th><th>Trạng thái (Tích chọn)</th></tr></thead>
-                            <tbody id="attendanceList"></tbody>
-                        </table>
-                        <button class="btn-primary" style="margin-top:20px;" onclick="saveAttendance()">Lưu bảng điểm danh</button>
-                    </div>
+                <div id="editProfileFormContainerTc" style="display:none; max-width:400px; background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px;">
+                    <h3 style="margin-bottom: 15px;">Cập nhật thông tin</h3>
+                    <form id="editProfileFormTc"><div class="input-group"><label>Mật khẩu mới</label><input type="password" id="editPassTc" placeholder="Bỏ trống nếu không đổi"></div><div class="input-group"><label>SĐT</label><input type="text" id="editPhoneTc"></div><div class="input-group"><label>Ngày sinh</label><input type="date" id="editDobTc"></div><div style="display:flex; gap:10px;"><button type="submit" class="btn-primary">Lưu</button><button type="button" id="btnCancelEditProfileTc" class="btn-logout" style="margin-top:0;">Hủy</button></div></form>
                 </div>
             </section>
         </main>

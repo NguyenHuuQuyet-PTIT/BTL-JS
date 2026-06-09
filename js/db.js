@@ -1,46 +1,42 @@
-function initializeDatabase() {
+function initDB() {
+    let users = JSON.parse(localStorage.getItem('Users')) || [];
+    if (!users.some(u => u.role === 'admin') && users.length > 0) { localStorage.clear(); }
+
     if (!localStorage.getItem('Users')) {
-        let users = [
-            { id: 'GV001', role: 'teacher', name: 'Trần Thị B', email: 'gv1@gmail.com', password: '123' },
-            { id: 'GV002', role: 'teacher', name: 'TS. Trần Văn C', email: 'gv2@gmail.com', password: '123' },
-            { id: 'GV003', role: 'teacher', name: 'PGS. Lê Thị D', email: 'gv3@gmail.com', password: '123' }
+        let newUsers = [
+            { id: 'ADMIN', role: 'admin', name: 'Giáo vụ Admin', email: 'admin@gmail.com', password: '123' },
+            { id: 'GV001', role: 'teacher', name: 'ThS. Trần Thị B', email: 'gv1@gmail.com', password: '123', dob: '1985-05-10', phone: '0988111222' },
+            { id: 'GV002', role: 'teacher', name: 'TS. Trần Văn C', email: 'gv2@gmail.com', password: '123', dob: '1975-08-22', phone: '0988333444' },
+            { id: 'SV202501', role: 'student', name: 'Nguyễn Văn An', email: 'sv1@gmail.com', password: '123', dob: '2005-01-15', phone: '0901000001' },
+            { id: 'SV202502', role: 'student', name: 'Trần Thị Bé', email: 'sv2@gmail.com', password: '123', dob: '2005-02-20', phone: '0901000002' },
+            { id: 'SV202503', role: 'student', name: 'Lê Hoàng Hải', email: 'sv3@gmail.com', password: '123', dob: '2005-03-10', phone: '0901000003' }
         ];
-        // Tạo 35 sinh viên
-        for(let i=1; i<=35; i++) {
-            let idStr = i < 10 ? '0'+i : i;
-            users.push({ id: `SV2025${idStr}`, role: 'student', name: `Sinh viên ${i}`, email: `sv${i}@gmail.com`, password: '123' });
-        }
-        localStorage.setItem('Users', JSON.stringify(users));
+        localStorage.setItem('Users', JSON.stringify(newUsers));
     }
 
     if (!localStorage.getItem('Subjects')) {
         localStorage.setItem('Subjects', JSON.stringify([
-            { id: 'SUB01', name: 'Lập trình Web' }, { id: 'SUB02', name: 'Cấu trúc dữ liệu' }, { id: 'SUB03', name: 'Cơ sở dữ liệu' }
+            { id: 'SUB01', name: 'Lập trình Web', abbr: 'WEB' }, 
+            { id: 'SUB02', name: 'Cấu trúc dữ liệu', abbr: 'CTDL' },
+            { id: 'SUB03', name: 'Cơ sở dữ liệu', abbr: 'CSDL' }
         ]));
     }
 
     if (!localStorage.getItem('Classes')) {
-        let allStudents = [];
-        for(let i=1; i<=35; i++) allStudents.push(`SV2025${i<10?'0'+i:i}`);
-
         let classes = [
             { 
-                id: 'CNTT101', subjectId: 'SUB01', teacherId: 'GV001', room: 'A101', 
-                dayOfWeek: 'Thứ 2', startTime: '07:00', endTime: '09:00',
-                enrolledStudents: allStudents.slice(0, 15), // 15 SV lớp 1
+                id: 'WEB_L1', subjectId: 'SUB01', teacherId: 'GV001', room: 'A101', 
+                dayOfWeek: 'Thứ 2', startDate: '2026-06-01', endDate: '2026-07-31', startTime: '07:00', endTime: '09:00', 
+                enrolledStudents: ['SV202501'], 
                 sessions: [
-                    { id: 'SES_1', date: '2025-05-10', startTime: '07:00', endTime: '09:00', attendance: { 'SV202501': 'present', 'SV202502': 'late' } }
-                ],
-                grades: { 'SV202501': { cc: 10, gk: 8, ck: 9 } }
+                    { id: 'S1', date: '2026-06-01', startTime: '07:00', endTime: '09:00', attendance: {'SV202501': 'present'} },
+                    { id: 'S2', date: '2026-06-08', startTime: '07:00', endTime: '09:00', attendance: {} }
+                ], grades: {'SV202501': {cc: 10, gk: 8, ck: 9}} 
             },
-            { 
-                id: 'CNTT102', subjectId: 'SUB02', teacherId: 'GV002', room: 'B205', 
-                dayOfWeek: 'Thứ 3', startTime: '09:00', endTime: '11:00',
-                enrolledStudents: allStudents.slice(10, 30), // 20 SV lớp 2
-                sessions: [], grades: {}
-            }
+            { id: 'WEB_L2', subjectId: 'SUB01', teacherId: 'GV002', room: 'A102', dayOfWeek: 'Thứ 3', startDate: '2026-06-01', endDate: '2026-07-31', startTime: '09:00', endTime: '11:00', enrolledStudents: [], sessions: [], grades: {} },
+            { id: 'CTDL_L1', subjectId: 'SUB02', teacherId: 'GV001', room: 'B201', dayOfWeek: 'Thứ 2', startDate: '2026-06-01', endDate: '2026-07-31', startTime: '08:00', endTime: '10:00', enrolledStudents: [], sessions: [], grades: {} }
         ];
         localStorage.setItem('Classes', JSON.stringify(classes));
     }
 }
-initializeDatabase();
+initDB();

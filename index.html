@@ -1,27 +1,21 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Đăng nhập - Edu Report</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
+<head><meta charset="UTF-8"><title>Đăng nhập - Edu Report</title><link rel="stylesheet" href="css/style.css"></head>
 <body class="auth-page">
     <div class="auth-box">
-        <h2>Welcome to EDUREPORT</h2>
+        <h2>EDUREPORT</h2>
         <form id="loginForm">
             <div class="role-toggle">
-                <input type="radio" id="roleStudent" name="role" value="student" checked>
-                <label for="roleStudent">Sinh viên</label>
-                <input type="radio" id="roleTeacher" name="role" value="teacher">
-                <label for="roleTeacher">Giáo viên</label>
+                <input type="radio" id="roleStudent" name="role" value="student" checked><label for="roleStudent">Sinh viên</label>
+                <input type="radio" id="roleTeacher" name="role" value="teacher"><label for="roleTeacher">Giáo viên</label>
+                <input type="radio" id="roleAdmin" name="role" value="admin"><label for="roleAdmin">Admin</label>
             </div>
             <div class="input-group"><label>Email</label><input type="email" id="email" required></div>
             <div class="input-group"><label>Mật khẩu</label><input type="password" id="password" required></div>
             <button type="submit" class="btn-primary">Đăng nhập</button>
+            <p style="text-align: center; margin-top: 15px; font-size: 12px; color: #666;">admin@gmail.com / gv1@gmail.com / sv1@gmail.com (Pass: 123)</p>
         </form>
-        <p class="auth-link">Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a></p>
     </div>
-    <script src="js/db.js"></script>
-    <script src="js/auth.js"></script>
+    <script src="js/db.js"></script><script src="js/auth.js"></script>
 </body>
 </html>
