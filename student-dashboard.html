@@ -2,64 +2,97 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Sinh viên - Edu Report</title>
+    <title>Student Dashboard - Edu Report</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-top"><div class="logo"><h2>Edu Report</h2><p>Sinh viên</p></div><nav class="menu"><ul><li class="menu-item active" data-target="study-tab"><a href="#">Học tập</a></li><li class="menu-item" data-target="register-tab"><a href="#">Đăng ký lớp</a></li><li class="menu-item" data-target="profile-tab"><a href="#">Thông tin cá nhân</a></li></ul></nav></div>
-            <div><p class="user-name" style="font-weight:bold;"></p><button onclick="handleLogout()" class="btn-logout">[→ Đăng xuất</button></div>
+            <div class="sidebar-top">
+                <div class="logo"><h2>Edu Report</h2><p>Sinh viên</p></div>
+                <nav class="menu">
+                    <ul>
+                        <li class="menu-item active" data-target="study-tab"><a href="#">Học tập & Thống kê</a></li>
+                        <li class="menu-item" data-target="register-tab"><a href="#">Đăng ký tín chỉ</a></li>
+                        <li class="menu-item" data-target="profile-tab"><a href="#">Thông tin cá nhân</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <div><p class="user-name font-bold"></p><button onclick="handleLogout()" class="btn-logout">Đăng xuất</button></div>
         </aside>
 
         <main class="main-content">
             <section id="study-tab" class="tab-section active-tab">
-                <header class="top-header"><h1>Học tập & Tiến trình</h1></header>
-
+                <header class="top-header"><h1>Kết quả Học tập & Tiến trình cá nhân</h1></header>
+                
                 <div class="stats-grid">
-                    <div class="stat-card"><p class="stat-title">Tổng môn học</p><h2 class="stat-number" id="stat-total-subjects">0</h2><p class="stat-desc">đang theo học</p></div>
-                    <div class="stat-card"><p class="stat-title">Điểm trung bình</p><h2 class="stat-number" id="stat-gpa">0.0</h2><p class="stat-desc">thang điểm 10</p></div>
-                    <div class="stat-card"><p class="stat-title">Môn xuất sắc</p><h2 class="stat-number" id="stat-excellent">0</h2><p class="stat-desc">>= 8.0</p></div>
-                    <div class="stat-card"><p class="stat-title">Tỉ lệ chuyên cần</p><h2 class="stat-number" id="stat-attendance-rate">0%</h2><p class="stat-desc">có mặt</p></div>
+                    <div class="stat-card"><p class="stat-title">Tổng môn học</p><h2 class="stat-number" id="stat-total-subjects">0</h2></div>
+                    <div class="stat-card"><p class="stat-title">Điểm trung bình học kỳ</p><h2 class="stat-number" id="stat-gpa">0.0</h2></div>
+                    <div class="stat-card"><p class="stat-title">Môn học xuất sắc</p><h2 class="stat-number" id="stat-excellent">0</h2></div>
+                    <div class="stat-card"><p class="stat-title">Tỉ lệ chuyên cần</p><h2 class="stat-number" id="stat-attendance-rate">0%</h2></div>
                 </div>
 
-                <div class="sub-menu"><button onclick="switchStuStudyTab('schedule')" id="stu-tab-schedule-btn" class="active">Lịch học tuần</button><button onclick="switchStuStudyTab('progress')" id="stu-tab-progress-btn">Tiến trình & Điểm số</button></div>
+                <div class="sub-menu">
+                    <button onclick="switchStuStudyTab('schedule')" id="stu-tab-schedule-btn" class="active">Lịch học tuần</button>
+                    <button onclick="switchStuStudyTab('progress')" id="stu-tab-progress-btn">Tiến trình & Điểm số chi tiết</button>
+                </div>
                 
                 <div id="stu-sub-schedule">
-                    <div id="weeklyScheduleContainer" style="display:flex; gap:15px; overflow-x:auto;"></div>
-                    <div class="charts-container" style="margin-top: 30px;">
-                        <div class="chart-box" style="flex:1;"><h3>Thống kê chuyên cần</h3><canvas id="attendanceChart" style="margin-top:15px;"></canvas></div>
-                        <div class="chart-box" style="flex:1;"><h3>Phân loại điểm</h3><canvas id="gradePieChart" style="margin-top:15px;"></canvas></div>
+                    <div id="weeklyScheduleContainer" class="flex-row flex-wrap mb-20"></div>
+                    <div class="charts-container">
+                        <div class="chart-box"><h3>Thống kê chuyên cần tổng quát</h3><canvas id="attendanceChart" class="mt-20"></canvas></div>
+                        <div class="chart-box"><h3>Phân loại thang điểm</h3><canvas id="gradePieChart" class="mt-20"></canvas></div>
                     </div>
                 </div>
-
+                
                 <div id="stu-sub-progress" style="display:none;"><div id="enrolledClassesCards" class="charts-container"></div></div>
             </section>
 
             <section id="register-tab" class="tab-section">
-                <header class="top-header"><h1>Đăng ký Tín chỉ</h1></header>
-                <div style="background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px;">
-                    <div id="registrationContainer"></div><button class="btn-primary" style="margin-top:20px; font-size:16px;" onclick="commitRegistration()">Lưu đăng ký</button>
-                </div>
+                <header class="top-header"><h1>Hệ thống Đăng ký Tín chỉ Trực tiếp</h1></header>
+                <div class="border-box p-20"><div id="registrationContainer"></div></div>
             </section>
 
             <section id="profile-tab" class="tab-section">
-                <header class="top-header"><h1>Quản lý Thông tin</h1></header>
+                <header class="top-header"><h1>Quản lý Thông tin Hồ sơ</h1></header>
                 <div class="profile-card">
-                    <div class="avatar-placeholder"></div>
-                    <div><p><strong>Mã SV:</strong> <span id="profId"></span></p><p><strong>Họ tên:</strong> <span class="user-name"></span></p><p><strong>Email:</strong> <span class="user-email"></span></p><p><strong>Ngày sinh:</strong> <span id="profDob"></span></p><p><strong>SĐT:</strong> <span id="profPhone"></span></p><button id="btnShowEditProfile" class="btn-primary" style="margin-top:15px; width:auto; padding: 8px 15px;">Chỉnh sửa hồ sơ</button></div>
+                    <div class="avatar-placeholder">SV</div>
+                    <div>
+                        <p><strong>Mã sinh viên:</strong> <span id="profId"></span></p>
+                        <p><strong>Họ và tên:</strong> <span class="user-name font-bold"></span></p>
+                        <p><strong>Email học viện:</strong> <span class="user-email"></span></p>
+                        <p><strong>Ngày sinh:</strong> <span id="profDob"></span></p>
+                        <p><strong>SĐT liên hệ:</strong> <span id="profPhone"></span></p>
+                        <button id="btnShowEditProfile" class="action-btn mt-10">Thay đổi thông tin</button>
+                    </div>
                 </div>
-                <div id="editProfileFormContainer" style="display:none; max-width:400px; background:#fff; padding:20px; border:1px solid #ddd; border-radius:8px;">
-                    <h3 style="margin-bottom: 15px;">Cập nhật thông tin</h3>
-                    <form id="editProfileForm"><div class="input-group"><label>Mật khẩu mới</label><input type="password" id="editPass" placeholder="Bỏ trống nếu không đổi"></div><div class="input-group"><label>SĐT</label><input type="text" id="editPhone"></div><div class="input-group"><label>Ngày sinh</label><input type="date" id="editDob"></div><div style="display:flex; gap:10px;"><button type="submit" class="btn-primary">Lưu</button><button type="button" id="btnCancelEditProfile" class="btn-logout" style="margin-top:0;">Hủy</button></div></form>
+                
+                <div id="editProfileFormContainer" style="display:none; max-width:400px;" class="border-box p-20">
+                    <h3 class="mb-20">Cập nhật thông tin cá nhân</h3>
+                    <form id="editProfileForm">
+                        <div class="input-group"><label>Mật khẩu mới</label><input type="password" id="editPass" placeholder="Bỏ trống nếu giữ nguyên"></div>
+                        <div class="input-group"><label>Số điện thoại</label><input type="text" id="editPhone"></div>
+                        <div class="input-group"><label>Ngày sinh</label><input type="date" id="editDob"></div>
+                        <div class="flex-row"><button type="submit" class="btn-primary">Lưu</button><button type="button" id="btnCancelEditProfile" class="btn-logout" style="margin-top:0;">Hủy</button></div>
+                    </form>
                 </div>
             </section>
         </main>
     </div>
 
-    <div id="stuClassModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="document.getElementById('stuClassModal').style.display='none'">&times;</span><h2 id="modalClassName"></h2><p id="modalTeacherName" style="color:#666; margin-bottom:20px;"></p><table class="data-table"><thead><tr><th>Buổi học</th><th>Trạng thái Điểm danh</th></tr></thead><tbody id="modalSessionList"></tbody></table></div></div>
+    <div id="stuClassModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="document.getElementById('stuClassModal').style.display='none'">&times;</span>
+            <h2 id="modalClassName" class="text-primary"></h2>
+            <p id="modalTeacherName" class="text-muted mb-20"></p>
+            <table class="data-table">
+                <thead><tr><th>Buổi học cụ thể</th><th>Kết quả Điểm danh</th></tr></thead>
+                <tbody id="modalSessionList"></tbody>
+            </table>
+        </div>
+    </div>
     
-    <script src="js/main.js"></script>
+    <script src="js/student.js"></script>
 </body>
 </html>
