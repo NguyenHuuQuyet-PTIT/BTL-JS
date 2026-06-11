@@ -7,11 +7,11 @@
     <div class="app-container">
         <aside class="sidebar">
             <div class="sidebar-top">
-                <div class="logo"><h2>Edu Report</h2><p>Giáo vụ / Admin</p></div>
+                <div class="logo mb-20"><h2 class="mb-10">Edu Report</h2><p class="text-muted text-sm">Giáo vụ / Admin</p></div>
                 <nav class="menu">
                     <ul>
-                        <li class="menu-item active" data-target="admin-classes"><a href="#">Điều phối Lớp học</a></li>
-                        <li class="menu-item" data-target="admin-users"><a href="#">Quản lý Tài khoản</a></li>
+                        <li class="menu-item active" id="menu-admin-classes" data-target="admin-classes"><a href="#">Điều phối Lớp học</a></li>
+                        <li class="menu-item" id="menu-admin-users" data-target="admin-users"><a href="#">Quản lý Tài khoản</a></li>
                     </ul>
                 </nav>
             </div>
@@ -19,11 +19,11 @@
         </aside>
 
         <main class="main-content">
-            <section id="admin-classes" class="tab-section active-tab">
+            <!-- Hiện tab mặc định, các tab khác ẩn đi -->
+            <section id="admin-classes" class="tab-section" style="display:block;">
                 <header class="top-header"><h1>Điều phối Lớp học & Buổi học</h1></header>
-                
-                <div class="border-box p-20 mb-20">
-                    <h3 class="mb-10">Khởi tạo lớp học mới</h3>
+                <div class="border-box mb-20">
+                    <h3 class="mb-20">Khởi tạo lớp học mới</h3>
                     <form id="adminCreateClassForm">
                         <div class="flex-row">
                             <div class="input-group flex-1"><label>Môn học</label><select id="admSub" required></select></div>
@@ -36,42 +36,42 @@
                             <div class="input-group flex-1"><label>Đến ngày</label><input type="date" id="admEndDate" required></div>
                             <div class="input-group flex-1"><label>Tiết Bắt đầu</label><input type="number" id="admStartPeriod" min="1" max="12" required></div>
                             <div class="input-group flex-1"><label>Tiết Kết thúc</label><input type="number" id="admEndPeriod" min="1" max="12" required></div>
-                            <div class="input-group"><button type="submit" class="btn-primary">Tạo Lớp</button></div>
+                            <div class="input-group"><button type="submit" class="btn-primary" style="padding: 10px 20px;">Tạo Lớp</button></div>
                         </div>
                     </form>
                 </div>
-                
-                <div id="adminClassList" class="charts-container"></div>
+                <div id="adminClassList" class="grid-container"></div>
             </section>
 
             <section id="admin-class-detail" class="tab-section">
-                <button onclick="document.getElementById('admin-classes').classList.add('active-tab'); this.parentElement.classList.remove('active-tab');" class="action-btn mb-20">← Quay lại</button>
+                <!-- Nút quay lại (Tự click menu) không tốn logic JS -->
+                <button onclick="document.getElementById('menu-admin-classes').click();" class="action-btn mb-20">← Quay lại</button>
                 <header class="top-header"><h1 id="admDetailClassName"></h1></header>
                 
                 <div class="sub-menu">
-                    <button onclick="switchAdmSubTab('students')" id="adm-tab-students-btn" class="active">Sinh viên</button>
-                    <button onclick="switchAdmSubTab('sessions')" id="adm-tab-sessions-btn">Buổi học</button>
+                    <button onclick="switchAdmSubTab('students')" id="adm-tab-students-btn" class="sub-btn adm-sub-btn active">Sinh viên</button>
+                    <button onclick="switchAdmSubTab('sessions')" id="adm-tab-sessions-btn" class="sub-btn adm-sub-btn">Buổi học</button>
                 </div>
                 
-                <div id="adm-sub-students">
+                <div id="adm-sub-students" class="adm-sub-tab">
                     <div class="flex-row mb-20">
-                        <input type="text" id="addStuId" placeholder="Mã Sinh viên" style="padding:10px; border:1px solid #ccc; width: 200px;">
-                        <button class="btn-primary" style="width:auto;" onclick="adminAddStudentToClass()">+ Thêm SV</button>
+                        <input type="text" id="addStuId" placeholder="Mã Sinh viên" style="padding:10px; border:1px solid #ccc; width: 250px; border-radius: 4px;">
+                        <button class="btn-primary" style="width:auto;" onclick="adminAddStudentToClass()">+ Thêm Sinh viên</button>
                     </div>
                     <table class="data-table"><thead><tr><th>Mã SV</th><th>Họ tên</th><th>Hành động</th></tr></thead><tbody id="admStudentList"></tbody></table>
                 </div>
                 
-                <div id="adm-sub-sessions" style="display:none;">
-                    <div class="border-box p-20 mb-20">
-                        <h4 class="mb-10">Tạo buổi học bổ sung (Đơn lẻ)</h4>
+                <div id="adm-sub-sessions" class="adm-sub-tab" style="display:none;">
+                    <div class="border-box mb-20">
+                        <h3 class="mb-10">Tạo buổi học bổ sung (Đơn lẻ)</h3>
                         <form onsubmit="event.preventDefault(); adminCreateSingleSession();" class="flex-row align-end">
-                            <div class="input-group mb-0"><label>Ngày</label><input type="date" id="aSesDate" required></div>
-                            <div class="input-group mb-0"><label>Tiết BĐ</label><input type="number" id="aSesStart" min="1" max="12" required></div>
-                            <div class="input-group mb-0"><label>Tiết KT</label><input type="number" id="aSesEnd" min="1" max="12" required></div>
-                            <div class="input-group mb-0"><button type="submit" class="btn-primary">+ Tạo buổi</button></div>
+                            <div class="input-group flex-1 mb-0"><label>Ngày</label><input type="date" id="aSesDate" required></div>
+                            <div class="input-group flex-1 mb-0"><label>Tiết BĐ</label><input type="number" id="aSesStart" min="1" max="12" required></div>
+                            <div class="input-group flex-1 mb-0"><label>Tiết KT</label><input type="number" id="aSesEnd" min="1" max="12" required></div>
+                            <div class="input-group mb-0"><button type="submit" class="btn-primary" style="padding: 10px 15px;">+ Tạo buổi</button></div>
                         </form>
                     </div>
-                    <table class="data-table"><thead><tr><th>Ngày</th><th>Tiết học</th><th>Hành động</th></tr></thead><tbody id="admSessionList"></tbody></table>
+                    <table class="data-table"><thead><tr><th>Ngày học</th><th>Tiết học</th><th>Hành động</th></tr></thead><tbody id="admSessionList"></tbody></table>
                 </div>
             </section>
 
@@ -82,49 +82,35 @@
         </main>
     </div>
 
+    <!-- Modals -->
     <div id="admEditClassModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="document.getElementById('admEditClassModal').style.display='none'">&times;</span>
-            <h2 class="mb-20">Sửa Lớp Học</h2>
+            <span class="close-modal" onclick="this.closest('.modal').style.display='none'; document.getElementById('editClassForm').reset();">&times;</span>
+            <h2 class="mb-20">Sửa Thông Tin Lớp Học</h2>
             <form id="editClassForm">
                 <input type="hidden" id="editClassId">
-                <div class="flex-row">
-                    <div class="input-group flex-1"><label>Môn học</label><select id="editClassSub" required></select></div>
-                    <div class="input-group flex-1"><label>Giáo viên</label><select id="editClassTeacher" required></select></div>
-                </div>
-                <div class="flex-row">
-                    <div class="input-group flex-1"><label>Phòng</label><input type="text" id="editClassRoom" required></div>
-                    <div class="input-group flex-1"><label>Thứ</label><select id="editClassDay"><option>Thứ 2</option><option>Thứ 3</option><option>Thứ 4</option><option>Thứ 5</option><option>Thứ 6</option><option>Thứ 7</option><option>Chủ nhật</option></select></div>
-                </div>
-                <div class="flex-row">
-                    <div class="input-group flex-1"><label>Từ ngày</label><input type="date" id="editClassStartDate" required></div>
-                    <div class="input-group flex-1"><label>Đến ngày</label><input type="date" id="editClassEndDate" required></div>
-                </div>
-                <div class="flex-row">
-                    <div class="input-group flex-1"><label>Tiết BĐ</label><input type="number" id="editClassStartPeriod" min="1" max="12" required></div>
-                    <div class="input-group flex-1"><label>Tiết KT</label><input type="number" id="editClassEndPeriod" min="1" max="12" required></div>
-                </div>
+                <div class="flex-row"><div class="input-group flex-1"><label>Môn học</label><select id="editClassSub" required></select></div><div class="input-group flex-1"><label>Giáo viên</label><select id="editClassTeacher" required></select></div></div>
+                <div class="flex-row"><div class="input-group flex-1"><label>Phòng học</label><input type="text" id="editClassRoom" required></div><div class="input-group flex-1"><label>Thứ</label><select id="editClassDay"><option>Thứ 2</option><option>Thứ 3</option><option>Thứ 4</option><option>Thứ 5</option><option>Thứ 6</option><option>Thứ 7</option><option>Chủ nhật</option></select></div></div>
+                <div class="flex-row"><div class="input-group flex-1"><label>Từ ngày</label><input type="date" id="editClassStartDate" required></div><div class="input-group flex-1"><label>Đến ngày</label><input type="date" id="editClassEndDate" required></div></div>
+                <div class="flex-row"><div class="input-group flex-1"><label>Tiết BĐ</label><input type="number" id="editClassStartPeriod" min="1" max="12" required></div><div class="input-group flex-1"><label>Tiết KT</label><input type="number" id="editClassEndPeriod" min="1" max="12" required></div></div>
                 <button type="submit" class="btn-primary mt-10">Lưu thay đổi & Làm mới Lịch học</button>
             </form>
         </div>
     </div>
-
     <div id="admEditSessionModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="document.getElementById('admEditSessionModal').style.display='none'">&times;</span>
+            <span class="close-modal" onclick="this.closest('.modal').style.display='none'; document.getElementById('editSessionForm').reset();">&times;</span>
             <h2 class="mb-20">Sửa Buổi Học Đơn Lẻ</h2>
             <form id="editSessionForm">
                 <input type="hidden" id="editSessionId">
                 <div class="input-group"><label>Ngày học</label><input type="date" id="editSesDate" required></div>
-                <div class="flex-row">
-                    <div class="input-group flex-1"><label>Tiết Bắt đầu</label><input type="number" id="editSesStart" min="1" max="12" required></div>
-                    <div class="input-group flex-1"><label>Tiết Kết thúc</label><input type="number" id="editSesEnd" min="1" max="12" required></div>
-                </div>
+                <div class="flex-row"><div class="input-group flex-1"><label>Tiết Bắt đầu</label><input type="number" id="editSesStart" min="1" max="12" required></div><div class="input-group flex-1"><label>Tiết Kết thúc</label><input type="number" id="editSesEnd" min="1" max="12" required></div></div>
                 <button type="submit" class="btn-primary">Cập nhật Buổi học</button>
             </form>
         </div>
     </div>
     
+    <script src="js/db.js"></script>
     <script src="js/admin.js"></script>
 </body>
 </html>
