@@ -1,13 +1,9 @@
 document.getElementById('loginForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
-    const email = document.getElementById('email').value; 
-    const pass = document.getElementById('password').value; 
-    const role = document.querySelector('input[name="role"]:checked').value;
-    const users = getDB('Users'); const user = users.find(u => u.email === email && u.password === pass && u.role === role);
+    let data = Object.fromEntries(new FormData(e.target));
+    const user = getDB('Users').find(u => u.email === data.email && u.password === data.password && u.role === data.role);
     if (user) { 
         localStorage.setItem('currentUser', JSON.stringify(user)); 
-        if (role === 'admin') window.location.href = 'admin-dashboard.html';
-        else if (role === 'teacher') window.location.href = 'teacher-dashboard.html';
-        else window.location.href = 'student-dashboard.html';
-    } else { alert("Sai thông tin đăng nhập hoặc phân quyền!"); }
+        window.location.href = data.role === 'admin' ? 'admin-dashboard.html' : data.role === 'teacher' ? 'teacher-dashboard.html' : 'student-dashboard.html';
+    } else alert("Sai thông tin đăng nhập hoặc phân quyền!"); 
 });

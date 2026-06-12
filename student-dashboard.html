@@ -11,9 +11,9 @@
                 <div class="logo mb-20"><h2 class="mb-10">Edu Report</h2><p class="text-muted text-sm">Sinh viên</p></div>
                 <nav class="menu">
                     <ul>
-                        <li class="menu-item active" id="menu-study-tab" data-target="study-tab"><a href="#">Học tập & Thống kê</a></li>
-                        <li class="menu-item" id="menu-register-tab" data-target="register-tab"><a href="#">Đăng ký tín chỉ</a></li>
-                        <li class="menu-item" id="menu-profile-tab" data-target="profile-tab"><a href="#">Thông tin cá nhân</a></li>
+                        <li class="menu-item active" data-target="study-tab"><a href="#">Học tập & Thống kê</a></li>
+                        <li class="menu-item" data-target="register-tab"><a href="#">Đăng ký tín chỉ</a></li>
+                        <li class="menu-item" data-target="profile-tab"><a href="#">Thông tin cá nhân</a></li>
                     </ul>
                 </nav>
             </div>
@@ -24,11 +24,11 @@
             <section id="study-tab" class="tab-section" style="display:block;">
                 <header class="top-header"><h1>Kết quả Học tập</h1></header>
                 
-                <div class="grid-container mb-20" style="grid-template-columns: repeat(4, 1fr);">
-                    <div class="border-box"><p class="stat-title">Môn học</p><h2 class="stat-number" id="stat-total-subjects">0</h2></div>
-                    <div class="border-box"><p class="stat-title">Điểm TB</p><h2 class="stat-number" id="stat-gpa">0.0</h2></div>
-                    <div class="border-box"><p class="stat-title">Xuất sắc</p><h2 class="stat-number" id="stat-excellent">0</h2></div>
-                    <div class="border-box"><p class="stat-title">Chuyên cần</p><h2 class="stat-number" id="stat-attendance-rate">0%</h2></div>
+                <div class="grid-container mb-20">
+                    <div class="border-box flex-col"><span class="text-muted text-sm font-bold">MÔN HỌC</span><h2 class="text-xl mt-10" id="stat-total-subjects">0</h2></div>
+                    <div class="border-box flex-col"><span class="text-muted text-sm font-bold">ĐIỂM TB</span><h2 class="text-xl mt-10" id="stat-gpa">0.0</h2></div>
+                    <div class="border-box flex-col"><span class="text-muted text-sm font-bold">XUẤT SẮC</span><h2 class="text-xl mt-10" id="stat-excellent">0</h2></div>
+                    <div class="border-box flex-col"><span class="text-muted text-sm font-bold">CHUYÊN CẦN</span><h2 class="text-xl mt-10" id="stat-attendance-rate">0%</h2></div>
                 </div>
 
                 <div class="sub-menu">
@@ -38,10 +38,9 @@
                 
                 <div id="stu-sub-schedule" class="stu-sub-tab">
                     <div id="weeklyScheduleContainer" class="grid-container mb-20"></div>
-                    <!-- Lưới Fix biểu đồ nằm ngang cân đối -->
                     <div class="charts-grid">
-                        <div class="border-box"><h3 class="text-center">Thống kê chuyên cần</h3><div class="chart-wrapper"><canvas id="attendanceChart"></canvas></div></div>
-                        <div class="border-box"><h3 class="text-center">Phân loại thang điểm</h3><div class="chart-wrapper"><canvas id="gradePieChart"></canvas></div></div>
+                        <div class="border-box flex-col"><h3 class="text-center">Thống kê chuyên cần</h3><div class="chart-wrapper"><canvas id="attendanceChart"></canvas></div></div>
+                        <div class="border-box flex-col"><h3 class="text-center">Phân loại thang điểm</h3><div class="chart-wrapper"><canvas id="gradePieChart"></canvas></div></div>
                     </div>
                 </div>
                 
@@ -50,18 +49,18 @@
 
             <section id="register-tab" class="tab-section">
                 <header class="top-header"><h1>Đăng ký Tín chỉ Trực tiếp</h1></header>
-                <div class="border-box"><div id="registrationContainer"></div></div>
+                <div class="border-box flex-col"><div id="registrationContainer"></div></div>
             </section>
 
             <section id="profile-tab" class="tab-section">
                 <header class="top-header"><h1>Hồ sơ Sinh viên</h1></header>
-                <div class="border-box mb-20">
+                <div class="border-box flex-col mb-20">
                     <div class="flex-row align-center">
-                        <div class="avatar-placeholder">SV</div>
+                        <div class="bg-gray text-white font-bold flex-row justify-center align-center rounded-full" style="width: 90px; height: 90px; font-size: 20px;">SV</div>
                         <div>
                             <p><strong>Mã sinh viên:</strong> <span id="profId"></span></p>
                             <p><strong>Họ và tên:</strong> <span class="user-name"></span></p>
-                            <p><strong>Email:</strong> <span class="user-email text-muted"></span></p>
+                            <p><strong>Email học viện:</strong> <span class="user-email text-muted"></span></p>
                             <p><strong>Ngày sinh:</strong> <span id="profDob"></span></p>
                             <p><strong>SĐT liên hệ:</strong> <span id="profPhone"></span></p>
                             <button id="btnShowEditProfile" class="action-btn mt-10">Thay đổi thông tin</button>
@@ -69,12 +68,12 @@
                     </div>
                 </div>
                 
-                <div id="editProfileFormContainer" style="display:none; max-width:400px;" class="border-box">
-                    <h3 class="mb-20">Cập nhật thông tin cá nhân</h3>
+                <div id="editProfileFormContainer" style="display:none; max-width:400px;" class="border-box flex-col">
+                    <h3 class="mb-20">Cập nhật thông tin</h3>
                     <form id="editProfileForm">
-                        <div class="input-group"><label>Mật khẩu mới</label><input type="password" id="editPass" placeholder="Bỏ trống nếu giữ nguyên"></div>
-                        <div class="input-group"><label>SĐT Liên hệ</label><input type="text" id="editPhone"></div>
-                        <div class="input-group"><label>Ngày sinh</label><input type="date" id="editDob"></div>
+                        <div class="input-group"><label>Mật khẩu mới</label><input type="password" name="password" placeholder="Bỏ trống nếu giữ nguyên"></div>
+                        <div class="input-group"><label>SĐT Liên hệ</label><input type="text" id="editPhone" name="phone"></div>
+                        <div class="input-group"><label>Ngày sinh</label><input type="date" id="editDob" name="dob"></div>
                         <div class="flex-row mt-20"><button type="submit" class="btn-primary">Lưu</button><button type="button" id="btnCancelEditProfile" class="action-btn">Hủy</button></div>
                     </form>
                 </div>
@@ -82,7 +81,6 @@
         </main>
     </div>
 
-    <!-- Modal Chi tiết Buổi học -->
     <div id="stuClassModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="this.closest('.modal').style.display='none'">&times;</span>
@@ -92,7 +90,6 @@
         </div>
     </div>
     
-    <script src="js/db.js"></script>
-    <script src="js/student.js"></script>
+    <script src="js/db.js"></script><script src="js/student.js"></script>
 </body>
 </html>
