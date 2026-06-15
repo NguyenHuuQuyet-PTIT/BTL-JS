@@ -44,15 +44,15 @@
                 </div>
 
                 <div class="sub-menu">
-                    <button onclick="switchTeacherMainTab('progress')" id="tc-main-progress-btn" class="sub-btn tc-main-btn active">Tiến trình lớp học</button>
-                    <button onclick="switchTeacherMainTab('schedule')" id="tc-main-schedule-btn" class="sub-btn tc-main-btn">Lịch giảng dạy tuần</button>
+                    <button data-target="tc-main-progress" class="sub-btn active">Tiến trình lớp học</button>
+                    <button data-target="tc-main-schedule" class="sub-btn">Lịch giảng dạy tuần</button>
                 </div>
                 
-                <div id="tc-main-progress" class="tc-main-tab">
-                    <div id="teacherClassList" class="grid-container"></div>
+                <div id="tc-main-progress" class="sub-tab-content">
+                    <div id="teacherClassList" class="border-box"></div>
                 </div>
                 
-                <div id="tc-main-schedule" class="tc-main-tab" style="display:none;">
+                <div id="tc-main-schedule" class="sub-tab-content" style="display:none;">
                     <div id="tcWeeklyScheduleContainer" class="grid-container"></div>
                 </div>
             </section>
@@ -64,11 +64,11 @@
                 </header>
                 
                 <div class="sub-menu">
-                    <button onclick="switchTeacherSubTab('grades')" id="tc-tab-grades-btn" class="sub-btn tc-sub-btn active">Nhập Điểm số</button>
-                    <button onclick="switchTeacherSubTab('sessions')" id="tc-tab-sessions-btn" class="sub-btn tc-sub-btn">Danh sách Buổi học</button>
+                    <button data-target="tc-sub-grades" class="sub-btn active" onclick="teacherRenderGrades()">Nhập Điểm số</button>
+                    <button data-target="tc-sub-sessions" class="sub-btn" onclick="teacherRenderSessions()">Danh sách Buổi học</button>
                 </div>
                 
-                <div id="tc-sub-grades" class="border-box tc-sub-tab">
+                <div id="tc-sub-grades" class="border-box sub-tab-content">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -84,7 +84,7 @@
                     </table>
                 </div>
                 
-                <div id="tc-sub-sessions" class="border-box tc-sub-tab" style="display:none;">
+                <div id="tc-sub-sessions" class="border-box sub-tab-content" style="display:none;">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -107,25 +107,25 @@
                     <div class="flex-row align-center">
                         <div class="bg-gray text-white font-bold flex-row justify-center align-center rounded-full" style="width: 90px; height: 90px; font-size: 20px;">GV</div>
                         <div>
-                            <p><strong>Mã giảng viên:</strong> <span id="tcProfId"></span></p>
+                            <p><strong>Mã định danh:</strong> <span id="profId"></span></p>
                             <p><strong>Họ và tên:</strong> <span class="user-name"></span></p>
                             <p><strong>Email:</strong> <span class="user-email"></span></p>
-                            <p><strong>Ngày sinh:</strong> <span id="tcProfDob"></span></p>
-                            <p><strong>SĐT:</strong> <span id="tcProfPhone"></span></p>
-                            <button id="btnShowEditProfileTc" class="action-btn mt-10">Chỉnh sửa hồ sơ</button>
+                            <p><strong>Ngày sinh:</strong> <span id="profDob"></span></p>
+                            <p><strong>Số điện thoại:</strong> <span id="profPhone"></span></p>
+                            <button id="btnShowEditProfile" class="action-btn mt-10">Thay đổi thông tin</button>
                         </div>
                     </div>
                 </div>
                 
-                <div id="editProfileFormContainerTc" style="display:none; max-width:400px;" class="border-box">
+                <div id="editProfileFormContainer" style="display:none; max-width:400px;" class="border-box">
                     <h3 class="mb-20">Cập nhật thông tin</h3>
-                    <form id="editProfileFormTc">
+                    <form id="editProfileForm">
                         <div class="input-group">
                             <label>Mật khẩu mới</label>
                             <input type="password" name="password" placeholder="Bỏ trống nếu giữ nguyên">
                         </div>
                         <div class="input-group">
-                            <label>SĐT</label>
+                            <label>Số điện thoại</label>
                             <input type="text" name="phone">
                         </div>
                         <div class="input-group">
@@ -134,7 +134,7 @@
                         </div>
                         <div class="flex-row mt-20">
                             <button type="submit" class="btn-primary">Lưu</button>
-                            <button type="button" id="btnCancelEditProfileTc" class="action-btn">Hủy</button>
+                            <button type="button" id="btnCancelEditProfile" class="action-btn">Hủy</button>
                         </div>
                     </form>
                 </div>
@@ -144,7 +144,7 @@
 
     <div id="tcAttModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="this.closest('.modal').style.display='none'">&times;</span>
+            <span class="close-modal">&times;</span>
             <h2 id="tcAttSessionInfo" class="mb-20"></h2>
             <table class="data-table">
                 <thead>

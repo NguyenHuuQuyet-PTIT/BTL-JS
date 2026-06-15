@@ -1,4 +1,4 @@
-let currentClassId = null;
+// KHÔNG CÒN SỬ DỤNG BIẾN TOÀN CỤC!
 
 // ==========================================
 // 1. KHỞI TẠO & HIỂN THỊ
@@ -15,7 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
         el.textContent = user.name;
     });
     
-    initSidebarNavigation();
+    // Khởi tạo các sự kiện UI dùng chung (Tab, Modal) từ db.js
+    initCommonUI();
+    
     setupAdminFormOptions();
     renderAdminClassList();
 });
@@ -44,17 +46,17 @@ function setupAdminFormOptions() {
     let createForm = document.forms['adminCreateClassForm'];
     let editForm = document.forms['editClassForm'];
     
+    let subOptions = subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    let teacherOptions = users.filter(u => u.role === 'teacher').map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    
     if (createForm && createForm.elements['subId']) {
-        let subOptions = subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-        let teacherOptions = users.filter(u => u.role === 'teacher').map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-        
         createForm.elements['subId'].innerHTML = subOptions;
         createForm.elements['teacherId'].innerHTML = teacherOptions;
-        
-        if (editForm && editForm.elements['subId']) {
-            editForm.elements['subId'].innerHTML = subOptions;
-            editForm.elements['teacherId'].innerHTML = teacherOptions;
-        }
+    }
+    
+    if (editForm && editForm.elements['subId']) {
+        editForm.elements['subId'].innerHTML = subOptions;
+        editForm.elements['teacherId'].innerHTML = teacherOptions;
     }
     
     let usersListTable = document.getElementById('adminUsersList');
@@ -97,11 +99,9 @@ if (createClassForm) {
         let subjects = getDB('Subjects');
         let subjectAbbr = subjects.find(s => s.id === subId)?.abbr || 'CLASS';
         
-        // Sinh số ngẫu nhiên 4 chữ số chống trùng ID
-        let randomNumber = Math.floor(1000 + Math.random() * 9000);
-        let newClassId = subjectAbbr + '_' + randomNumber;
-        
+        let newClassId = subjectAbbr + '_' + Math.floor(1000 + Math.random() * 9000);
         let generatedDates = generateDates(startDate, endDate, dayOfWeek);
+        
         let newSessions = generatedDates.map(dateStr => {
             return { 
                 id: 'SES_' + Date.now() + Math.random(), 
@@ -112,24 +112,14 @@ if (createClassForm) {
             };
         });
         
-        let newClassObj = {
-            id: newClassId,
-            subjectId: subId, 
-            teacherId: teacherId, 
-            room: room, 
-            dayOfWeek: dayOfWeek,
-            startDate: startDate, 
-            endDate: endDate, 
-            startPeriod: startPeriod, 
-            endPeriod: endPeriod, 
-            enrolledStudents: [], 
-            sessions: newSessions, 
-            grades: {}
-        };
+        classes.push({
+            id: newClassId, subjectId: subId, teacherId: teacherId, room: room, 
+            dayOfWeek: dayOfWeek, startDate: startDate, endDate: endDate, 
+            startPeriod: startPeriod, endPeriod: endPeriod, 
+            enrolledStudents: [], sessions: newSessions, grades: {}
+        });
         
-        classes.push(newClassObj);
         setDB('Classes', classes); 
-        
         alert("Tạo lớp học thành công!"); 
         this.reset(); 
         renderAdminClassList();
@@ -143,29 +133,35 @@ function renderAdminClassList() {
     let container = document.getElementById('adminClassList'); 
     
     if (!container) return;
+    let htmlResult = '';
     
-    let htmlContent = classes.map(c => {
-        let subName = subjects.find(s => s.id === c.subjectId)?.name || 'Unknown';
-        let tcName = users.find(u => u.id === c.teacherId)?.name || 'Unknown';
+    subjects.forEach(sub => {
+        let classesOfSubject = classes.filter(c => c.subjectId === sub.id); 
+        if (classesOfSubject.length === 0) return;
+        
+        htmlResult += `<h3 class="border-bottom mt-20 mb-10">${sub.name}</h3>`;
 
-        return `
-            <div class="border-box border-left-dark cursor-pointer" onclick="adminOpenClass('${c.id}')">
-                <h3 class="text-primary">${subName} - ${c.id}</h3>
-                <p class="mt-10 text-sm text-muted">GV: <span class="font-bold">${tcName}</span> | P.${c.room}</p>
-                <p class="text-sm mt-10">Lịch: ${c.dayOfWeek} (${getPeriodText(c.startPeriod, c.endPeriod)})</p>
-                
-                <div class="mt-auto pt-10">
-                    <p class="font-bold mb-10 text-success">${c.enrolledStudents.length} SV | ${c.sessions.length} Buổi</p>
+        classesOfSubject.forEach(c => {
+            let tcName = users.find(u => u.id === c.teacherId)?.name || 'Unknown';
+            
+            htmlResult += `
+                <div class="border-box border-left-dark flex-row align-center justify-between mb-10 cursor-pointer" onclick="adminOpenClass('${c.id}', '${sub.name}')">
+                    <div>
+                        <h4 class="mb-10 text-primary">Mã lớp: ${c.id}</h4>
+                        <p class="text-sm text-muted mb-10">GV: <span class="font-bold">${tcName}</span> | P.${c.room}</p>
+                        <p class="text-sm">Lịch: ${c.dayOfWeek} (${getPeriodText(c.startPeriod, c.endPeriod)})</p>
+                    </div>
                     <div class="flex-row">
-                        <button class="action-btn flex-1" onclick="event.stopPropagation(); adminEditClass('${c.id}')">Sửa</button>
-                        <button class="btn-danger flex-1" onclick="event.stopPropagation(); adminDeleteClass('${c.id}')">Xóa</button>
+                        <p class="font-bold text-success mt-10">${c.enrolledStudents.length} SV | ${c.sessions.length} Buổi</p>
+                        <button class="action-btn" onclick="event.stopPropagation(); adminEditClass('${c.id}')">Sửa</button>
+                        <button class="btn-danger" onclick="event.stopPropagation(); adminDeleteClass('${c.id}')">Xóa</button>
                     </div>
                 </div>
-            </div>
-        `;
-    }).join('');
+            `;
+        }); 
+    }); 
     
-    container.innerHTML = htmlContent || '<p>Chưa có lớp học nào.</p>';
+    container.innerHTML = htmlResult || '<p style="padding: 20px;">Chưa có lớp học nào.</p>';
 }
 
 function adminEditClass(id) {
@@ -173,7 +169,6 @@ function adminEditClass(id) {
     if (!targetClass) return;
     
     let form = document.forms['editClassForm'];
-    
     form.elements['classId'].value = targetClass.id;
     form.elements['subId'].value = targetClass.subjectId;
     form.elements['teacherId'].value = targetClass.teacherId;
@@ -184,7 +179,7 @@ function adminEditClass(id) {
     form.elements['startPeriod'].value = targetClass.startPeriod;
     form.elements['endPeriod'].value = targetClass.endPeriod;
     
-    document.getElementById('admEditClassModal').style.display = 'block';
+    openModal('admEditClassModal');
 }
 
 let editClassForm = document.getElementById('editClassForm');
@@ -194,46 +189,45 @@ if (editClassForm) {
         
         let formData = new FormData(e.target);
         let classId = formData.get('classId');
-        let subId = formData.get('subId');
-        let teacherId = formData.get('teacherId');
-        let room = formData.get('room');
-        let dayOfWeek = formData.get('dayOfWeek');
-        let startDate = formData.get('startDate');
-        let endDate = formData.get('endDate');
         let startPeriod = parseInt(formData.get('startPeriod'));
         let endPeriod = parseInt(formData.get('endPeriod'));
 
         if (startPeriod > endPeriod) {
-            alert("Tiết học không hợp lệ!");
-            return;
+            alert("Tiết học không hợp lệ!"); return;
         }
 
+        let classes = getDB('Classes');
+        let targetClass = classes.find(c => c.id === classId);
+        
+        let isTimeChanged = targetClass.dayOfWeek !== formData.get('dayOfWeek') || 
+                            targetClass.startDate !== formData.get('startDate') || 
+                            targetClass.endDate !== formData.get('endDate') || 
+                            targetClass.startPeriod !== startPeriod || 
+                            targetClass.endPeriod !== endPeriod;
+
         updateClassDB(classId, function(c) {
-            c.subjectId = subId; 
-            c.teacherId = teacherId; 
-            c.room = room; 
-            c.dayOfWeek = dayOfWeek; 
-            c.startDate = startDate; 
-            c.endDate = endDate; 
-            c.startPeriod = startPeriod; 
-            c.endPeriod = endPeriod;
+            c.subjectId = formData.get('subId'); 
+            c.teacherId = formData.get('teacherId'); 
+            c.room = formData.get('room'); 
             
-            if (confirm("Làm mới lịch học theo ngày và tiết học mới?")) {
-                let generatedDates = generateDates(c.startDate, c.endDate, c.dayOfWeek);
-                c.sessions = generatedDates.map(dateStr => {
-                    return { 
-                        id: 'SES_' + Date.now() + Math.random(), 
-                        date: dateStr, 
-                        startPeriod: startPeriod, 
-                        endPeriod: endPeriod, 
-                        attendance: {} 
-                    };
-                });
+            if (isTimeChanged) {
+                if (confirm("Bạn đã thay đổi thời gian học. Việc làm mới lịch sẽ xóa toàn bộ dữ liệu điểm danh cũ. Tiếp tục?")) {
+                    c.dayOfWeek = formData.get('dayOfWeek'); 
+                    c.startDate = formData.get('startDate'); 
+                    c.endDate = formData.get('endDate'); 
+                    c.startPeriod = startPeriod; 
+                    c.endPeriod = endPeriod;
+                    
+                    let generatedDates = generateDates(c.startDate, c.endDate, c.dayOfWeek);
+                    c.sessions = generatedDates.map(dateStr => {
+                        return { id: 'SES_' + Date.now() + Math.random(), date: dateStr, startPeriod: startPeriod, endPeriod: endPeriod, attendance: {} };
+                    });
+                }
             }
         });
         
         alert("Đã cập nhật thông tin lớp học!"); 
-        this.closest('.modal').style.display = 'none'; 
+        closeModal('admEditClassModal'); 
         this.reset(); 
         renderAdminClassList();
     });
@@ -247,32 +241,27 @@ function adminDeleteClass(id) {
     } 
 }
 
-function adminOpenClass(id) {
-    currentClassId = id; 
-    document.getElementById('admDetailClassName').textContent = "Quản lý chi tiết: " + id;
+// ==========================================
+// 3. QUẢN LÝ CHI TIẾT LỚP HỌC (SINH VIÊN & BUỔI HỌC)
+// ==========================================
+function adminOpenClass(classId, className) {
+    // LƯU classId VÀO DATASET CỦA THẺ CHA THAY VÌ DÙNG BIẾN TOÀN CỤC
+    document.getElementById('admin-class-detail').dataset.classId = classId; 
+    document.getElementById('admDetailClassName').textContent = `Quản lý chi tiết: ${className} (${classId})`;
     
-    document.querySelectorAll('.tab-section').forEach(t => {
-        t.style.display = 'none';
-    });
-    
+    document.querySelectorAll('.tab-section').forEach(t => { t.style.display = 'none'; });
     document.getElementById('admin-class-detail').style.display = 'block';
-    switchAdmSubTab('students');
-}
-
-// ==========================================
-// 3. CHI TIẾT LỚP (SINH VIÊN & BUỔI HỌC)
-// ==========================================
-function switchAdmSubTab(tabName) {
-    switchSubTab('adm-tab-' + tabName + '-btn', 'adm-sub-' + tabName, '.adm-sub-btn', '.adm-sub-tab');
-    if (tabName === 'students') {
-        adminRenderStudents();
-    } else {
-        adminRenderSessions();
-    }
+    
+    // Tự động kích hoạt tab Sinh viên khi vừa mở lớp
+    let tabBtn = document.querySelector('[data-target="adm-sub-students"]');
+    if (tabBtn) tabBtn.click();
+    adminRenderStudents();
 }
 
 function adminRenderStudents() {
-    let currentClassObj = getDB('Classes').find(c => c.id === currentClassId);
+    // Lấy lại classId từ dataset
+    let classId = document.getElementById('admin-class-detail').dataset.classId;
+    let currentClassObj = getDB('Classes').find(c => c.id === classId);
     let users = getDB('Users');
     
     let htmlContent = currentClassObj.enrolledStudents.map(studentId => {
@@ -293,16 +282,16 @@ function adminRenderStudents() {
 }
 
 function adminAddStudentToClass() {
+    let classId = document.getElementById('admin-class-detail').dataset.classId;
     let studentIdInput = document.getElementById('addStuId').value.trim();
     let users = getDB('Users');
     
     let isStudentValid = users.some(u => u.id === studentIdInput && u.role === 'student');
     if (!isStudentValid) {
-        alert("Mã Sinh viên không tồn tại trong hệ thống!");
-        return;
+        alert("Mã Sinh viên không tồn tại trong hệ thống!"); return;
     }
     
-    updateClassDB(currentClassId, function(c) { 
+    updateClassDB(classId, function(c) { 
         if (c.enrolledStudents.includes(studentIdInput)) {
             alert("Sinh viên này đã có trong lớp!");
         } else {
@@ -315,14 +304,16 @@ function adminAddStudentToClass() {
 }
 
 function adminRemoveStudent(studentId) { 
-    updateClassDB(currentClassId, function(c) {
+    let classId = document.getElementById('admin-class-detail').dataset.classId;
+    updateClassDB(classId, function(c) {
         c.enrolledStudents = c.enrolledStudents.filter(id => id !== studentId);
     });
     adminRenderStudents(); 
 }
 
 function adminRenderSessions() {
-    let currentClassObj = getDB('Classes').find(c => c.id === currentClassId);
+    let classId = document.getElementById('admin-class-detail').dataset.classId;
+    let currentClassObj = getDB('Classes').find(c => c.id === classId);
     
     let htmlContent = currentClassObj.sessions.map(s => {
         return `
@@ -344,21 +335,20 @@ let createSessionForm = document.getElementById('adminCreateSessionForm');
 if (createSessionForm) {
     createSessionForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        let classId = document.getElementById('admin-class-detail').dataset.classId;
         
         let formData = new FormData(e.target);
-        let sesDate = formData.get('sesDate');
         let startPeriod = parseInt(formData.get('sesStart'));
         let endPeriod = parseInt(formData.get('sesEnd'));
         
         if (startPeriod > endPeriod) {
-            alert("Tiết học không hợp lệ!");
-            return;
+            alert("Tiết học không hợp lệ!"); return;
         }
         
-        updateClassDB(currentClassId, function(c) { 
+        updateClassDB(classId, function(c) { 
             c.sessions.push({ 
                 id: 'SES_' + Date.now(), 
-                date: sesDate, 
+                date: formData.get('sesDate'), 
                 startPeriod: startPeriod, 
                 endPeriod: endPeriod, 
                 attendance: {} 
@@ -371,7 +361,8 @@ if (createSessionForm) {
 }
 
 function adminOpenEditSession(sessionId) {
-    let currentClassObj = getDB('Classes').find(c => c.id === currentClassId);
+    let classId = document.getElementById('admin-class-detail').dataset.classId;
+    let currentClassObj = getDB('Classes').find(c => c.id === classId);
     let targetSession = currentClassObj.sessions.find(s => s.id === sessionId);
     
     let form = document.forms['editSessionForm'];
@@ -380,43 +371,43 @@ function adminOpenEditSession(sessionId) {
     form.elements['sesStart'].value = targetSession.startPeriod;
     form.elements['sesEnd'].value = targetSession.endPeriod;
     
-    document.getElementById('admEditSessionModal').style.display = 'block';
+    openModal('admEditSessionModal');
 }
 
 let editSessionForm = document.getElementById('editSessionForm');
 if (editSessionForm) {
     editSessionForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        let classId = document.getElementById('admin-class-detail').dataset.classId;
         
         let formData = new FormData(e.target);
         let sessionId = formData.get('sessionId');
-        let sesDate = formData.get('sesDate');
         let startPeriod = parseInt(formData.get('sesStart'));
         let endPeriod = parseInt(formData.get('sesEnd'));
         
         if (startPeriod > endPeriod) {
-            alert("Tiết học không hợp lệ!");
-            return;
+            alert("Tiết học không hợp lệ!"); return;
         }
         
-        updateClassDB(currentClassId, function(c) { 
+        updateClassDB(classId, function(c) { 
             let targetSession = c.sessions.find(s => s.id === sessionId); 
             if (targetSession) {
-                targetSession.date = sesDate;
+                targetSession.date = formData.get('sesDate');
                 targetSession.startPeriod = startPeriod;
                 targetSession.endPeriod = endPeriod;
             } 
         });
         
         alert("Cập nhật buổi học thành công!"); 
-        this.closest('.modal').style.display = 'none'; 
+        closeModal('admEditSessionModal'); 
         this.reset(); 
         adminRenderSessions();
     });
 }
 
 function adminRemoveSession(sessionId) { 
-    updateClassDB(currentClassId, function(c) {
+    let classId = document.getElementById('admin-class-detail').dataset.classId;
+    updateClassDB(classId, function(c) {
         c.sessions = c.sessions.filter(s => s.id !== sessionId);
     });
     adminRenderSessions(); 

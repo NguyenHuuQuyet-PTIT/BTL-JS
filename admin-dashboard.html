@@ -85,7 +85,7 @@
                     </form>
                 </div>
                 
-                <div id="adminClassList" class="grid-container"></div>
+                <div id="adminClassList" class="border-box"></div>
             </section>
 
             <section id="admin-class-detail" class="tab-section">
@@ -95,24 +95,28 @@
                 </header>
                 
                 <div class="sub-menu">
-                    <button onclick="switchAdmSubTab('students')" id="adm-tab-students-btn" class="sub-btn adm-sub-btn active">Sinh viên</button>
-                    <button onclick="switchAdmSubTab('sessions')" id="adm-tab-sessions-btn" class="sub-btn adm-sub-btn">Buổi học</button>
+                    <button data-target="adm-sub-students" class="sub-btn active" onclick="adminRenderStudents()">Sinh viên</button>
+                    <button data-target="adm-sub-sessions" class="sub-btn" onclick="adminRenderSessions()">Buổi học</button>
                 </div>
                 
-                <div id="adm-sub-students" class="adm-sub-tab">
+                <div id="adm-sub-students" class="sub-tab-content">
                     <div class="flex-row mb-20">
                         <input type="text" id="addStuId" placeholder="Mã Sinh viên" style="padding:10px; border:1px solid #ccc; width: 250px; border-radius: 4px;">
                         <button class="btn-primary" style="width:auto;" onclick="adminAddStudentToClass()">+ Thêm Sinh viên</button>
                     </div>
                     <table class="data-table">
                         <thead>
-                            <tr><th>Mã SV</th><th>Họ tên</th><th>Hành động</th></tr>
+                            <tr>
+                                <th>Mã SV</th>
+                                <th>Họ tên</th>
+                                <th>Hành động</th>
+                            </tr>
                         </thead>
                         <tbody id="admStudentList"></tbody>
                     </table>
                 </div>
                 
-                <div id="adm-sub-sessions" class="adm-sub-tab border-box" style="display:none;">
+                <div id="adm-sub-sessions" class="sub-tab-content border-box" style="display:none;">
                     <div class="mb-20">
                         <h3 class="mb-10">Tạo buổi học bổ sung</h3>
                         <form id="adminCreateSessionForm" class="flex-row align-end">
@@ -135,7 +139,11 @@
                     </div>
                     <table class="data-table">
                         <thead>
-                            <tr><th>Ngày học</th><th>Tiết học</th><th>Hành động</th></tr>
+                            <tr>
+                                <th>Ngày học</th>
+                                <th>Tiết học</th>
+                                <th>Hành động</th>
+                            </tr>
                         </thead>
                         <tbody id="admSessionList"></tbody>
                     </table>
@@ -148,7 +156,12 @@
                 </header>
                 <table class="data-table">
                     <thead>
-                        <tr><th>ID</th><th>Vai trò</th><th>Họ tên</th><th>Email</th></tr>
+                        <tr>
+                            <th>ID</th>
+                            <th>Vai trò</th>
+                            <th>Họ tên</th>
+                            <th>Email</th>
+                        </tr>
                     </thead>
                     <tbody id="adminUsersList"></tbody>
                 </table>
@@ -158,7 +171,7 @@
 
     <div id="admEditClassModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="this.closest('.modal').style.display='none'; document.getElementById('editClassForm').reset();">&times;</span>
+            <span class="close-modal" onclick="document.getElementById('editClassForm').reset();">&times;</span>
             <h2 class="mb-20">Sửa Thông Tin Lớp Học</h2>
             
             <form id="editClassForm">
@@ -218,7 +231,7 @@
     
     <div id="admEditSessionModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="this.closest('.modal').style.display='none'; document.getElementById('editSessionForm').reset();">&times;</span>
+            <span class="close-modal" onclick="document.getElementById('editSessionForm').reset();">&times;</span>
             <h2 class="mb-20">Sửa Buổi Học</h2>
             
             <form id="editSessionForm">

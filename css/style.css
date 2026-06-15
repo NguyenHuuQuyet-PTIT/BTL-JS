@@ -54,7 +54,9 @@ body {
 .rounded-full { border-radius: 50%; }
 
 /* Khắc phục khoảng trắng thừa ở môn học đầu tiên */
-#registrationContainer h3:first-child { 
+#registrationContainer h3:first-child,
+#adminClassList h3:first-child,
+#teacherClassList h3:first-child { 
     margin-top: 0; 
 }
 

@@ -54,11 +54,12 @@
                 </div>
 
                 <div class="sub-menu">
-                    <button onclick="switchStuStudyTab('schedule')" id="stu-tab-schedule-btn" class="sub-btn stu-sub-btn active">Lịch học tuần</button>
-                    <button onclick="switchStuStudyTab('progress')" id="stu-tab-progress-btn" class="sub-btn stu-sub-btn">Tiến trình lớp học</button>
+                    <button data-target="stu-sub-schedule" class="sub-btn active">Lịch học tuần</button>
+                    <button data-target="stu-sub-progress" class="sub-btn">Tiến trình lớp học</button>
+                    <button data-target="stu-sub-grades" class="sub-btn">Bảng điểm tổng hợp</button>
                 </div>
                 
-                <div id="stu-sub-schedule" class="stu-sub-tab">
+                <div id="stu-sub-schedule" class="sub-tab-content">
                     <div id="weeklyScheduleContainer" class="grid-container mb-20"></div>
                     <div class="charts-grid">
                         <div class="border-box">
@@ -72,8 +73,25 @@
                     </div>
                 </div>
                 
-                <div id="stu-sub-progress" class="stu-sub-tab" style="display:none;">
-                    <div id="enrolledClassesCards" class="grid-container"></div>
+                <div id="stu-sub-progress" class="sub-tab-content" style="display:none;">
+                    <div id="enrolledClassesCards"></div>
+                </div>
+
+                <div id="stu-sub-grades" class="sub-tab-content border-box" style="display:none;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Môn học</th>
+                                <th>Giảng viên</th>
+                                <th>Điểm CC (20%)</th>
+                                <th>Điểm GK (30%)</th>
+                                <th>Điểm CK (50%)</th>
+                                <th>Điểm TB</th>
+                                <th>Xếp loại</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stuGradesTableBody"></tbody>
+                    </table>
                 </div>
             </section>
 
@@ -81,9 +99,7 @@
                 <header class="top-header">
                     <h1>Đăng ký Tín chỉ Trực tiếp</h1>
                 </header>
-                <div class="border-box">
-                    <div id="registrationContainer"></div>
-                </div>
+                <div id="registrationContainer" class="border-box"></div>
             </section>
 
             <section id="profile-tab" class="tab-section">
@@ -95,11 +111,11 @@
                     <div class="flex-row align-center">
                         <div class="bg-gray text-white font-bold flex-row justify-center align-center rounded-full" style="width: 90px; height: 90px; font-size: 20px;">SV</div>
                         <div>
-                            <p><strong>Mã sinh viên:</strong> <span id="profId"></span></p>
+                            <p><strong>Mã định danh:</strong> <span id="profId"></span></p>
                             <p><strong>Họ và tên:</strong> <span class="user-name"></span></p>
-                            <p><strong>Email học viện:</strong> <span class="user-email"></span></p>
+                            <p><strong>Email:</strong> <span class="user-email"></span></p>
                             <p><strong>Ngày sinh:</strong> <span id="profDob"></span></p>
-                            <p><strong>SĐT liên hệ:</strong> <span id="profPhone"></span></p>
+                            <p><strong>Số điện thoại:</strong> <span id="profPhone"></span></p>
                             <button id="btnShowEditProfile" class="action-btn mt-10">Thay đổi thông tin</button>
                         </div>
                     </div>
@@ -113,7 +129,7 @@
                             <input type="password" name="password" placeholder="Bỏ trống nếu giữ nguyên">
                         </div>
                         <div class="input-group">
-                            <label>SĐT Liên hệ</label>
+                            <label>Số điện thoại</label>
                             <input type="text" name="phone">
                         </div>
                         <div class="input-group">
@@ -132,7 +148,7 @@
 
     <div id="stuClassModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="this.closest('.modal').style.display='none'">&times;</span>
+            <span class="close-modal">&times;</span>
             <h2 id="modalClassName" class="text-primary"></h2>
             <p id="modalTeacherName" class="text-muted mb-20"></p>
             <table class="data-table">

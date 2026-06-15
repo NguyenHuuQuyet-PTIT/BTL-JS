@@ -1,8 +1,7 @@
-let currentClassId = null;
-let currentSessionId = null;
+// KHÔNG CÒN BIẾN TOÀN CỤC currentClassId và currentSessionId NỮA!
 
 // ==========================================
-// 1. KHỞI TẠO & HỒ SƠ
+// 1. KHỞI TẠO
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     let user = getDB('currentUser');
@@ -15,64 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.user-name').forEach(el => el.textContent = user.name);
     document.querySelectorAll('.user-email').forEach(el => el.textContent = user.email);
     
-    initSidebarNavigation();
-
-    document.getElementById('tcProfId').textContent = user.id; 
-    
-    // Format hiển thị ngày sinh DD/MM/YYYY
-    let displayDob = user.dob ? user.dob.split('-').reverse().join('/') : 'Chưa cập nhật';
-    document.getElementById('tcProfDob').textContent = displayDob;
-    document.getElementById('tcProfPhone').textContent = user.phone || 'Chưa cập nhật';
-    
-    // Mở Form Sửa Hồ Sơ
-    let btnShowEdit = document.getElementById('btnShowEditProfileTc');
-    if (btnShowEdit) {
-        btnShowEdit.addEventListener('click', () => { 
-            let form = document.forms['editProfileFormTc'];
-            form.elements['phone'].value = user.phone || ''; 
-            form.elements['dob'].value = user.dob || ''; 
-            document.getElementById('editProfileFormContainerTc').style.display = 'block'; 
-        });
-    }
-    
-    // Đóng Form Sửa
-    let btnCancelEdit = document.getElementById('btnCancelEditProfileTc');
-    if (btnCancelEdit) {
-        btnCancelEdit.addEventListener('click', () => { 
-            document.getElementById('editProfileFormContainerTc').style.display = 'none'; 
-        });
-    }
-
-    // Xử lý Lưu Hồ sơ
-    let editForm = document.getElementById('editProfileFormTc');
-    if (editForm) {
-        editForm.addEventListener('submit', function(e) {
-            e.preventDefault(); 
-            
-            let formData = new FormData(e.target);
-            let newPassword = formData.get('password').trim();
-            let newPhone = formData.get('phone').trim();
-            let newDob = formData.get('dob');
-            
-            if (newPassword !== '') {
-                user.password = newPassword;
-            }
-            user.phone = newPhone;
-            user.dob = newDob;
-            
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            
-            let users = getDB('Users');
-            let userIndex = users.findIndex(u => u.id === user.id); 
-            if (userIndex > -1) {
-                users[userIndex] = user; 
-            }
-            
-            setDB('Users', users);
-            alert("Cập nhật thông tin cá nhân thành công!"); 
-            window.location.reload();
-        });
-    }
+    initCommonUI();
+    initProfileUI(user);
 
     renderTeacherDashboard(user);
 });
@@ -89,37 +32,38 @@ function renderTeacherDashboard(user) {
     
     let totalStudentsCount = 0;
     let htmlCards = '';
-    
-    let weeklySchedule = { 
-        'Thứ 2': [], 'Thứ 3': [], 'Thứ 4': [], 'Thứ 5': [], 'Thứ 6': [], 'Thứ 7': [], 'Chủ nhật': [] 
-    };
+    let weeklySchedule = { 'Thứ 2': [], 'Thứ 3': [], 'Thứ 4': [], 'Thứ 5': [], 'Thứ 6': [], 'Thứ 7': [], 'Chủ nhật': [] };
 
     myClasses.forEach(c => {
         let subName = subjects.find(s => s.id === c.subjectId)?.name || 'Unknown'; 
         totalStudentsCount += c.enrolledStudents.length;
-        
-        let timeString = getPeriodText(c.startPeriod, c.endPeriod);
-        weeklySchedule[c.dayOfWeek].push({ 
-            subName: subName, 
-            room: c.room, 
-            timeStr: timeString 
-        });
-        
-        let totalSessions = c.sessions.length;
-        let passedSessions = c.sessions.filter(s => s.date <= todayStr).length;
-        let completionPercent = totalSessions > 0 ? Math.round((passedSessions / totalSessions) * 100) : 0;
+        weeklySchedule[c.dayOfWeek].push({ subName: subName, room: c.room, timeStr: getPeriodText(c.startPeriod, c.endPeriod) });
+    });
 
-        htmlCards += `
-            <div class="border-box border-left-dark cursor-pointer" onclick="teacherOpenClass('${c.id}', '${subName}')">
-                <h3 class="text-primary">${subName} - ${c.id}</h3>
-                <p class="mt-10 text-sm text-muted">Phòng học: <span class="font-bold">${c.room}</span></p>
-                <div class="progress-bg">
-                    <div class="progress-fill" style="width:${completionPercent}%;"></div>
+    subjects.forEach(sub => {
+        let classesOfSubject = myClasses.filter(c => c.subjectId === sub.id);
+        if (classesOfSubject.length === 0) return;
+        
+        htmlCards += `<h3 class="border-bottom mt-20 mb-10">${sub.name}</h3>`;
+
+        classesOfSubject.forEach(c => {
+            let totalSessions = c.sessions.length;
+            let passedSessions = c.sessions.filter(s => s.date <= todayStr).length;
+            let completionPercent = totalSessions > 0 ? Math.round((passedSessions / totalSessions) * 100) : 0;
+
+            htmlCards += `
+                <div class="border-box border-left-dark flex-row align-center justify-between mb-10 cursor-pointer" onclick="teacherOpenClass('${c.id}', '${sub.name}')">
+                    <div class="flex-1">
+                        <h4 class="mb-10 text-primary">Mã lớp: ${c.id}</h4>
+                        <p class="text-sm text-muted mb-10">Phòng học: <span class="font-bold">${c.room}</span> | <span class="text-success font-bold">${c.enrolledStudents.length} SV tham gia</span></p>
+                        <div class="progress-bg mt-10">
+                            <div class="progress-fill" style="width:${completionPercent}%;"></div>
+                        </div>
+                        <span class="text-sm font-bold text-muted">Tiến độ: ${completionPercent}% (${passedSessions}/${totalSessions} buổi)</span>
+                    </div>
                 </div>
-                <span class="text-sm font-bold text-muted">Tiến độ: ${completionPercent}% (${passedSessions}/${totalSessions} buổi)</span>
-                <p class="font-bold text-success mt-auto pt-10">${c.enrolledStudents.length} SV tham gia</p>
-            </div>
-        `;
+            `;
+        });
     });
 
     let htmlWeekly = Object.keys(weeklySchedule).filter(day => weeklySchedule[day].length > 0).map(day => {
@@ -129,74 +73,51 @@ function renderTeacherDashboard(user) {
                 <span class="text-sm text-muted">${item.timeStr} | P.${item.room}</span>
             </div>
         `).join('');
-        
-        return `
-            <div class="border-box">
-                <h3 class="border-bottom">${day}</h3>
-                ${itemsHtml}
-            </div>
-        `;
+        return `<div class="border-box"><h3 class="border-bottom">${day}</h3>${itemsHtml}</div>`;
     }).join('');
 
-    let elTotalClasses = document.getElementById('tc-total-classes');
-    if (elTotalClasses) elTotalClasses.textContent = myClasses.length;
-    
-    let elTotalStudents = document.getElementById('tc-total-students');
-    if (elTotalStudents) elTotalStudents.textContent = totalStudentsCount;
-    
-    let elClassList = document.getElementById('teacherClassList');
-    if (elClassList) elClassList.innerHTML = htmlCards || '<p>Chưa có lớp phân công giảng dạy.</p>';
-    
-    let elSchedule = document.getElementById('tcWeeklyScheduleContainer');
-    if (elSchedule) elSchedule.innerHTML = htmlWeekly || '<p>Trống lịch.</p>';
-}
-
-function switchTeacherMainTab(tabName) {
-    switchSubTab('tc-main-' + tabName + '-btn', 'tc-main-' + tabName, '.tc-main-btn', '.tc-main-tab');
-}
-
-function switchTeacherSubTab(tabName) { 
-    switchSubTab('tc-tab-' + tabName + '-btn', 'tc-sub-' + tabName, '.tc-sub-btn', '.tc-sub-tab'); 
-    if (tabName === 'grades') {
-        teacherRenderGrades(); 
-    } else {
-        teacherRenderSessions(); 
-    }
+    document.getElementById('tc-total-classes').textContent = myClasses.length;
+    document.getElementById('tc-total-students').textContent = totalStudentsCount;
+    document.getElementById('teacherClassList').innerHTML = htmlCards || '<p style="padding: 20px;">Chưa có lớp phân công.</p>';
+    document.getElementById('tcWeeklyScheduleContainer').innerHTML = htmlWeekly || '<p>Trống lịch.</p>';
 }
 
 function teacherOpenClass(classId, className) {
-    currentClassId = classId; 
+    // LƯU classId VÀO DATASET CỦA THẺ CHA THAY VÌ DÙNG BIẾN TOÀN CỤC
+    document.getElementById('class-detail-tab').dataset.classId = classId; 
     document.getElementById('teacherDetailClassName').textContent = `${className} (${classId})`;
     
-    document.querySelectorAll('.tab-section').forEach(t => {
-        t.style.display = 'none';
-    });
-    
+    document.querySelectorAll('.tab-section').forEach(t => t.style.display = 'none');
     document.getElementById('class-detail-tab').style.display = 'block';
-    switchTeacherSubTab('grades');
+    
+    // Tự động kích hoạt tab "Nhập điểm số"
+    document.querySelector('[data-target="tc-sub-grades"]').click();
+    teacherRenderGrades();
 }
 
 // ==========================================
 // 3. QUẢN LÝ ĐIỂM SỐ & ĐIỂM DANH
 // ==========================================
 function teacherRenderGrades() {
-    let currentClassObj = getDB('Classes').find(cls => cls.id === currentClassId);
+    // Lấy lại classId từ Dataset của HTML
+    let classId = document.getElementById('class-detail-tab').dataset.classId;
+    let currentClassObj = getDB('Classes').find(cls => cls.id === classId);
     let users = getDB('Users');
     
     let htmlContent = currentClassObj.enrolledStudents.map(studentId => {
         let stu = users.find(u => u.id === studentId); 
         if (!stu) return '';
         
-        let grades = currentClassObj.grades[studentId] || { cc: 0, gk: 0, ck: 0 };
-        let avgScore = (grades.cc * 0.2 + grades.gk * 0.3 + grades.ck * 0.5).toFixed(1);
+        let grades = currentClassObj.grades[studentId] || { cc: null, gk: null, ck: null };
+        let avgScore = calcAvgScore(grades.cc, grades.gk, grades.ck);
         
         return `
             <tr>
                 <td><strong class="text-primary">${stu.name}</strong><br><span class="text-muted text-sm">${stu.id}</span></td>
-                <td><input type="number" id="cc_${stu.id}" value="${grades.cc}" style="width:60px; padding:5px;"></td>
-                <td><input type="number" id="gk_${stu.id}" value="${grades.gk}" style="width:60px; padding:5px;"></td>
-                <td><input type="number" id="ck_${stu.id}" value="${grades.ck}" style="width:60px; padding:5px;"></td>
-                <td class="text-success font-bold">${avgScore}</td>
+                <td><input type="number" id="cc_${stu.id}" value="${grades.cc !== null ? grades.cc : ''}" min="0" max="10" step="0.1" style="width:70px; padding:5px;"></td>
+                <td><input type="number" id="gk_${stu.id}" value="${grades.gk !== null ? grades.gk : ''}" min="0" max="10" step="0.1" style="width:70px; padding:5px;"></td>
+                <td><input type="number" id="ck_${stu.id}" value="${grades.ck !== null ? grades.ck : ''}" min="0" max="10" step="0.1" style="width:70px; padding:5px;"></td>
+                <td class="text-success font-bold">${avgScore !== null ? avgScore : "--"}</td>
                 <td><button class="action-btn" onclick="teacherSaveGrade('${stu.id}')">Lưu</button></td>
             </tr>
         `;
@@ -206,20 +127,26 @@ function teacherRenderGrades() {
 }
 
 function teacherSaveGrade(studentId) {
-    updateClassDB(currentClassId, function(c) {
-        if (!c.grades[studentId]) {
-            c.grades[studentId] = {};
-        }
-        
-        let valCC = parseFloat(document.getElementById('cc_' + studentId).value) || 0;
-        let valGK = parseFloat(document.getElementById('gk_' + studentId).value) || 0;
-        let valCK = parseFloat(document.getElementById('ck_' + studentId).value) || 0;
-        
-        c.grades[studentId] = { 
-            cc: valCC, 
-            gk: valGK, 
-            ck: valCK 
-        };
+    let classId = document.getElementById('class-detail-tab').dataset.classId;
+    
+    let ccInp = document.getElementById('cc_' + studentId).value;
+    let gkInp = document.getElementById('gk_' + studentId).value;
+    let ckInp = document.getElementById('ck_' + studentId).value;
+    
+    let valCC = ccInp === "" ? null : parseFloat(ccInp);
+    let valGK = gkInp === "" ? null : parseFloat(gkInp);
+    let valCK = ckInp === "" ? null : parseFloat(ckInp);
+    
+    if ((valCC !== null && valCC < 0) || (valGK !== null && valGK < 0) || (valCK !== null && valCK < 0)) {
+        alert("Điểm số thành phần không được nhỏ hơn 0!"); return;
+    }
+    if ((valCC !== null && valCC > 10) || (valGK !== null && valGK > 10) || (valCK !== null && valCK > 10)) {
+        alert("Điểm số không được lớn hơn 10!"); return;
+    }
+    
+    updateClassDB(classId, function(c) {
+        if (!c.grades[studentId]) c.grades[studentId] = {};
+        c.grades[studentId] = { cc: valCC, gk: valGK, ck: valCK };
     });
     
     alert("Đã lưu điểm thành công!"); 
@@ -227,7 +154,8 @@ function teacherSaveGrade(studentId) {
 }
 
 function teacherRenderSessions() {
-    let currentClassObj = getDB('Classes').find(cls => cls.id === currentClassId);
+    let classId = document.getElementById('class-detail-tab').dataset.classId;
+    let currentClassObj = getDB('Classes').find(cls => cls.id === classId);
     
     let htmlContent = currentClassObj.sessions.map(s => {
         let isAttended = Object.keys(s.attendance).length > 0;
@@ -244,43 +172,33 @@ function teacherRenderSessions() {
         `;
     }).join('');
     
-    document.getElementById('tcSessionList').innerHTML = htmlContent || '<tr><td colspan="3">Chưa có lịch học được thiết lập.</td></tr>';
+    document.getElementById('tcSessionList').innerHTML = htmlContent || '<tr><td colspan="3">Chưa có lịch học.</td></tr>';
 }
 
 function teacherOpenAtt(sessionId) {
-    currentSessionId = sessionId; 
-    let currentClassObj = getDB('Classes').find(cls => cls.id === currentClassId);
+    let classId = document.getElementById('class-detail-tab').dataset.classId;
+    let currentClassObj = getDB('Classes').find(cls => cls.id === classId);
     let targetSession = currentClassObj.sessions.find(x => x.id === sessionId);
     let users = getDB('Users');
     
-    document.getElementById('tcAttSessionInfo').textContent = `Bảng Điểm Danh (Ngày ${targetSession.date})`;
+    // Lưu lại Session ID vào Modal
+    document.getElementById('tcAttModal').dataset.sessionId = sessionId;
+    document.getElementById('tcAttSessionInfo').textContent = `Điểm Danh (Ngày ${targetSession.date})`;
     
     let htmlContent = currentClassObj.enrolledStudents.map(studentId => {
         let stu = users.find(u => u.id === studentId); 
         if (!stu) return ''; 
         
         let status = targetSession.attendance[studentId] || '';
-        let isPresent = status === 'present' ? 'checked' : '';
-        let isLate = status === 'late' ? 'checked' : '';
-        let isAbsent = status === 'absent' ? 'checked' : '';
         
         return `
             <tr>
-                <td>
-                    <strong class="text-primary">${stu.name}</strong><br>
-                    <span class="text-muted text-sm">${stu.id}</span>
-                </td>
+                <td><strong class="text-primary">${stu.name}</strong><br><span class="text-muted text-sm">${stu.id}</span></td>
                 <td>
                     <div class="radio-group">
-                        <label class="text-success font-bold">
-                            <input type="radio" name="att_${stu.id}" value="present" ${isPresent}> Có mặt
-                        </label>
-                        <label class="text-warning font-bold">
-                            <input type="radio" name="att_${stu.id}" value="late" ${isLate}> Muộn
-                        </label>
-                        <label class="text-danger font-bold">
-                            <input type="radio" name="att_${stu.id}" value="absent" ${isAbsent}> Vắng
-                        </label>
+                        <label class="text-success font-bold"><input type="radio" name="att_${stu.id}" value="present" ${status === 'present' ? 'checked' : ''}> Có mặt</label>
+                        <label class="text-warning font-bold"><input type="radio" name="att_${stu.id}" value="late" ${status === 'late' ? 'checked' : ''}> Muộn</label>
+                        <label class="text-danger font-bold"><input type="radio" name="att_${stu.id}" value="absent" ${status === 'absent' ? 'checked' : ''}> Vắng</label>
                     </div>
                 </td>
             </tr>
@@ -288,22 +206,22 @@ function teacherOpenAtt(sessionId) {
     }).join('');
     
     document.getElementById('tcAttendanceList').innerHTML = htmlContent || '<tr><td colspan="2">Lớp học trống</td></tr>';
-    document.getElementById('tcAttModal').style.display = 'block';
+    openModal('tcAttModal');
 }
 
 function teacherSaveAttendance() {
-    updateClassDB(currentClassId, function(c) {
-        let targetSession = c.sessions.find(x => x.id === currentSessionId);
-        
+    let classId = document.getElementById('class-detail-tab').dataset.classId;
+    let sessionId = document.getElementById('tcAttModal').dataset.sessionId;
+
+    updateClassDB(classId, function(c) {
+        let targetSession = c.sessions.find(x => x.id === sessionId);
         c.enrolledStudents.forEach(studentId => { 
             let radioInput = document.querySelector(`input[name="att_${studentId}"]:checked`); 
-            if (radioInput) {
-                targetSession.attendance[studentId] = radioInput.value; 
-            }
+            if (radioInput) targetSession.attendance[studentId] = radioInput.value; 
         });
     });
     
     alert("Đã chốt danh sách điểm danh!"); 
-    document.getElementById('tcAttModal').style.display = 'none'; 
+    closeModal('tcAttModal');
     teacherRenderSessions();
 }

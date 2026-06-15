@@ -20,7 +20,7 @@ function updateClassDB(classId, updateFunction) {
 }
 
 // ==========================================
-// 2. TIỆN ÍCH DÙNG CHUNG
+// 2. TIỆN ÍCH DÙNG CHUNG (HELPER)
 // ==========================================
 const PERIOD_TIMES = { 
     1: "07:00-07:50", 2: "08:00-08:50", 3: "09:00-09:50", 4: "10:00-10:50", 
@@ -34,35 +34,26 @@ function getPeriodText(start, end) {
     return `Tiết ${start}-${end} (${startTime} - ${endTime})`;
 }
 
-function switchSubTab(btnId, tabId, btnClassGroup, tabClassGroup) {
-    document.querySelectorAll(btnClassGroup).forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    document.querySelectorAll(tabClassGroup).forEach(tab => {
-        tab.style.display = 'none';
-    });
-    
-    document.getElementById(btnId).classList.add('active');
-    document.getElementById(tabId).style.display = 'block';
+// Tách logic tính điểm để code HTML gọn gàng hơn
+function calcAvgScore(cc, gk, ck) {
+    if (cc === null || cc === "" || gk === null || gk === "" || ck === null || ck === "") return null;
+    return parseFloat((parseFloat(cc) * 0.2 + parseFloat(gk) * 0.3 + parseFloat(ck) * 0.5).toFixed(1));
 }
 
-function initSidebarNavigation() {
-    document.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            e.preventDefault(); 
-            
-            document.querySelectorAll('.menu-item').forEach(menu => {
-                menu.classList.remove('active');
-            });
-            this.classList.add('active');
-            
-            document.querySelectorAll('.tab-section').forEach(tab => {
-                tab.style.display = 'none';
-            });
-            document.getElementById(this.getAttribute('data-target')).style.display = 'block';
-        });
-    });
+function getRankHtml(score) {
+    if (score === null) return '<span class="text-muted">--</span>';
+    if (score >= 9.0) return '<span style="color: #9C27B0; font-weight: bold;">Xuất sắc</span>';
+    if (score >= 8.0) return '<span class="text-primary font-bold">Giỏi</span>';
+    if (score >= 6.5) return '<span class="text-success font-bold">Khá</span>';
+    if (score >= 5.0) return '<span class="text-warning font-bold">Trung bình</span>';
+    return '<span class="text-danger font-bold">Yếu</span>';
+}
+
+function getAttendanceHtml(status) {
+    if (status === 'present') return '<span class="text-success font-bold">Có mặt</span>';
+    if (status === 'late') return '<span class="text-warning font-bold">Đi muộn</span>';
+    if (status === 'absent') return '<span class="text-danger font-bold">Vắng mặt</span>';
+    return '<span class="text-muted">Chưa điểm danh</span>';
 }
 
 function handleLogout() {
@@ -71,15 +62,111 @@ function handleLogout() {
 }
 
 // ==========================================
-// 3. KHỞI TẠO DỮ LIỆU BAN ĐẦU
+// 3. QUẢN LÝ GIAO DIỆN CHUNG (MODAL, TAB, HỒ SƠ)
+// ==========================================
+function openModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function initCommonUI() {
+    // 1. Đóng Modal tự động
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.closest('.modal').style.display = 'none';
+        });
+    });
+
+    // 2. Chuyển Tab Sidebar
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault(); 
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            this.classList.add('active');
+            
+            document.querySelectorAll('.tab-section').forEach(tab => tab.style.display = 'none');
+            document.getElementById(this.getAttribute('data-target')).style.display = 'block';
+        });
+    });
+
+    // 3. Chuyển Tab Phụ (Sub-menu) - Dùng chung cho cả 3 trang
+    document.querySelectorAll('.sub-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            let parentMenu = this.closest('.sub-menu');
+            parentMenu.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            let container = parentMenu.parentElement;
+            container.querySelectorAll('.sub-tab-content').forEach(tab => tab.style.display = 'none');
+            
+            document.getElementById(this.getAttribute('data-target')).style.display = 'block';
+        });
+    });
+}
+
+// Dùng chung cho cả Sinh viên và Giáo viên
+function initProfileUI(user) {
+    let profContainer = document.getElementById('profile-tab');
+    if (!profContainer) return; // Nếu trang Admin thì bỏ qua
+
+    document.getElementById('profId').textContent = user.id; 
+    document.getElementById('profDob').textContent = user.dob ? user.dob.split('-').reverse().join('/') : 'Chưa cập nhật';
+    document.getElementById('profPhone').textContent = user.phone || 'Chưa cập nhật';
+    
+    let formContainer = document.getElementById('editProfileFormContainer');
+    let editForm = document.getElementById('editProfileForm');
+
+    document.getElementById('btnShowEditProfile').addEventListener('click', () => { 
+        editForm.elements['phone'].value = user.phone || ''; 
+        editForm.elements['dob'].value = user.dob || ''; 
+        formContainer.style.display = 'block'; 
+    });
+    
+    document.getElementById('btnCancelEditProfile').addEventListener('click', () => { 
+        formContainer.style.display = 'none'; 
+    });
+
+    editForm.addEventListener('submit', function(e) {
+        e.preventDefault(); 
+        let formData = new FormData(e.target);
+        let newPassword = formData.get('password').trim();
+        
+        if (newPassword !== '') user.password = newPassword;
+        user.phone = formData.get('phone').trim();
+        user.dob = formData.get('dob');
+        
+        localStorage.setItem('currentUser', JSON.stringify(user)); 
+        
+        let users = getDB('Users');
+        let userIndex = users.findIndex(u => u.id === user.id); 
+        if (userIndex > -1) {
+            users[userIndex] = user; 
+            setDB('Users', users);
+        }
+        
+        alert("Cập nhật thông tin cá nhân thành công!"); 
+        
+        // Cập nhật giao diện không cần load lại trang
+        document.getElementById('profDob').textContent = user.dob.split('-').reverse().join('/');
+        document.getElementById('profPhone').textContent = user.phone;
+        formContainer.style.display = 'none';
+        editForm.reset();
+    });
+}
+
+// ==========================================
+// 4. KHỞI TẠO DỮ LIỆU BAN ĐẦU
 // ==========================================
 function initDB() {
     let users = getDB('Users');
     
     if (!users.some(u => u.role === 'admin') && users.length > 0) {
-    localStorage.removeItem('Users');
-    localStorage.removeItem('Subjects');
-    localStorage.removeItem('Classes');
+        localStorage.removeItem('Users');
+        localStorage.removeItem('Subjects');
+        localStorage.removeItem('Classes');
     }
 
     if (!localStorage.getItem('Users')) {
@@ -112,11 +199,14 @@ function initDB() {
                 endDate: '2026-07-31', 
                 startPeriod: 1, 
                 endPeriod: 3, 
-                enrolledStudents: ['SV202501'], 
+                enrolledStudents: ['SV202501', 'SV202502'], 
                 sessions: [ 
-                    { id: 'S1', date: '2026-06-01', startPeriod: 1, endPeriod: 3, attendance: {'SV202501': 'present'} } 
+                    { id: 'S1', date: '2026-06-01', startPeriod: 1, endPeriod: 3, attendance: {'SV202501': 'present', 'SV202502': 'late'} } 
                 ], 
-                grades: { 'SV202501': { cc: 10, gk: 8, ck: 9 } } 
+                grades: { 
+                    'SV202501': { cc: 10, gk: 8, ck: 9 },
+                    'SV202502': { cc: null, gk: null, ck: null } 
+                } 
             }
         ]);
     }
