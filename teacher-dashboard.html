@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher Dashboard - Edu Report</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="logo mb-20">
+                    <h2 class="mb-10">Edu Report</h2>
+                    <p class="text-muted text-sm">Giáo viên</p>
+                </div>
+                <nav class="menu">
+                    <ul>
+                        <li class="menu-item active" data-target="class-tab"><a href="#">Lớp học phụ trách</a></li>
+                        <li class="menu-item" data-target="teacher-notifs">
+                            <a href="#" class="flex-row justify-between align-center">
+                                <span>Thông báo</span> <span id="tcNotifBadge"></span>
+                            </a>
+                        </li>
+                        <li class="menu-item" data-target="profile-tab"><a href="#">Thông tin cá nhân</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <div>
+                <p class="user-name font-bold"></p>
+                <button onclick="handleLogout()" class="btn-logout">Đăng xuất</button>
+            </div>
+        </aside>
+        
+        <main class="main-content">
+            <section id="class-tab" class="tab-section" style="display:block;">
+                <header class="top-header">
+                    <h1>Quản lý giảng dạy</h1>
+                </header>
+                
+                <div class="grid-container mb-20">
+                    <div class="border-box">
+                        <span class="text-muted text-sm font-bold">LỚP PHỤ TRÁCH</span>
+                        <h2 class="text-xl mt-10" id="tc-total-classes">0</h2>
+                    </div>
+                    <div class="border-box">
+                        <span class="text-muted text-sm font-bold">TỔNG SỐ SINH VIÊN</span>
+                        <h2 class="text-xl mt-10" id="tc-total-students">0</h2>
+                    </div>
+                </div>
+
+                <div class="sub-menu">
+                    <button data-target="tc-main-progress" class="sub-btn active">Tiến trình lớp học</button>
+                    <button data-target="tc-main-schedule" class="sub-btn">Lịch giảng dạy tuần</button>
+                </div>
+                
+                <div id="tc-main-progress" class="sub-tab-content">
+                    <div id="teacherClassList" class="border-box"></div>
+                </div>
+                
+                <div id="tc-main-schedule" class="sub-tab-content" style="display:none;">
+                    <div id="tcWeeklyScheduleContainer" class="grid-container"></div>
+                </div>
+            </section>
+            
+            <section id="class-detail-tab" class="tab-section">
+                <button onclick="document.querySelector('[data-target=\'class-tab\']').click();" class="action-btn mb-20">← Quay lại danh sách lớp</button>
+                <header class="top-header">
+                    <h1 id="teacherDetailClassName"></h1>
+                </header>
+                
+                <div class="sub-menu">
+                    <button data-target="tc-sub-grades" class="sub-btn active" onclick="teacherRenderGrades()">Nhập Điểm số</button>
+                    <button data-target="tc-sub-sessions" class="sub-btn" onclick="teacherRenderSessions()">Danh sách Buổi học</button>
+                </div>
+                
+                <div id="tc-sub-grades" class="border-box sub-tab-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Sinh viên</th>
+                                <th>Chuyên Cần (20%)</th>
+                                <th>Giữa Kỳ (30%)</th>
+                                <th>Cuối Kỳ (50%)</th>
+                                <th>Điểm TB</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tcStudentGrades"></tbody>
+                    </table>
+                </div>
+                
+                <div id="tc-sub-sessions" class="border-box sub-tab-content" style="display:none;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày học</th>
+                                <th>Tiết học</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tcSessionList"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="teacher-notifs" class="tab-section">
+                <header class="top-header">
+                    <h1>Quản lý Thông Báo</h1>
+                </header>
+                
+                <div class="sub-menu">
+                    <button data-target="tc-sub-inbox" class="sub-btn active" onclick="renderTeacherInbox()">Hộp thư đến</button>
+                    <button data-target="tc-sub-sent" class="sub-btn" onclick="renderTeacherSent()">Gửi & Lịch sử</button>
+                </div>
+                
+                <div id="tc-sub-inbox" class="sub-tab-content">
+                    <div class="flex-row justify-end mb-20 border-bottom" style="padding-bottom: 15px;">
+                        <button class="action-btn" onclick="markAllTeacherNotifsRead()">Đánh dấu tất cả đã đọc</button>
+                    </div>
+                    <div id="teacherInboxList"></div>
+                </div>
+                
+                <div id="tc-sub-sent" class="sub-tab-content border-box" style="display:none;">
+                    <form id="teacherNotifForm">
+                        <div class="input-group">
+                            <label>Gửi đến Lớp</label>
+                            <select name="target" id="tcNotifTarget" required></select>
+                        </div>
+                        <div class="input-group">
+                            <label>Nội dung thông báo</label>
+                            <textarea name="text" rows="5" required placeholder="Nhập nội dung thông báo..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: auto;">Gửi Thông báo</button>
+                    </form>
+                    
+                    <h3 class="border-bottom mb-10 mt-20">Lịch sử Đã gửi</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Lớp nhận</th>
+                                <th>Nội dung</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacherSentNotifs"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="profile-tab" class="tab-section">
+                <header class="top-header">
+                    <h1>Hồ sơ Giảng viên</h1>
+                </header>
+                
+                <div class="border-box mb-20">
+                    <div class="flex-row align-center">
+                        <div class="bg-gray text-white font-bold flex-row justify-center align-center rounded-full" style="width: 90px; height: 90px; font-size: 20px;">GV</div>
+                        <div>
+                            <p><strong>Mã định danh:</strong> <span id="profId"></span></p>
+                            <p><strong>Họ và tên:</strong> <span class="user-name"></span></p>
+                            <p><strong>Email:</strong> <span class="user-email"></span></p>
+                            <p><strong>Ngày sinh:</strong> <span id="profDob"></span></p>
+                            <p><strong>Số điện thoại:</strong> <span id="profPhone"></span></p>
+                            <button id="btnShowEditProfile" class="action-btn mt-10">Thay đổi thông tin</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="editProfileFormContainer" style="display:none; max-width:400px;" class="border-box">
+                    <h3 class="mb-20">Cập nhật thông tin</h3>
+                    <form id="editProfileForm">
+                        <div class="input-group">
+                            <label>Mật khẩu mới</label>
+                            <input type="password" name="password" placeholder="Bỏ trống nếu giữ nguyên">
+                        </div>
+                        <div class="input-group">
+                            <label>Số điện thoại</label>
+                            <input type="text" name="phone">
+                        </div>
+                        <div class="input-group">
+                            <label>Ngày sinh</label>
+                            <input type="date" name="dob">
+                        </div>
+                        <div class="flex-row mt-20">
+                            <button type="submit" class="btn-primary">Lưu</button>
+                            <button type="button" id="btnCancelEditProfile" class="action-btn">Hủy</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="tcAttModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="tcAttSessionInfo" class="mb-20"></h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Sinh viên</th>
+                        <th>Trạng thái Điểm danh</th>
+                    </tr>
+                </thead>
+                <tbody id="tcAttendanceList"></tbody>
+            </table>
+            <button class="btn-primary mt-20" style="width: auto;" onclick="teacherSaveAttendance()">Chốt Bảng Điểm Danh</button>
+        </div>
+    </div>
+    
+    <div id="readNotifModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="readNotifTitle" class="text-primary mb-10"></h2>
+            <p id="readNotifDate" class="text-muted text-sm mb-20 border-bottom"></p>
+            <div id="readNotifContent" style="line-height: 1.6;"></div>
+            <div id="readNotifActions" class="flex-row mt-20"></div>
+        </div>
+    </div>
+    
+    <script src="js/db.js"></script>
+    <script src="js/teacher.js"></script>
+</body>
+</html>
