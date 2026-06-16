@@ -1,0 +1,695 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* ==========================================================================
+   1. HỆ THỐNG MÀU SẮC & BIẾN SỐ CHỦ ĐẠO (CANVA BRAND DESIGN SYSTEM)
+   ========================================================================== */
+:root {
+    /* Bảng màu đặc trưng của Canva */
+    --primary: #8b3dff;           /* Tím Canva hoàng gia */
+    --primary-hover: #7425f3;     /* Tím đậm khi hover */
+    --primary-light: #f4f0ff;     /* Tím nhạt làm nền */
+    --secondary: #00c4cc;         /* Xanh ngọc Canva (Cyan) */
+    --secondary-hover: #00b0b8;
+    --secondary-light: #e6fafb;
+    --bg-main: #f8f9fc;           /* Xám nhạt siêu sạch */
+    --bg-card: #ffffff;           /* Màu nền của các thẻ */
+    --text-main: #0e131f;         /* Chữ chính đen bóng đêm */
+    --text-muted: #5c677d;        /* Chữ nhạt xám cool */
+    --border-color: #eef1f6;      /* Viền nhạt mịn */
+    
+    /* Trạng thái hệ thống */
+    --success: #00d28a;           /* Xanh lá tươi trẻ */
+    --warning: #ff9f0a;           /* Cam hổ phách */
+    --danger: #ff453a;            /* Đỏ san hô */
+    
+    /* Bo góc và Đổ bóng tinh tế */
+    --border-radius: 12px;
+    --border-radius-lg: 24px;
+    --shadow-sm: 0 2px 8px rgba(139, 61, 255, 0.02);
+    --shadow: 0 10px 30px rgba(139, 61, 255, 0.05), 0 2px 8px rgba(0, 0, 0, 0.01);
+    --shadow-lg: 0 20px 48px rgba(139, 61, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.02);
+    
+    /* Chuyển động mượt mà */
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* ==========================================================================
+   2. THIẾT LẬP CƠ BẢN & LỚP TIỆN ÍCH (RESET & UTILITIES)
+   ========================================================================== */
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Outfit', sans-serif; 
+}
+
+body { 
+    background-color: var(--bg-main); 
+    color: var(--text-main); 
+    line-height: 1.6; 
+    -webkit-font-smoothing: antialiased;
+}
+
+.flex-row { 
+    display: flex; 
+    gap: 15px; 
+} 
+
+.flex-wrap { flex-wrap: wrap; } 
+.flex-1 { flex: 1; }
+.align-end { align-items: flex-end; } 
+.align-center { align-items: center; } 
+.justify-between { justify-content: space-between; } 
+.justify-center { justify-content: center; }
+.justify-end { justify-content: flex-end; }
+.text-center { text-align: center; }
+
+.mt-5 { margin-top: 5px; }
+.mt-10 { margin-top: 10px; } 
+.mt-20 { margin-top: 20px; } 
+.mt-auto { margin-top: auto; }
+.mb-0 { margin-bottom: 0 !important; }
+.mb-10 { margin-bottom: 10px; } 
+.mb-20 { margin-bottom: 20px; }
+.p-10 { padding: 10px; } 
+.p-20 { padding: 20px; }
+.ml-10 { margin-left: 10px; }
+
+.font-bold { font-weight: 600; } 
+.text-sm { font-size: 13px; color: var(--text-muted); } 
+.text-xl { font-size: 24px; font-weight: 700; color: var(--primary); }
+.text-success { color: var(--success) !important; } 
+.text-warning { color: var(--warning) !important; } 
+.text-danger { color: var(--danger) !important; }
+.text-muted { color: var(--text-muted); } 
+.text-primary { color: var(--primary) !important; } 
+.text-white { color: #fff; }
+.bg-light { background: var(--primary-light); } 
+.bg-gray { background: #e2e8f0; }
+
+.border-bottom { 
+    border-bottom: 1px solid var(--border-color); 
+    padding-bottom: 12px; 
+    margin-bottom: 15px;
+}
+.rounded-full { border-radius: 9999px; }
+
+/* ==========================================================================
+   3. BỐ CỤC HỆ THỐNG CHÍNH (MAIN APPLICATION LAYOUT)
+   ========================================================================== */
+.app-container { 
+    display: flex; 
+    min-height: 100vh; 
+}
+
+/* Sidebar phong cách Canva tối giản tinh tế */
+.sidebar { 
+    width: 270px; 
+    background: var(--bg-card); 
+    border-right: 1px solid var(--border-color); 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: space-between; 
+    padding: 35px 20px; 
+    position: sticky; 
+    top: 0; 
+    height: 100vh; 
+    box-shadow: var(--shadow-sm);
+}
+
+.sidebar-top {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Logo thương hiệu nổi bật */
+.logo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 15px;
+    border-left: 4px solid var(--primary);
+    margin-bottom: 35px;
+}
+
+.logo h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: -0.5px;
+}
+
+/* Khối thông tin cá nhân ở Sidebar */
+.user-info-sidebar {
+    padding: 15px;
+    background: var(--primary-light);
+    border-radius: var(--border-radius);
+    margin-top: auto;
+    border: 1px solid rgba(139, 61, 255, 0.1);
+}
+
+.user-info-sidebar .user-name {
+    font-size: 15px;
+    color: var(--primary);
+}
+
+.main-content { 
+    flex: 1; 
+    padding: 40px; 
+    overflow-y: auto; 
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Header dạng Banner Canva rực rỡ */
+.top-header { 
+    background: linear-gradient(135deg, var(--primary) 0%, #6015d0 100%); 
+    color: #fff; 
+    padding: 30px 40px; 
+    border-radius: var(--border-radius-lg); 
+    margin-bottom: 30px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.top-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    filter: blur(20px);
+}
+
+.top-header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+/* Hộp nội dung nổi (Card) */
+.border-box { 
+    background: var(--bg-card); 
+    border: 1px solid var(--border-color); 
+    border-radius: var(--border-radius-lg); 
+    padding: 24px; 
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.border-box:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+}
+
+.border-left-dark { 
+    border-left: 4px solid var(--primary); 
+}
+
+.grid-container { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+    gap: 20px; 
+    margin-bottom: 20px; 
+}
+
+.disabled { 
+    opacity: 0.6; 
+    pointer-events: none; 
+    background: #f8fafc; 
+}
+
+.cursor-pointer { 
+    cursor: pointer; 
+}
+
+.cursor-pointer:hover { 
+    border-color: var(--primary); 
+}
+
+/* ==========================================================================
+   4. NÚT BẤM HIỆN ĐẠI (PREMIUM BUTTONS & HOVERS)
+   ========================================================================== */
+.btn-primary, .btn-danger, .action-btn, .btn-logout { 
+    cursor: pointer; 
+    font-weight: 600; 
+    border-radius: var(--border-radius); 
+    text-align: center; 
+    border: 1px solid transparent; 
+    padding: 10px 24px; 
+    transition: var(--transition);
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-primary { 
+    background: linear-gradient(135deg, var(--primary) 0%, #7425f3 100%); 
+    color: #fff; 
+    width: 100%; 
+    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.15);
+} 
+
+.btn-primary:hover { 
+    background: linear-gradient(135deg, #7425f3 0%, #6015d0 100%); 
+    box-shadow: 0 6px 16px rgba(139, 61, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.btn-danger { 
+    background: var(--danger); 
+    color: #fff; 
+    padding: 8px 18px; 
+} 
+
+.btn-danger:hover { 
+    background: #e03b30; 
+    box-shadow: 0 4px 12px rgba(255, 69, 58, 0.2);
+    transform: translateY(-2px);
+}
+
+.action-btn { 
+    background: var(--primary-light); 
+    border-color: transparent; 
+    color: var(--primary); 
+    padding: 8px 18px; 
+} 
+
+.action-btn:hover { 
+    background: var(--primary); 
+    color: #fff; 
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(139, 61, 255, 0.15);
+}
+
+.btn-logout { 
+    background: #f8fafc; 
+    border: 1px solid var(--border-color); 
+    color: var(--text-muted);
+    width: 100%; 
+    text-align: center; 
+    margin-top: 15px; 
+}
+
+.btn-logout:hover {
+    background: var(--danger);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(255, 69, 58, 0.2);
+    transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   5. BIỂU MẪU, BẢNG BIỂU & BIỂU ĐỒ (FORMS & TABLES)
+   ========================================================================== */
+.input-group { 
+    margin-bottom: 20px; 
+}
+
+.input-group label { 
+    display: block; 
+    margin-bottom: 6px; 
+    font-weight: 600; 
+    font-size: 14px; 
+    color: var(--text-main); 
+}
+
+.input-group input, 
+.input-group select, 
+.input-group textarea { 
+    width: 100%; 
+    padding: 12px 16px; 
+    border: 1px solid var(--border-color); 
+    border-radius: var(--border-radius); 
+    background-color: #f8f9fa;
+    transition: var(--transition);
+    font-size: 14px;
+    color: var(--text-main);
+}
+
+.input-group input:focus, 
+.input-group select:focus, 
+.input-group textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(139, 61, 255, 0.12);
+}
+
+.input-group textarea {
+    resize: vertical;
+}
+
+.radio-group { 
+    display: flex; 
+    gap: 20px; 
+    align-items: center; 
+}
+
+/* Bảng dữ liệu thiết kế phẳng hiện đại */
+.data-table { 
+    width: 100%; 
+    border-collapse: separate; 
+    border-spacing: 0;
+    margin-top: 15px; 
+    background: var(--bg-card); 
+    border-radius: var(--border-radius); 
+    border: 1px solid var(--border-color); 
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.data-table th, .data-table td { 
+    padding: 16px 20px; 
+    text-align: left; 
+    border-bottom: 1px solid var(--border-color); 
+    font-size: 14px; 
+}
+
+.data-table th { 
+    background: #f8f9fa; 
+    font-weight: 700; 
+    color: var(--text-main);
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tbody tr {
+    transition: var(--transition);
+}
+
+.data-table tbody tr:hover {
+    background-color: var(--primary-light);
+}
+
+.charts-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 20px; 
+    margin-bottom: 20px; 
+}
+
+.chart-wrapper { 
+    height: 270px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    margin-top: 15px; 
+}
+
+canvas { 
+    max-height: 100%; 
+    max-width: 100%; 
+}
+
+/* ==========================================================================
+   6. THANH ĐIỀU HƯỚNG & MENU PHÂN CHIA CHUYÊN NGHIỆP
+   ========================================================================== */
+.menu ul { list-style: none; } 
+.menu li { margin-bottom: 6px; }
+
+.menu a { 
+    text-decoration: none; 
+    color: var(--text-muted); 
+    font-weight: 500; 
+    display: flex; 
+    align-items: center;
+    padding: 12px 18px; 
+    border-radius: var(--border-radius); 
+    transition: var(--transition);
+}
+
+.menu li.active a, .menu a:hover { 
+    background: linear-gradient(90deg, var(--primary-light) 0%, rgba(244, 240, 255, 0.2) 100%); 
+    color: var(--primary); 
+    font-weight: 600;
+}
+
+.menu li.active {
+    border-left: 4px solid var(--primary);
+    margin-left: -20px;
+    padding-left: 16px;
+}
+
+.tab-section { display: none; }
+
+.sub-menu { 
+    display: flex; 
+    gap: 20px; 
+    margin-bottom: 25px; 
+    border-bottom: 2px solid var(--border-color); 
+    padding-bottom: 5px; 
+}
+
+.sub-menu button { 
+    background: none; 
+    border: none; 
+    font-size: 15px; 
+    font-weight: 600; 
+    color: var(--text-muted); 
+    cursor: pointer; 
+    padding-bottom: 12px; 
+    position: relative; 
+    transition: var(--transition);
+}
+
+.sub-menu button.active { 
+    color: var(--primary); 
+}
+
+.sub-menu button.active::after { 
+    content: ''; 
+    position: absolute; 
+    bottom: -2px; 
+    left: 0; 
+    right: 0; 
+    height: 3px; 
+    background: var(--primary); 
+    border-radius: 99px;
+}
+
+.progress-bg { 
+    background: #e2e8f0; 
+    height: 8px; 
+    border-radius: 4px; 
+    overflow: hidden; 
+    margin: 10px 0; 
+}
+
+.progress-fill { 
+    background: linear-gradient(90deg, var(--success) 0%, #34d399 100%); 
+    height: 100%; 
+    transition: width 0.3s; 
+}
+
+/* ==========================================================================
+   7. MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ (CANVA GRADIENT GLASSMORPHISM)
+   ========================================================================== */
+.auth-page { 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    min-height: 100vh; 
+    padding: 20px;
+    /* Nền Gradient mờ ảo Canva */
+    background: radial-gradient(circle at 10% 10%, #edd3ff 0%, transparent 30%), 
+                radial-gradient(circle at 90% 90%, #cbfafe 0%, transparent 35%), 
+                linear-gradient(135deg, #f3f6ff 0%, #e8f0fe 100%);
+    position: relative;
+}
+
+.auth-box { 
+    background: rgba(255, 255, 255, 0.85); 
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    padding: 30px 40px 40px 40px; 
+    border-radius: var(--border-radius-lg); 
+    border: 1px solid rgba(255, 255, 255, 0.5); 
+    width: 100%;
+    max-width: 440px; 
+    box-shadow: 0 24px 60px rgba(139, 61, 255, 0.1), 0 8px 16px rgba(0, 0, 0, 0.02);
+    transition: max-width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.auth-box.register-mode {
+    max-width: 720px;
+}
+
+.auth-box h2 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: -0.5px;
+}
+
+.role-toggle { 
+    display: flex; 
+    background: rgba(15, 23, 42, 0.05); 
+    border-radius: var(--border-radius); 
+    margin-bottom: 15px; 
+    padding: 4px; 
+}
+
+.role-toggle input { display: none; }
+.role-toggle label { 
+    flex: 1; 
+    text-align: center; 
+    padding: 8px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    border-radius: 8px; 
+    font-size: 13px; 
+    color: var(--text-muted); 
+    transition: var(--transition);
+}
+
+.role-toggle input:checked + label { 
+    background: var(--primary); 
+    color: #fff; 
+    box-shadow: 0 2px 6px rgba(139, 61, 255, 0.2);
+}
+
+.auth-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.auth-tab-btn {
+    flex: 1;
+    text-align: center;
+    background: none;
+    border: none;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    position: relative;
+    transition: var(--transition);
+}
+
+.auth-tab-btn.active {
+    color: var(--primary);
+}
+
+.auth-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 20%;
+    right: 20%;
+    height: 3px;
+    background-color: var(--primary);
+    border-radius: 99px;
+}
+
+/* Các trường input thu gọn chuyên dụng của Auth */
+.auth-box .input-group {
+    margin-bottom: 12px;
+}
+
+.auth-box .input-group label {
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.auth-box .input-group input {
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+/* Lưới 2 cột cho form Đăng ký */
+.grid-2-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+@media (max-width: 768px) {
+    .grid-2-col {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .auth-box.register-mode {
+        max-width: 440px;
+        padding: 20px;
+    }
+}
+
+/* ==========================================
+   8. HỘP THOẠI (MODAL BLUR LAYOUT)
+   ========================================== */
+.modal { 
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    left: 0; 
+    top: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(14, 19, 31, 0.2); 
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: var(--transition);
+}
+
+.modal-content { 
+    background: var(--bg-card); 
+    margin: 6% auto; 
+    padding: 35px; 
+    border-radius: var(--border-radius-lg); 
+    width: 90%; 
+    max-width: 650px; 
+    box-shadow: 0 25px 50px -12px rgba(139, 61, 255, 0.15); 
+    border: 1px solid var(--border-color);
+    position: relative;
+    animation: modalFadeIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@keyframes modalFadeIn {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.close-modal { 
+    color: var(--text-muted); 
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 26px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    transition: var(--transition);
+} 
+
+.close-modal:hover { color: var(--danger); }
+
+/* Custom radio cho điểm danh */
+.radio-group label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.radio-group input[type="radio"] {
+    accent-color: var(--primary);
+    width: 16px;
+    height: 16px;
+}

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Edu Report - Đăng nhập & Đăng ký</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+    <div class="auth-box">
+        <h2 class="text-center mb-10">EDU REPORT</h2>
+        <p class="text-muted text-sm text-center mb-20">Hệ thống quản lý giảng dạy & học tập</p>
+        
+        <!-- Tab chuyển đổi giữa Đăng nhập và Đăng ký -->
+        <div class="auth-tabs">
+            <button class="auth-tab-btn active" id="tabLoginBtn" onclick="chuyenTabDangNhapDangKy('dang-nhap')">Đăng nhập</button>
+            <button class="auth-tab-btn" id="tabRegisterBtn" onclick="chuyenTabDangNhapDangKy('dang-ky')">Đăng ký</button>
+        </div>
+
+        <!-- FORM ĐĂNG NHẬP -->
+        <form id="loginForm">
+            <div class="role-toggle">
+                <input type="radio" id="loginRoleStudent" name="loginRole" value="sinh-vien" checked>
+                <label for="loginRoleStudent">Sinh viên</label>
+                
+                <input type="radio" id="loginRoleTeacher" name="loginRole" value="giang-vien">
+                <label for="loginRoleTeacher">Giảng viên</label>
+            </div>
+            
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" name="email" required placeholder="nhapemail@gmail.com">
+            </div>
+            
+            <div class="input-group">
+                <label>Mật khẩu</label>
+                <input type="password" name="password" required placeholder="••••••••">
+            </div>
+            
+            <button type="submit" class="btn-primary mt-10">Đăng nhập</button>
+            
+            <div class="border-box mt-20 p-10 bg-light">
+                <p class="text-sm font-bold text-primary mb-10 text-center">Tài khoản demo:</p>
+                <div class="flex-row justify-between text-sm">
+                    <span><strong>SV:</strong> sv1@gmail.com (Pass: 123)</span>
+                    <span><strong>GV:</strong> gv1@gmail.com (Pass: 123)</span>
+                </div>
+            </div>
+        </form>
+
+        <!-- FORM ĐĂNG KÝ (Ẩn mặc định) -->
+        <form id="registerForm" style="display: none;">
+            <div class="role-toggle">
+                <input type="radio" id="regRoleStudent" name="regRole" value="sinh-vien" checked>
+                <label for="regRoleStudent">Sinh viên</label>
+                
+                <input type="radio" id="regRoleTeacher" name="regRole" value="giang-vien">
+                <label for="regRoleTeacher">Giảng viên</label>
+            </div>
+
+            <div class="grid-2-col">
+                <div class="input-group">
+                    <label>Mã định danh (MSSV / Mã GV)</label>
+                    <input type="text" name="id" required placeholder="VD: SV202609 hoặc GV009">
+                </div>
+
+                <div class="input-group">
+                    <label>Họ và tên</label>
+                    <input type="text" name="name" required placeholder="Nguyễn Văn A">
+                </div>
+                
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required placeholder="nhapemail@gmail.com">
+                </div>
+                
+                <div class="input-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" name="password" required placeholder="Tối thiểu 6 ký tự">
+                </div>
+
+                <div class="input-group">
+                    <label>Ngày sinh</label>
+                    <input type="date" name="dob" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Số điện thoại</label>
+                    <input type="text" name="phone" placeholder="09xxxxxxxx">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-primary mt-10">Đăng ký tài khoản</button>
+        </form>
+    </div>
+    
+    <script>
+        function chuyenTabDangNhapDangKy(loaiTab) {
+            const formDangNhap = document.getElementById('loginForm');
+            const formDangKy = document.getElementById('registerForm');
+            const nutTabDangNhap = document.getElementById('tabLoginBtn');
+            const nutTabDangKy = document.getElementById('tabRegisterBtn');
+            const authBox = document.querySelector('.auth-box');
+
+            if (loaiTab === 'dang-nhap') {
+                authBox.classList.remove('register-mode');
+                formDangNhap.style.display = 'block';
+                formDangKy.style.display = 'none';
+                nutTabDangNhap.classList.add('active');
+                nutTabDangKy.classList.remove('active');
+            } else {
+                authBox.classList.add('register-mode');
+                formDangNhap.style.display = 'none';
+                formDangKy.style.display = 'block';
+                nutTabDangNhap.classList.remove('active');
+                nutTabDangKy.classList.add('active');
+            }
+        }
+    </script>
+    <script src="js/app.js"></script>
+</body>
+</html>
