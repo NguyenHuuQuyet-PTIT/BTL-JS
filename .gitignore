@@ -11,11 +11,11 @@ yarn-debug.log*
 yarn-error.log*
 
 # Biến môi trường & cấu hình nhạy cảm
-#.env k ẩn file này do chạy mng chạy code k bị lỗi nha
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+#.env không ẩn file này do chạy mọi người chạy code không bị lỗi nha
+#.env.local
+#.env.development.local
+#.env.test.local
+#.env.production.local
 
 # Cấu hình IDE / Editor
 .vscode/
