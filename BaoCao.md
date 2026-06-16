@@ -1,7 +1,4 @@
 # BÁO CÁO BÀI TẬP LỚN MÔN LẬP TRÌNH WEB
-**ĐỀ TÀI: HỆ THỐNG QUẢN LÝ HỌC TẬP & ĐÀO TẠO (EDU REPORT LMS)**
-
----
 
 ## 1. Giới thiệu chung
 Dự án **Edu Report LMS** là một ứng dụng quản lý học tập dành riêng cho cơ sở đào tạo, hỗ trợ hai đối tượng sử dụng chính là **Sinh viên** và **Giảng viên** ngành Công nghệ thông tin. Hệ thống cung cấp đầy đủ các tính năng hỗ trợ học tập, giảng dạy trực tuyến, quản lý điểm và chuyên cần.
@@ -11,7 +8,7 @@ Dự án **Edu Report LMS** là một ứng dụng quản lý học tập dành 
 ## 2. Công nghệ sử dụng
 - **Frontend (Giao diện):**
   - **HTML5:** Xây dựng khung cấu trúc trang web động và biểu mẫu.
-  - **Vanilla CSS3:** Thiết kế giao diện hiện đại, sử dụng hệ màu xanh nhẹ chủ đạo, bo góc tròn, đổ bóng mờ mềm mại và tương thích tốt trên các thiết bị di động (Responsive UI).
+  - **CSS3:** Thiết kế giao diện hiện đại, sử dụng hệ màu xanh nhẹ chủ đạo, tương thích tốt trên các thiết bị di động (Responsive UI).
   - **JavaScript (ES6):** Xử lý tương tác DOM trực tiếp, tính toán điểm trung bình, lọc dữ liệu thông báo và vẽ biểu đồ trực quan thông qua thư viện `Chart.js`.
 - **Backend (Máy chủ):**
   - **Node.js & Express:** Xây dựng hệ thống API web xử lý các yêu cầu đăng ký tài khoản mới và xác thực đăng nhập.
@@ -60,6 +57,3 @@ Dự án **Edu Report LMS** là một ứng dụng quản lý học tập dành 
   - `teacher-dashboard.html`: Giao diện trang làm việc của giảng viên.
 - `/venv`: Thư mục môi trường ảo Python.
 - `requirements.txt`: Khai báo các thư viện Python hỗ trợ quản lý dự án.
-- `README.md`: Hướng dẫn cài đặt và chạy nhanh dự án.
-- `KetNoi_MongoDB.md`: Tài liệu giải thích cách thức kết nối database.
-- `HuongDan_MongoDB.md`: Hướng dẫn cài đặt chi tiết và vận hành hệ thống.
