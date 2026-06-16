@@ -50,10 +50,9 @@ Dự án **Edu Report LMS** là một ứng dụng quản lý học tập dành 
   - `.env`: Lưu trữ cấu hình biến môi trường và cổng kết nối.
   - `package.json`: Khai báo các thư viện phụ thuộc của backend.
 - `/frontend`: Thư mục chứa mã nguồn giao diện người dùng tĩnh.
-  - `/css`: Thư mục lưu trữ file thiết kế giao diện (`style.css`).
-  - `/js`: Thư mục lưu file logic JavaScript (`app.js`).
+  - `/css`: Thư mục lưu trữ file thiết kế giao diện.
+  - `/js`: Thư mục lưu file logic JavaScript.
   - `index.html`: Giao diện trang đăng nhập và đăng ký tài khoản.
   - `student-dashboard.html`: Giao diện trang làm việc của sinh viên.
   - `teacher-dashboard.html`: Giao diện trang làm việc của giảng viên.
-- `/venv`: Thư mục môi trường ảo Python.
 - `requirements.txt`: Khai báo các thư viện Python hỗ trợ quản lý dự án.
