@@ -1,7 +1,6 @@
 ## 🛠️ Hướng dẫn cài đặt & Chạy ứng dụng
 
-
-### Bước 1: Kích hoạt venv & Cài đặt thư viện Python
+### Bước 1: Kích hoạt venv & Cài đặt thư viện
 1. Mở Terminal (PowerShell hoặc CMD) tại thư mục gốc `BTL JS`.
 2. Kích hoạt môi trường ảo:
    - **Trên PowerShell:**
@@ -41,9 +40,9 @@ Mở file [frontend/index.html](file:///c:/Users/quyet/Desktop/BTL%20JS/frontend
 
 ---
 
-## 🔑 Tài khoản thử nghiệm mẫu (Đã lưu sẵn trên MongoDB Atlas)
+## 🔑 Tài khoản thử nghiệm mẫu
 
 * **Tài khoản Sinh viên:**
-  - Email: `sv1@gmail.com` | Mật khẩu: `123` (Nguyễn Hữu Quyết)
+  - Email: `sv1@gmail.com` | Mật khẩu: `123`
 * **Tài khoản Giảng viên:**
-  - Email: `gv1@gmail.com` | Mật khẩu: `123` (ThS. Nguyễn Văn A)
+  - Email: `gv1@gmail.com` | Mật khẩu: `123`
