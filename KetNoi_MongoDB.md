@@ -1,12 +1,8 @@
-# Giải thích chi tiết mã nguồn kết nối MongoDB Atlas
-
-Tài liệu này giải thích chi tiết hoạt động kết nối cơ sở dữ liệu MongoDB Atlas ở Backend và cách liên kết dữ liệu với Frontend.
+# Giải thích kết nối MongoDB Atlas
 
 ---
 
 ## I. Phân tích mã nguồn kết nối trong `backend/server.js`
-
-Dưới đây là từng dòng code cấu hình kết nối MongoDB và ý nghĩa cụ thể:
 
 ### 1. Nạp thư viện Mongoose
 ```javascript
