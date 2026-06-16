@@ -47,11 +47,3 @@ Mở file [frontend/index.html](file:///c:/Users/quyet/Desktop/BTL%20JS/frontend
   - Email: `sv1@gmail.com` | Mật khẩu: `123` (Nguyễn Hữu Quyết)
 * **Tài khoản Giảng viên:**
   - Email: `gv1@gmail.com` | Mật khẩu: `123` (ThS. Nguyễn Văn A)
-
----
-
-## ❔ File `backend/models/User.js` dùng để làm gì?
-
-Tệp tin [backend/models/User.js](file:///c:/Users/quyet/Desktop/BTL%20JS/backend/models/User.js) định nghĩa cấu trúc dữ liệu người dùng (Schema) thông qua **Mongoose** bao gồm các trường:
-* `id` (mã số định danh), `name` (họ và tên), `email` (email đăng nhập), `password` (mật khẩu), `role` (vai trò: sinh-vien hoặc giang-vien), `dob` (ngày sinh), `phone` (số điện thoại), và `readNotifs` (danh sách ID thông báo đã đọc).
-* Mongoose sẽ tự động kiểm tra tính hợp lệ của dữ liệu trước khi lưu trữ vào MongoDB Atlas.
