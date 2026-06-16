@@ -1,4 +1,4 @@
-# Thư viện Python hỗ trợ quản lý dự án và kết nối cơ sở dữ liệu
+# Thư viện Python dự án và kết nối cơ sở dữ liệu
 pymongo>=4.6.0
 dnspython>=2.6.0
 requests>=2.31.0
