@@ -16,6 +16,7 @@
                 <nav class="menu">
                     <ul>
                         <li class="menu-item active" data-target="admin-classes"><a href="#">Điều phối Lớp học</a></li>
+                        <li class="menu-item" data-target="admin-notifs"><a href="#">Thông báo</a></li>
                         <li class="menu-item" data-target="admin-users"><a href="#">Quản lý Tài khoản</a></li>
                     </ul>
                 </nav>
@@ -31,6 +32,8 @@
                 <header class="top-header">
                     <h1>Điều phối Lớp học & Buổi học</h1>
                 </header>
+                
+                <div id="adminRegToggleContainer" class="mb-20"></div>
                 
                 <div class="border-box mb-20">
                     <h3 class="mb-20">Khởi tạo lớp học mới</h3>
@@ -150,6 +153,41 @@
                 </div>
             </section>
 
+            <section id="admin-notifs" class="tab-section border-box">
+                <header class="top-header">
+                    <h1>Gửi Thông Báo Hệ Thống</h1>
+                </header>
+                
+                <div class="mb-20">
+                    <form id="adminNotifForm">
+                        <div class="input-group">
+                            <label>Gửi đến</label>
+                            <select name="target" required>
+                                <option value="all_students">Toàn bộ Sinh viên</option>
+                                <option value="all_teachers">Toàn bộ Giáo viên</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Nội dung thông báo</label>
+                            <textarea name="text" rows="5" required placeholder="Nhập nội dung thông báo..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: auto;">Gửi Thông báo</button>
+                    </form>
+                </div>
+                
+                <h3 class="border-bottom mb-10 mt-20">Lịch sử Đã gửi</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ngày</th>
+                            <th>Gửi đến</th>
+                            <th>Nội dung</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminSentNotifs"></tbody>
+                </table>
+            </section>
+
             <section id="admin-users" class="tab-section border-box">
                 <header class="top-header">
                     <h1>Danh sách Hệ thống</h1>
@@ -224,7 +262,7 @@
                         <input type="number" name="endPeriod" min="1" max="12" required>
                     </div>
                 </div>
-                <button type="submit" class="btn-primary mt-10">Lưu thay đổi & Làm mới Lịch học</button>
+                <button type="submit" class="btn-primary mt-10">Lưu thay đổi</button>
             </form>
         </div>
     </div>
@@ -252,6 +290,16 @@
                 </div>
                 <button type="submit" class="btn-primary">Cập nhật Buổi học</button>
             </form>
+        </div>
+    </div>
+    
+    <div id="readNotifModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="readNotifTitle" class="text-primary mb-10"></h2>
+            <p id="readNotifDate" class="text-muted text-sm mb-20 border-bottom"></p>
+            <div id="readNotifContent" style="line-height: 1.6;"></div>
+            <div id="readNotifActions" class="flex-row mt-20"></div>
         </div>
     </div>
     

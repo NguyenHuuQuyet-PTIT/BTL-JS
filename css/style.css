@@ -25,11 +25,13 @@ body {
 .align-center { align-items: center; } 
 .justify-between { justify-content: space-between; } 
 .justify-center { justify-content: center; }
+.justify-end { justify-content: flex-end; }
 .text-center { text-align: center; }
 
 .mt-10 { margin-top: 10px; } 
 .mt-20 { margin-top: 20px; } 
 .mt-auto { margin-top: auto; }
+.mb-0 { margin-bottom: 0 !important; }
 .mb-10 { margin-bottom: 10px; } 
 .mb-20 { margin-bottom: 20px; }
 .p-10 { padding: 10px; } 
@@ -154,7 +156,7 @@ body {
     background: #d32f2f; 
     color: #fff; 
     padding: 8px 12px; 
-    font-size: 13px; 
+    font-size: 13px;
 } 
 .btn-danger:hover { background: #b71c1c; }
 
@@ -175,6 +177,11 @@ body {
     margin-top: 15px; 
 }
 
+#adminRegToggleContainer button {
+    width: 100%;
+    padding: 10px 15px; 
+}
+
 /* ==========================================
    4. FORM, BẢNG & BIỂU ĐỒ
    ========================================== */
@@ -190,11 +197,17 @@ body {
     color: #555; 
 }
 
-.input-group input, .input-group select { 
+.input-group input, 
+.input-group select, 
+.input-group textarea { 
     width: 100%; 
     padding: 10px; 
     border: 1px solid #ccc; 
     border-radius: 4px; 
+}
+
+.input-group textarea {
+    resize: vertical;
 }
 
 .radio-group { 
@@ -257,6 +270,10 @@ canvas {
     display: block; 
     padding: 12px 15px; 
     border-radius: 4px; 
+}
+
+.menu a.flex-row { 
+    display: flex; 
 }
 
 .menu li.active a, .menu a:hover { 

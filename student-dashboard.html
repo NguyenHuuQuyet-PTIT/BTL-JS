@@ -17,7 +17,12 @@
                 <nav class="menu">
                     <ul>
                         <li class="menu-item active" data-target="study-tab"><a href="#">Học tập & Thống kê</a></li>
-                        <li class="menu-item" data-target="register-tab"><a href="#">Đăng ký tín chỉ</a></li>
+                        <li class="menu-item" data-target="student-notifs">
+                            <a href="#" class="flex-row justify-between align-center">
+                                <span>Thông báo</span> <span id="stuNotifBadge"></span>
+                            </a>
+                        </li>
+                        <li class="menu-item" data-target="register-tab"><a href="#">Đăng ký lớp học</a></li>
                         <li class="menu-item" data-target="profile-tab"><a href="#">Thông tin cá nhân</a></li>
                     </ul>
                 </nav>
@@ -94,10 +99,28 @@
                     </table>
                 </div>
             </section>
+            
+            <section id="student-notifs" class="tab-section">
+                <header class="top-header">
+                    <h1>Thông báo</h1>
+                </header>
+                
+                <div class="flex-row justify-between align-center mb-20 border-bottom" style="padding-bottom: 15px;">
+                    <div class="input-group mb-0 flex-row align-center">
+                        <span class="font-bold text-sm text-muted" style="white-space: nowrap;">Lọc thông báo</span>
+                        <select id="stuNotifFilter" onchange="handleStudentNotifFilterChange()">
+                            <!-- Dữ liệu Option được load từ JS -->
+                        </select>
+                    </div>
+                    <button class="action-btn mb-0" onclick="markAllNotifsRead()">Đánh dấu tất cả đã đọc</button>
+                </div>
+                
+                <div id="studentNotifList"></div>
+            </section>
 
             <section id="register-tab" class="tab-section">
                 <header class="top-header">
-                    <h1>Đăng ký Tín chỉ Trực tiếp</h1>
+                    <h1>Đăng ký Lớp học Trực tiếp</h1>
                 </header>
                 <div id="registrationContainer" class="border-box"></div>
             </section>
@@ -146,6 +169,7 @@
         </main>
     </div>
 
+    <!-- Modals -->
     <div id="stuClassModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -160,6 +184,16 @@
                 </thead>
                 <tbody id="modalSessionList"></tbody>
             </table>
+        </div>
+    </div>
+    
+    <div id="readNotifModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="readNotifTitle" class="text-primary mb-10"></h2>
+            <p id="readNotifDate" class="text-muted text-sm mb-20 border-bottom"></p>
+            <div id="readNotifContent" style="line-height: 1.6;"></div>
+            <div id="readNotifActions" class="flex-row mt-20"></div>
         </div>
     </div>
     
