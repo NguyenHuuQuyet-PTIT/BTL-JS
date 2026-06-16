@@ -61,7 +61,7 @@ async function taoDuLieuNguoiDungMau() {
 // CÁC API ENDPOINTS XỬ LÝ ĐĂNG KÝ / ĐĂNG NHẬP
 // ==========================================================
 
-// 1. API Xử lý Đăng ký tài khoản mới (Việt hóa đường dẫn)
+// 1. API Xử lý Đăng ký tài khoản mới
 app.post('/api/auth/dang-ky', async (yeuCau, phanHoi) => {
     try {
         // Lấy thông tin gửi lên từ form qua body request
@@ -118,7 +118,7 @@ app.post('/api/auth/dang-ky', async (yeuCau, phanHoi) => {
     }
 });
 
-// 2. API Xử lý Đăng nhập (Việt hóa đường dẫn)
+// 2. API Xử lý Đăng nhập
 app.post('/api/auth/dang-nhap', async (yeuCau, phanHoi) => {
     try {
         // Lấy thông tin email, mật khẩu và vai trò từ request body gửi lên
@@ -161,7 +161,7 @@ app.post('/api/auth/dang-nhap', async (yeuCau, phanHoi) => {
     }
 });
 
-// 3. API Lấy danh sách toàn bộ người dùng trong hệ thống (Việt hóa đường dẫn)
+// 3. API Lấy danh sách toàn bộ người dùng trong hệ thống
 app.get('/api/nguoi-dung', async (yeuCau, phanHoi) => {
     try {
         // Lấy tất cả người dùng ra và ẩn mật khẩu đi để đảm bảo an toàn thông tin
@@ -177,7 +177,7 @@ app.get('/', (yeuCau, phanHoi) => {
     phanHoi.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-// Lắng nghe và khởi chạy Server trên cổng đã chỉ định
+// Khởi chạy Server trên cổng đã chọn
 app.listen(CONG_CHAY, () => {
     console.log(`>>> Server đang chạy tại địa chỉ: http://localhost:${CONG_CHAY}`);
 });
