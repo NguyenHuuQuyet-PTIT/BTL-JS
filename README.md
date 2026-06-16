@@ -1,5 +1,6 @@
 ## 🛠️ Hướng dẫn cài đặt & Chạy ứng dụng
 
+
 ### Bước 1: Kích hoạt venv & Cài đặt thư viện Python
 1. Mở Terminal (PowerShell hoặc CMD) tại thư mục gốc `BTL JS`.
 2. Kích hoạt môi trường ảo:
