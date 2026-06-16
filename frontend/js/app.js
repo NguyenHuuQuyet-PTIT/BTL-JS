@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------
-// 1. CƠ SỞ DỮ LIỆU LOCALSTORAGE & TRUY XUẤT (DATABASE & HELPERS)
+// 1. CƠ SỞ DỮ LIỆU LOCALSTORAGE & TRUY XUẤT
 // --------------------------------------------------------------------------
 function layCSDL(khoa) {
     // Lấy dữ liệu từ localStorage, trả về mảng rỗng nếu không tồn tại
