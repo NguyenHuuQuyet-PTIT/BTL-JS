@@ -1,12 +1,59 @@
 // ==========================================
-// 1. CƠ SỞ DỮ LIỆU & TRUY XUẤT
+// 1. CẤU HÌNH API ĐÁM MÂY & ĐỒNG BỘ
+// ==========================================
+const API_BASE = 'https://edureport-backend-s8dj.onrender.com/api';
+
+// Hàm gửi dữ liệu lên Backend
+async function syncWithServer(key, data) {
+    let endpoint = '';
+    let payload = data;
+
+    if (key === 'Users') {
+        endpoint = '/sync/users';
+    } else if (key === 'Classes') {
+        endpoint = '/sync/classes';
+    } else if (key === 'Notifications') {
+        endpoint = '/sync/notifications';
+    } else if (key === 'RegistrationOpen') {
+        endpoint = '/sync/system';
+        payload = { RegistrationOpen: data };
+    } else {
+        return; // Bỏ qua nếu không phải dữ liệu cần đồng bộ
+    }
+
+    try {
+        await fetch(API_BASE + endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        console.log(`[Đồng bộ] Đã đẩy ${key} lên mây MongoDB thành công!`);
+    } catch (error) {
+        console.error(`[Đồng bộ] Lỗi khi đẩy ${key}:`, error);
+    }
+}
+
+// Chặn bắt sự kiện lưu LocalStorage để đồng bộ nút Mở/Khóa cổng (admin.js dùng cách lưu trực tiếp)
+const originalSetItem = localStorage.setItem;
+localStorage.setItem = function(key, value) {
+    originalSetItem.apply(this, arguments);
+    if (key === 'RegistrationOpen') {
+        syncWithServer(key, JSON.parse(value));
+    }
+};
+
+// ==========================================
+// 2. CƠ SỞ DỮ LIỆU & TRUY XUẤT (TRÁO RUỘT)
 // ==========================================
 function getDB(key) {
     return JSON.parse(localStorage.getItem(key)) || [];
 }
 
 function setDB(key, data) {
-    localStorage.setItem(key, JSON.stringify(data));
+    // Lưu tạm vào ổ cứng để giao diện không bị giật lag
+    originalSetItem.call(localStorage, key, JSON.stringify(data)); 
+    // Gửi chạy ngầm lên mây
+    syncWithServer(key, data);
 }
 
 function updateClassDB(classId, updateFunction) {
@@ -20,7 +67,7 @@ function updateClassDB(classId, updateFunction) {
 }
 
 // ==========================================
-// 2. TIỆN ÍCH DÙNG CHUNG (HELPER)
+// 3. TIỆN ÍCH DÙNG CHUNG (HELPER)
 // ==========================================
 const PERIOD_TIMES = { 
     1: "07:00-07:50", 2: "08:00-08:50", 3: "09:00-09:50", 4: "10:00-10:50", 
@@ -34,7 +81,6 @@ function getPeriodText(start, end) {
     return `Tiết ${start}-${end} (${startTime} - ${endTime})`;
 }
 
-// Logic đánh số tự động: Môn học_L + Index
 function getDisplayClassName(classId) {
     let classes = getDB('Classes');
     let subjects = getDB('Subjects');
@@ -61,7 +107,6 @@ function calcAvgScore(cc, gk, ck) {
     return parseFloat((parseFloat(cc) * 0.2 + parseFloat(gk) * 0.3 + parseFloat(ck) * 0.5).toFixed(1));
 }
 
-// Xếp loại học tập
 function getRankHtml(score) {
     if (score === null) {
         return '<span class="text-muted">--</span>';
@@ -81,7 +126,6 @@ function getRankHtml(score) {
     return '<span class="text-danger font-bold">Yếu</span>';
 }
 
-// Điểm danh
 function getAttendanceHtml(status) {
     if (status === 'present') {
         return '<span class="text-success font-bold">Có mặt</span>';
@@ -101,7 +145,7 @@ function handleLogout() {
 }
 
 // ==========================================
-// 3. QUẢN LÝ GIAO DIỆN CHUNG (MODAL, TAB)
+// 4. QUẢN LÝ GIAO DIỆN CHUNG (MODAL, TAB)
 // ==========================================
 function openModal(modalId) { 
     document.getElementById(modalId).style.display = 'block'; 
@@ -189,7 +233,7 @@ function initProfileUI(user) {
         user.phone = formData.get('phone').trim();
         user.dob = formData.get('dob');
         
-        localStorage.setItem('currentUser', JSON.stringify(user)); 
+        originalSetItem.call(localStorage, 'currentUser', JSON.stringify(user)); 
         
         let users = getDB('Users');
         let userIndex = users.findIndex(u => u.id === user.id); 
@@ -208,7 +252,7 @@ function initProfileUI(user) {
 }
 
 // ==========================================
-// 4. TIỆN ÍCH THÔNG BÁO
+// 5. TIỆN ÍCH THÔNG BÁO (DÙNG CHUNG)
 // ==========================================
 function formatNotificationText(text) {
     let formatted = text.replace(/\n/g, '<br>');
@@ -300,7 +344,7 @@ function openReadNotifModal(notifId) {
         
         if (!user.readNotifs.includes(notifId)) {
             user.readNotifs.push(notifId);
-            localStorage.setItem('currentUser', JSON.stringify(user));
+            originalSetItem.call(localStorage, 'currentUser', JSON.stringify(user));
             
             let users = getDB('Users');
             let uIndex = users.findIndex(u => u.id === user.id);
@@ -333,74 +377,64 @@ function openReadNotifModal(notifId) {
 }
 
 // ==========================================
-// 5. KHỞI TẠO DỮ LIỆU BAN ĐẦU
+// 6. KHỞI TẠO TỪ ĐÁM MÂY (TỰ ĐỘNG CHẠY)
 // ==========================================
-function initDB() {
-    let users = getDB('Users');
-    
-    if (!users.some(u => u.role === 'admin') && users.length > 0) {
-        localStorage.clear();
-    }
-
-    if (!localStorage.getItem('Users')) {
-        setDB('Users', [
-            { id: 'ADMIN', role: 'admin', name: 'Giáo vụ Hệ thống', email: 'admin@gmail.com', password: '123' },
-            { id: 'GV001', role: 'teacher', name: 'ThS. Trần Thị B', email: 'gv1@gmail.com', password: '123', dob: '1985-05-10', phone: '0988111222', readNotifs: [] },
-            { id: 'GV002', role: 'teacher', name: 'TS. Trần Văn C', email: 'gv2@gmail.com', password: '123', dob: '1975-08-22', phone: '0988333444', readNotifs: [] },
-            { id: 'SV202501', role: 'student', name: 'Nguyễn Văn An', email: 'sv1@gmail.com', password: '123', dob: '2005-01-15', phone: '0901000001', readNotifs: [] },
-            { id: 'SV202502', role: 'student', name: 'Trần Thị Bé', email: 'sv2@gmail.com', password: '123', dob: '2005-02-20', phone: '0901000002', readNotifs: [] }
-        ]);
-    }
-    
+async function initDB() {
+    // 1. Giữ nguyên cấu hình môn học cục bộ (vì ta không đưa phần này lên mây)
     if (!localStorage.getItem('Subjects')) {
-        setDB('Subjects', [ 
+        originalSetItem.call(localStorage, 'Subjects', JSON.stringify([ 
             { id: 'SUB01', name: 'Lập trình Web', abbr: 'WEB' }, 
             { id: 'SUB02', name: 'Cấu trúc dữ liệu', abbr: 'CTDL' }, 
             { id: 'SUB03', name: 'Cơ sở dữ liệu', abbr: 'CSDL' } 
-        ]);
-    }
-    
-    if (!localStorage.getItem('Classes')) {
-        let defaultId = 'WEB_' + Date.now();
-        setDB('Classes', [
-            { 
-                id: defaultId, 
-                subjectId: 'SUB01', 
-                teacherId: 'GV001', 
-                room: 'A101', 
-                dayOfWeek: 'Thứ 2', 
-                startDate: '2026-06-01', 
-                endDate: '2026-07-31', 
-                startPeriod: 1, 
-                endPeriod: 3, 
-                enrolledStudents: ['SV202501', 'SV202502'], 
-                sessions: [ 
-                    { id: 'S1', date: '2026-06-01', startPeriod: 1, endPeriod: 3, attendance: {'SV202501': 'present', 'SV202502': 'late'} } 
-                ], 
-                grades: { 
-                    'SV202501': { cc: 10, gk: 8, ck: 9 }, 
-                    'SV202502': { cc: null, gk: null, ck: null } 
-                } 
-            }
-        ]);
+        ]));
     }
 
-    if (!localStorage.getItem('Notifications')) {
-        setDB('Notifications', [
-            { 
-                id: 'NOTIF_' + Date.now(), 
-                senderName: 'Giáo vụ Hệ thống', 
-                target: 'all_students', 
-                text: 'Chào mừng tân sinh viên khóa mới!\nHãy theo dõi trang tài liệu: https://google.com', 
-                date: new Date().toLocaleDateString('en-CA') 
-            }
+    try {
+        // 2. Kéo dữ liệu tươi mới nhất từ Backend về
+        const [usersRes, classesRes, notifsRes, sysRes] = await Promise.all([
+            fetch(API_BASE + '/users'),
+            fetch(API_BASE + '/classes'),
+            fetch(API_BASE + '/notifications'),
+            fetch(API_BASE + '/system')
         ]);
-    }
 
-    // Đặt mặc định trạng thái khóa cổng đăng ký là false
-    if (localStorage.getItem('RegistrationOpen') === null) {
-        localStorage.setItem('RegistrationOpen', JSON.stringify(false));
+        const users = await usersRes.json();
+        const classes = await classesRes.json();
+        const notifs = await notifsRes.json();
+        const sys = await sysRes.json();
+
+        // 3. Đổ dữ liệu mới đè vào LocalStorage để các hàm cũ đọc được
+        if (users.length > 0) originalSetItem.call(localStorage, 'Users', JSON.stringify(users));
+        if (classes.length > 0) originalSetItem.call(localStorage, 'Classes', JSON.stringify(classes));
+        if (notifs.length > 0) originalSetItem.call(localStorage, 'Notifications', JSON.stringify(notifs));
+
+        if (sys && sys.length > 0) {
+            const regConfig = sys.find(s => s.key === 'RegistrationOpen');
+            if (regConfig) {
+                originalSetItem.call(localStorage, 'RegistrationOpen', JSON.stringify(regConfig.value));
+            }
+        }
+
+        console.log("✅ Đã kéo dữ liệu từ đám mây xuống LocalStorage thành công!");
+        
+        // 4. Kích hoạt vẽ lại màn hình lập tức để dữ liệu mới nhất được hiển thị
+        if (typeof renderAdminClassList === 'function') renderAdminClassList();
+        if (typeof renderRegistrationToggle === 'function') renderRegistrationToggle();
+        if (typeof setupAdminFormOptions === 'function') setupAdminFormOptions();
+        if (typeof renderAdminNotifs === 'function') renderAdminNotifs();
+
+        let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (currentUser && typeof renderStudentStudyDashboard === 'function') {
+            renderStudentStudyDashboard(currentUser);
+            renderRegistrationTab(currentUser);
+            renderStudentNotifs(currentUser);
+            updateNotifBadge(currentUser);
+        }
+
+    } catch (error) {
+        console.error("❌ Lỗi khi kéo dữ liệu từ đám mây. Hãy kiểm tra xem Backend đã bật chưa!", error);
     }
 }
 
+// Gọi hàm khởi tạo ngay khi trang tải xong
 initDB();

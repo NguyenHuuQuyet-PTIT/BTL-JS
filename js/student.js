@@ -297,7 +297,7 @@ function openStuModal(classId) {
 }
 
 // ==========================================
-// 3. ĐĂNG KÝ TÍN CHỈ
+// 3. ĐĂNG KÝ LỚP HỌC
 // ==========================================
 function renderRegistrationTab(user) {
     let classes = getDB('Classes');
