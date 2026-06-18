@@ -1,36 +1,57 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 /* ==========================================================================
-   1. HỆ THỐNG MÀU SẮC & BIẾN SỐ CHỦ ĐẠO (CANVA)
+   1. HỆ THỐNG MÀU SẮC & BIẾN SỐ CHỦ ĐẠO (CANVA & PREMIUM SAAS)
    ========================================================================== */
 :root {
-    /* Bảng màu đặc trưng của Canva */
-    --primary: #8b3dff;           /* Tím Canva hoàng gia */
+    /* Bảng màu rực rỡ phong cách Canva */
+    --primary: #8b3dff;           /* Tím hoàng gia Canva */
     --primary-hover: #7425f3;     /* Tím đậm khi hover */
-    --primary-light: #f4f0ff;     /* Tím nhạt làm nền */
+    --primary-light: #f4f0ff;     /* Nền tím pastel */
     --secondary: #00c4cc;         /* Xanh ngọc Canva (Cyan) */
     --secondary-hover: #00b0b8;
     --secondary-light: #e6fafb;
-    --bg-main: #f8f9fc;           /* Xám nhạt siêu sạch */
-    --bg-card: #ffffff;           /* Màu nền của các thẻ */
-    --text-main: #0e131f;         /* Chữ chính đen bóng đêm */
-    --text-muted: #5c677d;        /* Chữ nhạt xám cool */
-    --border-color: #eef1f6;      /* Viền nhạt mịn */
     
-    /* Trạng thái hệ thống */
+    /* Tông màu nền & Chữ cao cấp */
+    --bg-main: #f8f9fd;           /* Nền ứng dụng siêu sạch */
+    --bg-card: rgba(255, 255, 255, 0.9); /* Thẻ kính mờ */
+    --text-main: #0e121d;         /* Chữ đen mun sang trọng */
+    --text-muted: #5e6982;        /* Chữ nhạt xám cool */
+    --border-color: rgba(139, 61, 255, 0.08); /* Viền tím siêu mịn */
+    
+    /* Trạng thái hệ thống rực rỡ */
     --success: #00d28a;           /* Xanh lá tươi trẻ */
     --warning: #ff9f0a;           /* Cam hổ phách */
     --danger: #ff453a;            /* Đỏ san hô */
     
-    /* Bo góc và Đổ bóng tinh tế */
-    --border-radius: 12px;
+    /* Bo góc hiện đại */
+    --border-radius: 14px;
     --border-radius-lg: 24px;
-    --shadow-sm: 0 2px 8px rgba(139, 61, 255, 0.02);
-    --shadow: 0 10px 30px rgba(139, 61, 255, 0.05), 0 2px 8px rgba(0, 0, 0, 0.01);
-    --shadow-lg: 0 20px 48px rgba(139, 61, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.02);
     
-    /* Chuyển động mượt mà */
-    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    /* Đổ bóng đa lớp cao cấp (Layered Soft Shadows) */
+    --shadow-sm: 0 4px 12px rgba(139, 61, 255, 0.02);
+    --shadow: 0 12px 36px rgba(139, 61, 255, 0.04), 0 2px 8px rgba(0, 0, 0, 0.01);
+    --shadow-lg: 0 24px 60px rgba(139, 61, 255, 0.12), 0 8px 20px rgba(139, 61, 255, 0.04);
+    
+    /* Chuyển động mượt tự nhiên */
+    --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(139, 61, 255, 0.2);
+    border-radius: 99px;
+    transition: var(--transition);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
 }
 
 /* ==========================================================================
@@ -77,7 +98,7 @@ body {
 
 .font-bold { font-weight: 600; } 
 .text-sm { font-size: 13px; color: var(--text-muted); } 
-.text-xl { font-size: 24px; font-weight: 700; color: var(--primary); }
+.text-xl { font-size: 26px; font-weight: 700; color: var(--primary); }
 .text-success { color: var(--success) !important; } 
 .text-warning { color: var(--warning) !important; } 
 .text-danger { color: var(--danger) !important; }
@@ -89,32 +110,44 @@ body {
 
 .border-bottom { 
     border-bottom: 1px solid var(--border-color); 
-    padding-bottom: 12px; 
-    margin-bottom: 15px;
+    padding-bottom: 14px; 
+    margin-bottom: 18px;
 }
 .rounded-full { border-radius: 9999px; }
 
 /* ==========================================================================
-   3. BỐ CỤC HỆ THỐNG CHÍNH (MAIN APPLICATION LAYOUT)
+   3. BỐ CỤC HỆ THỐNG CHÍNH (MAIN LAYOUT)
    ========================================================================== */
 .app-container { 
     display: flex; 
     min-height: 100vh; 
+    background: radial-gradient(circle at 10% 20%, rgba(139, 61, 255, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 196, 204, 0.03) 0%, transparent 40%);
 }
 
-/* Sidebar phong cách Canva tối giản tinh tế */
+/* Sidebar tinh tế phong cách SaaS */
 .sidebar { 
-    width: 270px; 
-    background: var(--bg-card); 
-    border-right: 1px solid var(--border-color); 
+    width: 280px; 
+    background: #ffffff; 
+    border-right: 1px solid rgba(139, 61, 255, 0.06); 
     display: flex; 
     flex-direction: column; 
     justify-content: space-between; 
-    padding: 35px 20px; 
+    padding: 40px 24px; 
     position: sticky; 
     top: 0; 
     height: 100vh; 
-    box-shadow: var(--shadow-sm);
+    box-shadow: 4px 0 24px rgba(139, 61, 255, 0.015);
+    overflow-y: auto; /* Cho phép cuộn dọc khi màn hình thấp */
+}
+
+/* Ẩn thanh cuộn mặc định của sidebar để giữ tính thẩm mỹ cao */
+.sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(139, 61, 255, 0.1);
+    border-radius: 99px;
 }
 
 .sidebar-top {
@@ -122,30 +155,34 @@ body {
     flex-direction: column;
 }
 
-/* Logo thương hiệu nổi bật */
+/* Logo phong cách Canva sáng tạo */
 .logo {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    padding-left: 15px;
+    padding-left: 16px;
     border-left: 4px solid var(--primary);
-    margin-bottom: 35px;
+    margin-bottom: 40px;
 }
 
 .logo h2 {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
     color: var(--primary);
-    letter-spacing: -0.5px;
+    letter-spacing: -0.8px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 /* Khối thông tin cá nhân ở Sidebar */
 .user-info-sidebar {
-    padding: 15px;
-    background: var(--primary-light);
+    padding: 18px;
+    background: linear-gradient(135deg, var(--primary-light) 0%, rgba(244, 240, 255, 0.5) 100%);
     border-radius: var(--border-radius);
     margin-top: auto;
-    border: 1px solid rgba(139, 61, 255, 0.1);
+    border: 1px solid rgba(139, 61, 255, 0.08);
+    box-shadow: var(--shadow-sm);
 }
 
 .user-info-sidebar .user-name {
@@ -155,20 +192,20 @@ body {
 
 .main-content { 
     flex: 1; 
-    padding: 40px; 
+    padding: 40px 50px; 
     overflow-y: auto; 
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
 }
 
-/* Header dạng Banner Canva rực rỡ */
+/* Header dạng Banner Canva gradient đẹp lộng lẫy */
 .top-header { 
-    background: linear-gradient(135deg, var(--primary) 0%, #6015d0 100%); 
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); 
     color: #fff; 
-    padding: 30px 40px; 
+    padding: 35px 45px; 
     border-radius: var(--border-radius-lg); 
-    margin-bottom: 30px; 
+    margin-bottom: 35px; 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
@@ -182,36 +219,54 @@ body {
     position: absolute;
     top: -50%;
     right: -20%;
-    width: 300px;
-    height: 300px;
+    width: 350px;
+    height: 350px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    filter: blur(20px);
+    background: rgba(255, 255, 255, 0.15);
+    filter: blur(30px);
+    pointer-events: none;
+}
+
+.top-header::after {
+    content: '';
+    position: absolute;
+    bottom: -60%;
+    left: -10%;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    background: rgba(0, 196, 204, 0.2);
+    filter: blur(25px);
+    pointer-events: none;
 }
 
 .top-header h1 {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.8px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* Hộp nội dung nổi (Card) */
+/* Hộp nội dung nổi (Card Glassmorphic) */
 .border-box { 
     background: var(--bg-card); 
+    backdrop-filter: blur(20px) saturate(190%);
+    -webkit-backdrop-filter: blur(20px) saturate(190%);
     border: 1px solid var(--border-color); 
     border-radius: var(--border-radius-lg); 
-    padding: 24px; 
+    padding: 28px; 
     box-shadow: var(--shadow);
     transition: var(--transition);
 }
 
 .border-box:hover {
     box-shadow: var(--shadow-lg);
-    transform: translateY(-4px);
+    border-color: rgba(139, 61, 255, 0.2);
+    transform: translateY(-4px) scale(1.002);
 }
 
 .border-left-dark { 
-    border-left: 4px solid var(--primary); 
+    border-left: 5px solid var(--primary); 
 }
 
 .grid-container { 
@@ -245,11 +300,17 @@ body {
     text-align: center; 
     border: 1px solid transparent; 
     padding: 10px 24px; 
-    transition: var(--transition);
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
     font-size: 14px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    user-select: none;
+}
+
+.btn-primary:active, .btn-danger:active, .action-btn:active, .btn-logout:active {
+    transform: translateY(1px) scale(0.97) !important;
+    box-shadow: none !important;
 }
 
 .btn-primary { 
@@ -261,8 +322,8 @@ body {
 
 .btn-primary:hover { 
     background: linear-gradient(135deg, #7425f3 0%, #6015d0 100%); 
-    box-shadow: 0 6px 16px rgba(139, 61, 255, 0.25);
-    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(139, 61, 255, 0.25);
+    transform: translateY(-3px) scale(1.02);
 }
 
 .btn-danger { 
@@ -273,8 +334,8 @@ body {
 
 .btn-danger:hover { 
     background: #e03b30; 
-    box-shadow: 0 4px 12px rgba(255, 69, 58, 0.2);
-    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 69, 58, 0.25);
+    transform: translateY(-3px) scale(1.02);
 }
 
 .action-btn { 
@@ -287,8 +348,8 @@ body {
 .action-btn:hover { 
     background: var(--primary); 
     color: #fff; 
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(139, 61, 255, 0.15);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 16px rgba(139, 61, 255, 0.18);
 }
 
 .btn-logout { 
@@ -304,8 +365,8 @@ body {
     background: var(--danger);
     color: #fff;
     border-color: transparent;
-    box-shadow: 0 4px 12px rgba(255, 69, 58, 0.2);
-    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 69, 58, 0.25);
+    transform: translateY(-3px) scale(1.02);
 }
 
 /* ==========================================================================
@@ -342,7 +403,7 @@ body {
     outline: none;
     border-color: var(--primary);
     background-color: #fff;
-    box-shadow: 0 0 0 3px rgba(139, 61, 255, 0.12);
+    box-shadow: 0 0 0 4px rgba(139, 61, 255, 0.16);
 }
 
 .input-group textarea {
@@ -365,7 +426,7 @@ body {
     border-radius: var(--border-radius); 
     border: 1px solid var(--border-color); 
     overflow: hidden;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 4px 20px rgba(139, 61, 255, 0.02);
 }
 
 .data-table th, .data-table td { 
@@ -376,12 +437,13 @@ body {
 }
 
 .data-table th { 
-    background: #f8f9fa; 
+    background: #fcfbfe; 
     font-weight: 700; 
     color: var(--text-main);
     text-transform: uppercase;
-    font-size: 12px;
-    letter-spacing: 0.5px;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    border-bottom: 2px solid rgba(139, 61, 255, 0.1);
 }
 
 .data-table tr:last-child td {
@@ -389,11 +451,11 @@ body {
 }
 
 .data-table tbody tr {
-    transition: var(--transition);
+    transition: all 0.2s ease;
 }
 
 .data-table tbody tr:hover {
-    background-color: var(--primary-light);
+    background-color: rgba(139, 61, 255, 0.04);
 }
 
 .charts-grid { 
@@ -430,13 +492,20 @@ canvas {
     align-items: center;
     padding: 12px 18px; 
     border-radius: var(--border-radius); 
-    transition: var(--transition);
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.menu li.active a, .menu a:hover { 
-    background: linear-gradient(90deg, var(--primary-light) 0%, rgba(244, 240, 255, 0.2) 100%); 
+.menu a:hover {
+    transform: translateX(4px);
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.menu li.active a { 
+    background: linear-gradient(90deg, var(--primary-light) 0%, rgba(244, 240, 255, 0.1) 100%); 
     color: var(--primary); 
     font-weight: 600;
+    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.05);
 }
 
 .menu li.active {
@@ -692,4 +761,119 @@ canvas {
     accent-color: var(--primary);
     width: 16px;
     height: 16px;
+}
+
+/* ==========================================================================
+   9. HỘP THOẠI THÔNG BÁO TỰ CHẾ ĐẸP MẮT (CUSTOM PREMIUM ALERT MODAL)
+   ========================================================================== */
+.custom-alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(14, 19, 31, 0.3);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.custom-alert-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.custom-alert-box {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(139, 61, 255, 0.2);
+    border-radius: var(--border-radius-lg);
+    padding: 35px 30px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(139, 61, 255, 0.2), 0 10px 20px rgba(0, 0, 0, 0.05);
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.custom-alert-overlay.show .custom-alert-box {
+    transform: translateY(0) scale(1);
+}
+
+.custom-alert-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin: 0 auto 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: bold;
+    box-shadow: 0 8px 20px rgba(139, 61, 255, 0.15);
+}
+
+/* Các trạng thái Icon màu sắc */
+.custom-alert-icon.success {
+    background: linear-gradient(135deg, #00d28a 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 8px 20px rgba(0, 210, 138, 0.25);
+}
+
+.custom-alert-icon.error {
+    background: linear-gradient(135deg, #ff453a 0%, #d32f2f 100%);
+    color: white;
+    box-shadow: 0 8px 20px rgba(255, 69, 58, 0.25);
+}
+
+.custom-alert-icon.info {
+    background: linear-gradient(135deg, var(--primary) 0%, #7425f3 100%);
+    color: white;
+    box-shadow: 0 8px 20px rgba(139, 61, 255, 0.25);
+}
+
+.custom-alert-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 10px;
+}
+
+.custom-alert-text {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 25px;
+    word-break: break-word;
+}
+
+.custom-alert-btn {
+    background: linear-gradient(135deg, var(--primary) 0%, #7425f3 100%);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 12px 30px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.15);
+    width: 100%;
+}
+
+.custom-alert-btn:hover {
+    background: linear-gradient(135deg, #7425f3 0%, #6015d0 100%);
+    box-shadow: 0 8px 20px rgba(139, 61, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.custom-alert-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.15);
 }

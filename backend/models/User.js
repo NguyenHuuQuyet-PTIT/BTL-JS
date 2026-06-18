@@ -1,49 +1,46 @@
 const mongoose = require('mongoose');
 
-// Định nghĩa cấu trúc Schema lưu trữ thông tin Người dùng (Sinh viên và Giảng viên)
 const UserSchema = new mongoose.Schema({
     id: {
         type: String,
         required: true,
-        unique: true, // Mã số định danh duy nhất (MSSV hoặc mã Giảng viên)
+        unique: true,
         trim: true
     },
     name: {
         type: String,
-        required: true // Họ và tên đầy đủ
+        required: true
     },
     email: {
         type: String,
         required: true,
-        unique: true, // Địa chỉ email duy nhất dùng để đăng nhập
+        unique: true,
         trim: true,
         lowercase: true
     },
     password: {
         type: String,
-        required: true // Mật khẩu đăng nhập
+        required: true
     },
     role: {
         type: String,
         required: true,
-        enum: ['sinh-vien', 'giang-vien'] // Vai trò: chỉ nhận giá trị 'sinh-vien' (sinh viên) hoặc 'giang-vien' (giảng viên)
+        enum: ['sinh-vien', 'giang-vien', 'admin']
     },
     dob: {
         type: String,
-        default: '' // Ngày sinh
+        default: ''
     },
     phone: {
         type: String,
-        default: '' // Số điện thoại liên lạc
+        default: ''
     },
     readNotifs: {
         type: [String],
-        default: [] // Mảng lưu trữ danh sách ID thông báo đã đọc
+        default: []
     }
 }, {
-    timestamps: true // Tự động thêm trường ngày tạo (createdAt) và ngày cập nhật (updatedAt)
+    timestamps: true
 });
 
-// Xuất Schema thành Model 'User' để các file khác (ví dụ: server.js) sử dụng
 module.exports = mongoose.model('User', UserSchema);
-

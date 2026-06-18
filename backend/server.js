@@ -1,183 +1,174 @@
-// Import các thư viện cần thiết cho Backend Express Server
-const express = require('express'); // Thư viện Express để tạo API web server
-const mongoose = require('mongoose'); // Thư viện Mongoose để thao tác với MongoDB
-const cors = require('cors'); // Middleware CORS cho phép Frontend truy cập API từ domain khác
-require('dotenv').config(); // Cấu hình đọc các biến môi trường từ file .env
-const dns = require('dns'); // Thư viện DNS tích hợp của Node.js
-const path = require('path'); // Thư viện để xử lý đường dẫn tệp tin
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+require('dotenv').config();
+const dns = require('dns');
+const path = require('path');
 
-// Tự động cấu hình ứng dụng sử dụng DNS Google (8.8.8.8) và Cloudflare (1.1.1.1)
-// Việc này giúp sửa lỗi kết nối MongoDB Atlas (querySrv ECONNREFUSED) trên mạng FPT/Viettel/VNPT hoặc mạng trường học
+// Cấu hình DNS dự phòng để tránh lỗi kết nối MongoDB Atlas trên một số nhà mạng
 try {
     dns.setServers(['8.8.8.8', '1.1.1.1']);
-} catch (saiSo) {
-    console.log('>>> Cảnh báo: Không thể đổi DNS nội bộ Node.js, sử dụng DNS mặc định của máy.');
+} catch (e) {
+    console.log('Cảnh báo: Không thể đổi DNS, sử dụng DNS mặc định.');
 }
 
-// Import model User từ file models/User.js để truy vấn trong database
 const NguoiDungModel = require('./models/User');
+const app = express();
+const PORT = process.env.PORT || 5000;
 
-const app = express(); // Khởi tạo đối tượng ứng dụng express
-const CONG_CHAY = process.env.PORT || 5000; // Lấy cổng từ file .env, mặc định là cổng 5000
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Kích hoạt các Middleware cần thiết
-app.use(cors()); // Cho phép chia sẻ tài nguyên nguồn gốc chéo (CORS) giữa front-end và back-end
-app.use(express.json()); // Cho phép Express đọc được dữ liệu JSON gửi từ body request
-app.use(express.static(path.join(__dirname, '../frontend'))); // Phục vụ các tệp tin tĩnh (HTML, CSS, JS) từ thư mục frontend
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://quyetnguyen15112007_db_user:BTL-JS@cluster0.yz79rrw.mongodb.net/edu-report?retryWrites=true&w=majority';
 
-// Lấy link kết nối MongoDB Atlas từ môi trường hoặc dùng link mặc định của bạn
-const LINK_MONGODB = process.env.MONGO_URI || 'mongodb+srv://quyetnguyen15112007_db_user:BTL-JS@cluster0.yz79rrw.mongodb.net/edu-report?retryWrites=true&w=majority';
+// Tắt bufferCommands để frontend nhận lỗi ngay khi mất kết nối DB
+mongoose.set('bufferCommands', false);
 
-// Kết nối đến cơ sở dữ liệu MongoDB Atlas
-mongoose.connect(LINK_MONGODB)
+mongoose.connect(MONGO_URI)
     .then(async () => {
-        console.log('>>> Kết nối thành công đến MongoDB Atlas!');
-        // Gọi hàm tự động tạo dữ liệu người dùng CNTT mẫu nếu chưa có tài khoản nào
-        await taoDuLieuNguoiDungMau();
+        console.log('Kết nối thành công đến MongoDB Atlas.');
+        await taoDuLieuMau();
     })
     .catch(err => {
-        // Hiển thị lỗi chi tiết nếu kết nối database thất bại
-        console.error('Lỗi khi kết nối MongoDB:', err.message);
+        console.error('Lỗi kết nối MongoDB:', err.message);
     });
 
-// Hàm tự động tạo sẵn các tài khoản CNTT demo vào MongoDB Atlas
-async function taoDuLieuNguoiDungMau() {
+// Chỉ khởi tạo tài khoản mẫu nếu DB chưa có tài khoản nào
+async function taoDuLieuMau() {
     try {
-        const taiKhoanMau = [
-            { id: 'GV001', role: 'giang-vien', name: 'ThS. Nguyễn Văn A', email: 'gv1@gmail.com', password: '123', dob: '1985-05-10', phone: '0988111222', readNotifs: [] },
-            { id: 'SV202501', role: 'sinh-vien', name: 'Nguyễn Hữu Quyết', email: 'sv1@gmail.com', password: '123', dob: '2005-01-15', phone: '0901000001', readNotifs: [] }
-        ];
-
-        // Dọn sạch bảng người dùng cũ để giữ đúng 2 tài khoản mẫu theo yêu cầu
-        await NguoiDungModel.deleteMany({});
-        await NguoiDungModel.insertMany(taiKhoanMau);
-        console.log('>>> Đã dọn sạch database và khởi tạo đúng 2 tài khoản mẫu (1 GV, 1 SV) vào MongoDB Atlas.');
+        const soTaiKhoan = await NguoiDungModel.countDocuments();
+        if (soTaiKhoan === 0) {
+            const taiKhoanMau = [
+                { id: 'AD001', role: 'admin', name: 'Quản trị viên HT', email: 'admin', password: 'admin', dob: '1990-01-01', phone: '0999888777', readNotifs: [] },
+                { id: 'GV001', role: 'giang-vien', name: 'ThS. Nguyễn Văn A', email: 'giaovien', password: 'giaovien', dob: '1985-05-10', phone: '0988111222', readNotifs: [] },
+                { id: 'SV202501', role: 'sinh-vien', name: 'Nguyễn Hữu Quyết', email: 'sinhvien', password: 'sinhvien', dob: '2005-01-15', phone: '0901000001', readNotifs: [] }
+            ];
+            await NguoiDungModel.insertMany(taiKhoanMau);
+            console.log('Đã khởi tạo 3 tài khoản mẫu vào MongoDB Atlas.');
+        } else {
+            console.log(`Database đã có ${soTaiKhoan} tài khoản, bỏ qua khởi tạo.`);
+        }
     } catch (error) {
-        console.error('Lỗi khi khởi tạo dữ liệu mẫu:', error);
+        console.error('Lỗi khởi tạo dữ liệu mẫu:', error);
     }
 }
 
-// ==========================================================
-// CÁC API ENDPOINTS XỬ LÝ ĐĂNG KÝ / ĐĂNG NHẬP
-// ==========================================================
-
-// 1. API Xử lý Đăng ký tài khoản mới
-app.post('/api/auth/dang-ky', async (yeuCau, phanHoi) => {
+// API: Đăng ký tài khoản mới (Admin tạo)
+app.post('/api/auth/dang-ky', async (req, res) => {
     try {
-        // Lấy thông tin gửi lên từ form qua body request
-        const { id, name, email, password, role, dob, phone } = yeuCau.body;
-
-        // Kiểm tra xem người dùng có nhập thiếu các trường thông tin bắt buộc không
+        const { id, name, email, password, role, dob, phone } = req.body;
         if (!id || !name || !email || !password || !role) {
-            return phanHoi.status(400).json({ success: false, message: 'Thiếu thông tin bắt buộc để đăng ký!' });
+            return res.status(400).json({ success: false, message: 'Thiếu thông tin bắt buộc!' });
         }
 
-        // Kiểm tra xem email này đã tồn tại trong MongoDB hay chưa
-        const kiemTraEmail = await NguoiDungModel.findOne({ email: email.toLowerCase() });
-        if (kiemTraEmail) {
-            return phanHoi.status(400).json({ success: false, message: 'Email này đã được sử dụng trên hệ thống!' });
+        const emailLower = email.toLowerCase().trim();
+        if (await NguoiDungModel.findOne({ email: emailLower })) {
+            return res.status(400).json({ success: false, message: 'Email/tên đăng nhập này đã được sử dụng!' });
+        }
+        if (await NguoiDungModel.findOne({ id: id.trim() })) {
+            return res.status(400).json({ success: false, message: 'Mã định danh đã tồn tại!' });
         }
 
-        // Kiểm tra xem mã số SV hoặc mã số GV đã tồn tại chưa
-        const kiemTraId = await NguoiDungModel.findOne({ id: id.trim() });
-        if (kiemTraId) {
-            return phanHoi.status(400).json({ success: false, message: 'Mã định danh SV/GV này đã tồn tại!' });
-        }
-
-        // Tạo đối tượng người dùng mới theo Schema của User
         const nguoiDungMoi = new NguoiDungModel({
-            id: id.trim(),
-            name: name.trim(),
-            email: email.toLowerCase().trim(),
-            password: password,
-            role: role,
-            dob: dob,
-            phone: phone,
-            readNotifs: []
+            id: id.trim(), name: name.trim(), email: emailLower,
+            password, role, dob: dob || '', phone: phone ? phone.trim() : '', readNotifs: []
         });
-
-        // Lưu lại thông tin đối tượng đó vào database MongoDB
         await nguoiDungMoi.save();
 
-        // Trả về phản hồi thành công kèm theo dữ liệu tài khoản vừa tạo
-        phanHoi.status(201).json({
-            success: true,
-            message: 'Đăng ký tài khoản mới thành công!',
-            user: {
-                id: nguoiDungMoi.id,
-                name: nguoiDungMoi.name,
-                email: nguoiDungMoi.email,
-                role: nguoiDungMoi.role,
-                dob: nguoiDungMoi.dob,
-                phone: nguoiDungMoi.phone
-            }
+        res.status(201).json({
+            success: true, message: 'Tạo tài khoản thành công.',
+            user: { id: nguoiDungMoi.id, name: nguoiDungMoi.name, email: nguoiDungMoi.email, role: nguoiDungMoi.role, dob: nguoiDungMoi.dob, phone: nguoiDungMoi.phone }
         });
     } catch (error) {
         console.error('Lỗi khi đăng ký:', error);
-        phanHoi.status(500).json({ success: false, message: 'Lỗi hệ thống trong quá trình đăng ký!' });
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ.' });
     }
 });
 
-// 2. API Xử lý Đăng nhập
-app.post('/api/auth/dang-nhap', async (yeuCau, phanHoi) => {
+// API: Đăng nhập (hỗ trợ cả Email lẫn Mã định danh)
+app.post('/api/auth/dang-nhap', async (req, res) => {
     try {
-        // Lấy thông tin email, mật khẩu và vai trò từ request body gửi lên
-        const { email, password, role } = yeuCau.body;
-
-        // Kiểm tra thông tin gửi lên phải đầy đủ
+        const { email, password, role } = req.body;
         if (!email || !password || !role) {
-            return phanHoi.status(400).json({ success: false, message: 'Thiếu thông tin đăng nhập!' });
+            return res.status(400).json({ success: false, message: 'Thiếu thông tin đăng nhập!' });
         }
 
-        // Truy vấn người dùng trên MongoDB hợp lệ với email, mật khẩu và vai trò tương ứng
+        const input = email.trim();
         const nguoiDung = await NguoiDungModel.findOne({
-            email: email.toLowerCase().trim(),
-            password: password,
-            role: role
+            $or: [{ email: input.toLowerCase() }, { id: input }],
+            password, role
         });
 
-        // Nếu không tìm thấy tài khoản phù hợp thì báo lỗi về client
         if (!nguoiDung) {
-            return phanHoi.status(400).json({ success: false, message: 'Sai email, mật khẩu hoặc vai trò truy cập!' });
+            return res.status(400).json({ success: false, message: 'Sai tài khoản, mật khẩu hoặc vai trò!' });
         }
 
-        // Trả về phản hồi đăng nhập thành công kèm thông tin người dùng đăng nhập
-        phanHoi.status(200).json({
-            success: true,
-            message: 'Đăng nhập hệ thống thành công!',
-            user: {
-                id: nguoiDung.id,
-                name: nguoiDung.name,
-                email: nguoiDung.email,
-                role: nguoiDung.role,
-                dob: nguoiDung.dob,
-                phone: nguoiDung.phone,
-                readNotifs: nguoiDung.readNotifs
-            }
+        res.status(200).json({
+            success: true, message: 'Đăng nhập thành công.',
+            user: { id: nguoiDung.id, name: nguoiDung.name, email: nguoiDung.email, role: nguoiDung.role, dob: nguoiDung.dob, phone: nguoiDung.phone, readNotifs: nguoiDung.readNotifs }
         });
     } catch (error) {
         console.error('Lỗi khi đăng nhập:', error);
-        phanHoi.status(500).json({ success: false, message: 'Lỗi hệ thống trong quá trình đăng nhập!' });
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ.' });
     }
 });
 
-// 3. API Lấy danh sách toàn bộ người dùng trong hệ thống
-app.get('/api/nguoi-dung', async (yeuCau, phanHoi) => {
+// API: Lấy danh sách người dùng
+app.get('/api/nguoi-dung', async (req, res) => {
     try {
-        // Lấy tất cả người dùng ra và ẩn mật khẩu đi để đảm bảo an toàn thông tin
-        const nguoiDungs = await NguoiDungModel.find({}, '-password');
-        phanHoi.status(200).json({ success: true, users: nguoiDungs });
+        const users = await NguoiDungModel.find({});
+        res.status(200).json({ success: true, users });
     } catch (error) {
-        phanHoi.status(500).json({ success: false, message: 'Không thể truy xuất danh sách người dùng!' });
+        res.status(500).json({ success: false, message: 'Không thể lấy danh sách người dùng.' });
     }
 });
 
-// Định tuyến trang chủ mặc định để tải giao diện frontend/index.html khi truy cập localhost:5000
-app.get('/', (yeuCau, phanHoi) => {
-    phanHoi.sendFile(path.join(__dirname, '../frontend/index.html'));
+// API: Cập nhật thông tin người dùng
+app.put('/api/nguoi-dung/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, email, password, role, dob, phone } = req.body;
+
+        const nguoiDung = await NguoiDungModel.findOne({ id });
+        if (!nguoiDung) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng!' });
+        }
+
+        if (name !== undefined) nguoiDung.name = name.trim();
+        if (email !== undefined) nguoiDung.email = email.toLowerCase().trim();
+        if (password !== undefined && password.trim() !== '') nguoiDung.password = password;
+        if (role !== undefined) nguoiDung.role = role;
+        if (dob !== undefined) nguoiDung.dob = dob;
+        if (phone !== undefined) nguoiDung.phone = phone.trim();
+
+        await nguoiDung.save();
+        res.status(200).json({ success: true, message: 'Cập nhật thành công.', user: nguoiDung });
+    } catch (error) {
+        console.error('Lỗi khi cập nhật:', error);
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ.' });
+    }
 });
 
-// Khởi chạy Server trên cổng đã chọn
-app.listen(CONG_CHAY, () => {
-    console.log(`>>> Server đang chạy tại địa chỉ: http://localhost:${CONG_CHAY}`);
+// API: Xóa người dùng
+app.delete('/api/nguoi-dung/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await NguoiDungModel.findOneAndDelete({ id });
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng!' });
+        }
+        res.status(200).json({ success: true, message: 'Xóa tài khoản thành công.' });
+    } catch (error) {
+        console.error('Lỗi khi xóa:', error);
+        res.status(500).json({ success: false, message: 'Lỗi máy chủ.' });
+    }
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
+app.listen(PORT, () => {
+    console.log(`Server đang chạy tại: http://localhost:${PORT}`);
 });

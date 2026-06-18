@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Quản trị viên - Edu Report</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-top">
+                <div class="logo mb-20">
+                    <h2>Edu Report</h2>
+                    <p class="text-sm">Trang Quản trị viên</p>
+                </div>
+                <nav class="menu">
+                    <ul>
+                        <li class="menu-item active" data-target="account-manage-tab">
+                            <a href="#">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                Quản lý Tài khoản
+                            </a>
+                        </li>
+                        <li class="menu-item" data-target="class-manage-tab" onclick="khoiTaoTabDieuPhoiLop()">
+                            <a href="#">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+                                Điều phối Lớp học
+                            </a>
+                        </li>
+                        <li class="menu-item" data-target="profile-tab">
+                            <a href="#">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                Thông tin cá nhân
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            
+            <div class="user-info-sidebar">
+                <p class="user-name font-bold text-primary"></p>
+                <p class="user-email text-sm mb-10" style="word-break: break-all;"></p>
+                <button onclick="xuLyDangXuat()" class="btn-logout">Đăng xuất</button>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- TAB QUẢN LÝ TÀI KHOẢN -->
+            <section id="account-manage-tab" class="tab-section" style="display:block;">
+                <header class="top-header">
+                    <h1>Quản lý Hệ thống & Tài khoản</h1>
+                </header>
+                
+                <div class="grid-container mb-20">
+                    <div class="border-box">
+                        <span class="text-sm font-bold text-muted">TỔNG SINH VIÊN</span>
+                        <h2 class="text-xl mt-10" id="stat-total-students-adm">0</h2>
+                    </div>
+                    <div class="border-box">
+                        <span class="text-sm font-bold text-muted">TỔNG GIẢNG VIÊN</span>
+                        <h2 class="text-xl mt-10" id="stat-total-teachers-adm">0</h2>
+                    </div>
+                </div>
+
+                <div class="border-box mb-20 flex-row justify-between align-center flex-wrap" style="gap: 15px;">
+                    <div class="sub-menu mb-0" style="border-bottom: none; padding-bottom: 0;">
+                        <button data-target="adm-sub-student-accounts" class="sub-btn active" style="padding-bottom: 0;">Tài khoản Sinh viên</button>
+                        <button data-target="adm-sub-teacher-accounts" class="sub-btn" style="padding-bottom: 0;">Tài khoản Giảng viên</button>
+                    </div>
+                    <button class="btn-primary" style="width: auto;" onclick="moHopThoai('admCreateAccountModal')">+ Tạo tài khoản mới</button>
+                </div>
+                
+                <!-- Sub-tab Sinh Viên -->
+                <div id="adm-sub-student-accounts" class="sub-tab-content border-box">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Sinh viên</th>
+                                <th>Họ và tên</th>
+                                <th>Email</th>
+                                <th>Ngày sinh</th>
+                                <th>Số điện thoại</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admStudentAccounts">
+                            <!-- Nạp qua JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Sub-tab Giảng Viên -->
+                <div id="adm-sub-teacher-accounts" class="sub-tab-content border-box" style="display:none;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Giảng viên</th>
+                                <th>Họ và tên</th>
+                                <th>Email</th>
+                                <th>Ngày sinh</th>
+                                <th>Số điện thoại</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admTeacherAccounts">
+                            <!-- Nạp qua JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- TAB ĐIỀU PHỐI LỚP HỌC -->
+            <section id="class-manage-tab" class="tab-section">
+                <header class="top-header">
+                    <h1>Điều phối Lớp học & Cổng Đăng ký</h1>
+                </header>
+
+                <div class="border-box mb-20">
+                    <h3 class="mb-10 font-bold text-primary">Cổng đăng ký tín chỉ trực tuyến toàn trường</h3>
+                    <div id="adminRegToggleContainer"></div>
+                </div>
+
+                <div class="border-box mb-20">
+                    <h3 class="mb-20 font-bold text-primary">Khởi tạo lớp học chuyên ngành mới</h3>
+                    <form id="adminCreateClassForm">
+                        <div class="flex-row flex-wrap">
+                            <div class="input-group flex-1">
+                                <label>Môn học</label>
+                                <select name="subId" required></select>
+                            </div>
+                            <div class="input-group flex-1">
+                                <label>Giảng viên phụ trách</label>
+                                <select name="teacherId" required></select>
+                            </div>
+                            <div class="input-group flex-1">
+                                <label>Phòng học</label>
+                                <input type="text" name="room" required placeholder="Ví dụ: Lab 1 - A101">
+                            </div>
+                            <div class="input-group flex-1">
+                                <label>Thứ học</label>
+                                <select name="dayOfWeek">
+                                    <option>Thứ 2</option>
+                                    <option>Thứ 3</option>
+                                    <option>Thứ 4</option>
+                                    <option>Thứ 5</option>
+                                    <option>Thứ 6</option>
+                                    <option>Thứ 7</option>
+                                    <option>Chủ nhật</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex-row flex-wrap align-end">
+                            <div class="input-group flex-1">
+                                <label>Từ ngày</label>
+                                <input type="date" name="startDate" required>
+                            </div>
+                            <div class="input-group flex-1">
+                                <label>Đến ngày</label>
+                                <input type="date" name="endDate" required>
+                            </div>
+                            <div class="input-group flex-1">
+                                <label>Tiết Bắt đầu</label>
+                                <input type="number" name="startPeriod" min="1" max="12" required>
+                            </div>
+                            <div class="input-group flex-1">
+                                <label>Tiết Kết thúc</label>
+                                <input type="number" name="endPeriod" min="1" max="12" required>
+                            </div>
+                            <div class="input-group">
+                                <button type="submit" class="btn-primary" style="padding: 11px 24px;">Tạo Lớp học</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="adminClassList" class="border-box"></div>
+            </section>
+
+            <!-- TAB CHI TIẾT ĐIỀU PHỐI LỚP -->
+            <section id="admin-class-detail" class="tab-section">
+                <button onclick="document.querySelector('[data-target=\'class-manage-tab\']').click();" class="action-btn mb-20">← Quay lại điều phối</button>
+                <header class="top-header">
+                    <h1 id="admDetailClassName"></h1>
+                </header>
+                
+                <div class="sub-menu">
+                    <button data-target="adm-sub-students" class="sub-btn active" onclick="hienThiDanhSachSinhVienDieuPhoi()">Sinh viên lớp</button>
+                    <button data-target="adm-sub-sessions" class="sub-btn" onclick="hienThiDanhSachBuoiHocDieuPhoi()">Lịch buổi học</button>
+                </div>
+                
+                <div id="adm-sub-students" class="sub-tab-content">
+                    <div class="flex-row mb-20">
+                        <input type="text" id="addStuId" placeholder="Nhập Mã Sinh viên (MSSV)..." style="padding:10px; border:1px solid var(--border-color); width: 250px; border-radius: var(--border-radius);">
+                        <button class="btn-primary" style="width:auto;" onclick="themSinhVienVaoLopDieuPhoi()">+ Thêm Sinh viên</button>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã Sinh viên</th>
+                                <th>Họ và tên</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admStudentList"></tbody>
+                    </table>
+                </div>
+                
+                <div id="adm-sub-sessions" class="sub-tab-content border-box" style="display:none;">
+                    <div class="mb-20">
+                        <h3 class="mb-10 font-bold text-primary">Tạo buổi học phần bổ sung (Makeup Class)</h3>
+                        <form id="adminCreateSessionForm" class="flex-row align-end flex-wrap">
+                            <div class="input-group flex-1 mb-0">
+                                <label>Ngày</label>
+                                <input type="date" name="sesDate" required>
+                            </div>
+                            <div class="input-group flex-1 mb-0">
+                                <label>Tiết BĐ</label>
+                                <input type="number" name="sesStart" min="1" max="12" required>
+                            </div>
+                            <div class="input-group flex-1 mb-0">
+                                <label>Tiết KT</label>
+                                <input type="number" name="sesEnd" min="1" max="12" required>
+                            </div>
+                            <div class="input-group mb-0">
+                                <button type="submit" class="btn-primary" style="padding: 11px 20px;">+ Tạo buổi</button>
+                            </div>
+                        </form>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày học</th>
+                                <th>Tiết học</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admSessionList"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB HỒ SƠ CÁ NHÂN -->
+            <section id="profile-tab" class="tab-section">
+                <header class="top-header">
+                    <h1>Hồ sơ Quản trị viên</h1>
+                </header>
+                
+                <div class="border-box mb-20">
+                    <div class="flex-row align-center flex-wrap">
+                        <div class="bg-light text-primary font-bold flex-row justify-center align-center rounded-full" style="width: 80px; height: 80px; font-size: 24px; border: 2px solid var(--primary);">AD</div>
+                        <div style="margin-left: 10px;">
+                            <p class="mb-5"><strong>Mã Quản trị viên:</strong> <span id="profId"></span></p>
+                            <p class="mb-5"><strong>Họ và tên:</strong> <span class="user-name"></span></p>
+                            <p class="mb-5"><strong>Email:</strong> <span class="user-email"></span></p>
+                            <p class="mb-5"><strong>Ngày sinh:</strong> <span id="profDob"></span></p>
+                            <p class="mb-5"><strong>Số điện thoại:</strong> <span id="profPhone"></span></p>
+                            <button id="btnShowEditProfile" class="action-btn mt-10">Thay đổi thông tin</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="editProfileFormContainer" style="display:none; max-width:480px;" class="border-box">
+                    <h3 class="mb-20 font-bold text-primary">Cập nhật thông tin</h3>
+                    <form id="editProfileForm">
+                        <div class="input-group">
+                            <label>Mật khẩu mới</label>
+                            <input type="password" name="password" placeholder="Bỏ trống nếu giữ nguyên">
+                        </div>
+                        <div class="input-group">
+                            <label>Số điện thoại</label>
+                            <input type="text" name="phone">
+                        </div>
+                        <div class="input-group">
+                            <label>Ngày sinh</label>
+                            <input type="date" name="dob">
+                        </div>
+                        <div class="flex-row mt-20">
+                            <button type="submit" class="btn-primary" style="width: auto;">Cập nhật</button>
+                            <button type="button" id="btnCancelEditProfile" class="action-btn">Hủy bỏ</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ================= MODALS HỆ THỐNG ================= -->
+    <!-- Modal Tạo tài khoản mới -->
+    <div id="admCreateAccountModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 class="mb-20 text-primary">Tạo Tài Khoản Mới</h2>
+            <form id="adminCreateAccountForm">
+                <div class="flex-row flex-wrap">
+                    <div class="input-group flex-1">
+                        <label>Mã định danh (MSSV/Mã GV)</label>
+                        <input type="text" name="id" required placeholder="Ví dụ: SV202502 hoặc GV002">
+                    </div>
+                    <div class="input-group flex-1">
+                        <label>Vai trò</label>
+                        <select name="role" required>
+                            <option value="sinh-vien">Sinh viên</option>
+                            <option value="giang-vien">Giảng viên</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex-row flex-wrap">
+                    <div class="input-group flex-1">
+                        <label>Họ và tên</label>
+                        <input type="text" name="name" required placeholder="Nguyễn Văn B">
+                    </div>
+                    <div class="input-group flex-1">
+                        <label>Email</label>
+                        <input type="text" name="email" required placeholder="email@gmail.com">
+                    </div>
+                </div>
+                <div class="flex-row flex-wrap">
+                    <div class="input-group flex-1">
+                        <label>Mật khẩu</label>
+                        <input type="password" name="password" required placeholder="Tối thiểu 6 ký tự">
+                    </div>
+                    <div class="input-group flex-1">
+                        <label>Số điện thoại</label>
+                        <input type="text" name="phone" placeholder="09xxxxxxxx">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Ngày sinh</label>
+                    <input type="date" name="dob" required>
+                </div>
+                <button type="submit" class="btn-primary mt-10">Tạo tài khoản</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Sửa tài khoản -->
+    <div id="admEditAccountModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 class="mb-20 text-primary">Chỉnh Sửa Tài Khoản</h2>
+            <form id="adminEditAccountForm">
+                <div class="flex-row flex-wrap">
+                    <div class="input-group flex-1">
+                        <label>Mã định danh (Không thay đổi)</label>
+                        <input type="text" name="id" readonly style="background: #e2e8f0;">
+                    </div>
+                    <div class="input-group flex-1">
+                        <label>Vai trò</label>
+                        <select name="role" required>
+                            <option value="sinh-vien">Sinh viên</option>
+                            <option value="giang-vien">Giảng viên</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex-row flex-wrap">
+                    <div class="input-group flex-1">
+                        <label>Họ và tên</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <div class="input-group flex-1">
+                        <label>Email</label>
+                        <input type="text" name="email" required>
+                    </div>
+                </div>
+                <div class="flex-row flex-wrap">
+                    <div class="input-group flex-1">
+                        <label>Mật khẩu mới</label>
+                        <input type="password" name="password" placeholder="Bỏ trống nếu giữ nguyên">
+                    </div>
+                    <div class="input-group flex-1">
+                        <label>Số điện thoại</label>
+                        <input type="text" name="phone">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Ngày sinh</label>
+                    <input type="date" name="dob" required>
+                </div>
+                <button type="submit" class="btn-primary mt-10">Lưu thay đổi</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Sửa thông tin lớp học (Của giaovien.js) -->
+    <div id="admEditClassModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="document.getElementById('editClassForm').reset();">&times;</span>
+            <h2 class="mb-20 text-primary">Sửa Thông Tin Lớp Học</h2>
+            
+            <form id="editClassForm">
+                <input type="hidden" name="classId">
+                <div class="flex-row flex-wrap">
+                    <div class="input-group flex-1">
+                        <label>Môn học</label>
+                        <select name="subId" required></select>
+                    </div>
+                    <div class="input-group flex-1">
+                        <label>Giảng viên</label>
+                        <select name="teacherId" required></select>
+                    </div>
+                </div>
+                <div class="flex-row flex-wrap">
+                    <div class="input-group flex-1">
+                        <label>Phòng học</label>
+                        <input type="text" name="room" required>
+                    </div>
+                    <div class="input-group flex-1">
+                        <label>Thứ</label>
+                        <select name="dayOfWeek">
+                            <option>Thứ 2</option>
+                            <option>Thứ 3</option>
+                            <option>Thứ 4</option>
+                            <option>Thứ 5</option>
+                            <option>Thứ 6</option>
+                            <option>Thứ 7</option>
+                            <option>Chủ nhật</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex-row flex-wrap">
+                    <div class="input-group flex-1">
+                        <label>Từ ngày</label>
+                        <input type="date" name="startDate" required>
+                    </div>
+                    <div class="input-group flex-1">
+                        <label>Đến ngày</label>
+                        <input type="date" name="endDate" required>
+                    </div>
+                </div>
+                <div class="flex-row flex-wrap">
+                    <div class="input-group flex-1">
+                        <label>Tiết BĐ</label>
+                        <input type="number" name="startPeriod" min="1" max="12" required>
+                    </div>
+                    <div class="input-group flex-1">
+                        <label>Tiết KT</label>
+                        <input type="number" name="endPeriod" min="1" max="12" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary mt-10" style="width:auto;">Lưu thay đổi</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Sửa thông tin buổi học (Của giaovien.js) -->
+    <div id="admEditSessionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="document.getElementById('editSessionForm').reset();">&times;</span>
+            <h2 class="mb-20 text-primary">Sửa Buổi Học</h2>
+            
+            <form id="editSessionForm">
+                <input type="hidden" name="sessionId">
+                <div class="input-group">
+                    <label>Ngày học</label>
+                    <input type="date" name="sesDate" required>
+                </div>
+                <div class="flex-row flex-wrap">
+                    <div class="input-group flex-1">
+                        <label>Tiết BĐ</label>
+                        <input type="number" name="sesStart" min="1" max="12" required>
+                    </div>
+                    <div class="input-group flex-1">
+                        <label>Tiết KT</label>
+                        <input type="number" name="sesEnd" min="1" max="12" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" style="width:auto;">Cập nhật Buổi học</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Đọc thông báo (Để tránh lỗi nếu app.js gọi) -->
+    <div id="readNotifModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="readNotifTitle" class="text-primary mb-10"></h2>
+            <p id="readNotifDate" class="text-muted text-sm mb-20 border-bottom"></p>
+            <div id="readNotifContent" style="line-height: 1.6;"></div>
+            <div id="readNotifActions" class="flex-row mt-20"></div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
