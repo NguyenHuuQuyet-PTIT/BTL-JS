@@ -116,6 +116,49 @@ function hienThiConfirmTuyBien(noiDung, hamDongY) {
 }
 
 // --------------------------------------------------------------------------
+// HỆ THỐNG SỰ KIỆN CLICK TOÀN CỤC ĐỂ ĐÓNG HỘP THOẠI KHI CLICK RA NGOÀI
+// Tự động đóng bất kỳ modal hoặc hộp thoại tùy biến nào khi người dùng click vào vùng nền trống bên ngoài
+// --------------------------------------------------------------------------
+window.addEventListener('click', function(e) {
+    // 1. Kiểm tra nếu click trúng vào lớp nền của một modal thông thường (phần tử có class là "modal")
+    if (e.target.classList.contains('modal')) {
+        // Thực hiện ẩn hộp thoại bằng cách chuyển thuộc tính display sang 'none'
+        e.target.style.display = 'none';
+        
+        // Tìm kiếm xem trong modal này có chứa thẻ iframe tải tài liệu hay không
+        let iframe = e.target.querySelector('iframe');
+        // Nếu tìm thấy iframe, tiến hành xóa đường dẫn nguồn src để ngăn tải ngầm hoặc phát âm thanh tiếp diễn
+        if (iframe) iframe.src = '';
+        
+        // Tìm kiếm xem trong modal này có chứa thẻ phát video nào đang chạy hay không
+        let video = e.target.querySelector('video');
+        // Nếu tìm thấy video, tiến hành tạm dừng phát để tránh âm thanh chạy ngầm khi modal đã đóng
+        if (video) video.pause();
+        
+        // Tìm kiếm xem trong modal này có chứa thẻ phát nhạc/âm thanh nào đang chạy hay không
+        let audio = e.target.querySelector('audio');
+        // Nếu tìm thấy audio, tiến hành tạm dừng phát để tránh âm thanh chạy ngầm khi modal đã đóng
+        if (audio) audio.pause();
+    }
+    
+    // 2. Kiểm tra nếu click trúng vào lớp nền của custom alert/confirm (phần tử có class là "custom-alert-overlay")
+    if (e.target.classList.contains('custom-alert-overlay')) {
+        // Thực hiện ẩn hộp thoại alert/confirm bằng cách gỡ bỏ class hiển thị 'show'
+        e.target.classList.remove('show');
+        
+        // Kiểm tra nếu đây là hộp thoại thông báo Alert và có gắn kèm hàm gọi lại callback
+        if (e.target.id === 'customAlertOverlay' && typeof e.target.datasetCallback === 'function') {
+            // Lưu trữ tạm thời hàm callback đã được đăng ký trước đó
+            let callback = e.target.datasetCallback;
+            // Tiến hành xóa thuộc tính callback trên phần tử DOM để tránh việc gọi lặp lại không mong muốn
+            e.target.datasetCallback = null;
+            // Thực thi hàm callback sau khoảng thời gian trễ 300ms tương thích với hoạt ảnh ẩn CSS
+            setTimeout(() => { callback(); }, 300);
+        }
+    }
+});
+
+// --------------------------------------------------------------------------
 // 1. CƠ SỞ DỮ LIỆU LOCALSTORAGE & TRUY XUẤT (DATABASE & HELPERS)
 // --------------------------------------------------------------------------
 

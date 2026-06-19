@@ -1,102 +1,34 @@
-# 📚 Edu Report LMS - Hệ thống Quản lý Học tập
+# 📚 Edu Report LMS
 
-Dự án **Edu Report** là ứng dụng web LMS (Learning Management System) dành cho khoa CNTT, phân chia rõ ràng 3 vai trò: **Sinh viên**, **Giảng viên** và **Quản trị viên (Admin)**.
-
----
+Hệ thống quản lý học tập và điều phối đào tạo dành cho khoa CNTT. Dự án phân chia rõ 3 vai trò: Sinh viên, Giảng viên và Admin.
 
 ## 🚀 Hướng dẫn chạy dự án
 
-### 1. Chạy Backend (Server Node.js + MongoDB)
+### 1. Khởi chạy Backend
 ```bash
-# Di chuyển vào thư mục backend
 cd backend
-
-# Cài đặt thư viện phụ thuộc
 npm install
-
-# Khởi động server Express (chạy local)
 npm run dev
 ```
-> Server chạy tại `http://localhost:5000` và kết nối MongoDB Atlas tự động.
+> Server chạy tại `http://localhost:5000` và tự động kết nối tới MongoDB Atlas.
 
-### 2. Chạy Frontend (Giao diện)
-- **Cách 1:** Mở file `frontend/index.html` trực tiếp trong trình duyệt
-- **Cách 2:** Dùng extension **Live Server** của VS Code để chạy Hot Reload
-- **Deploy online:** Frontend đã deploy lên Vercel tại `https://edu--report.vercel.app/`
-
----
-
-## 🔑 Tài khoản thử nghiệm
-
-| Vai trò | Email / Username | Mật khẩu | Chức năng chính |
-|---------|-----------------|----------|----------------|
-| **Admin** | `admin` | `admin` | Quản lý tài khoản, lớp học, cổng đăng ký, thông báo toàn trường |
-| **Giảng viên** | `giaovien` | `giaovien` | Nhập điểm, điểm danh, giao bài tập (có file), xem bài SV nộp trực tiếp |
-| **Sinh viên** | `sinhvien` | `sinhvien` | Xem lịch học, điểm số, nhận thông báo bài tập, xem file & nộp bài |
+### 2. Khởi chạy Frontend
+- Mở file `frontend/index.html` trực tiếp trên trình duyệt hoặc chạy qua **Live Server** trên VS Code.
+- Đã deploy tại: `https://edu--report.vercel.app/`
 
 ---
 
-## ✨ Tính năng nổi bật
+## 🔑 Tài khoản đăng nhập demo
 
-### 🎯 Luồng Giao bài - Nộp bài hoàn chỉnh
-1. **GV giao bài tập** → upload file (PDF/ảnh/Word/...) + viết mô tả đề bài
-2. **Hệ thống tự động tạo thông báo** gửi vào hộp thư lớp học của SV
-3. **SV nhận thông báo** → click vào → hiện popup chi tiết bài tập đầy đủ
-4. **SV xem file đính kèm** trực tiếp (file tự động hiển thị inline ngay dưới đề bài, hỗ trợ xem Word .docx bằng mammoth.js, PDF, ảnh... không cần tải về máy)
-5. **SV làm bài xong → nộp lại** bằng file upload hoặc đường dẫn URL
-6. **GV xem danh sách bài nộp** → Bản xem trước bài làm tự động tải và hiển thị ngay dưới bảng, không cần bấm xem trực tiếp hay tải về máy
-
-### 📋 Thông báo thông minh
-- Thông báo bài tập hiển thị **badge "📋 BÀI TẬP"** nổi bật trong hộp thư
-- Click vào thông báo bài tập → **modal chi tiết** hiện đầy đủ kèm bản xem trước file tự động ngay bên dưới
-- Thông báo thường vẫn hiện bình thường như cũ
-
-### 🗂️ Xem file không cần tải về
-- **PDF, ảnh, video, text, Word (.docx)** → tự động hiển thị bản xem trước inline ngay trên trang
-- Các loại file nén khác (.zip, .rar...) có nút **"Tải xuống"** dự phòng
+- **Admin:** `admin` / `admin` (Quản lý tài khoản, lớp học, cổng đăng ký tín chỉ, gửi thông báo).
+- **Giảng viên:** `giaovien` / `giaovien` (Điểm danh, nhập điểm, giao bài tập có đính kèm file, xem bài làm SV).
+- **Sinh viên:** `sinhvien` / `sinhvien` (Xem lịch học, bảng điểm, đăng ký tín chỉ, xem bài tập và nộp bài).
 
 ---
 
-## 📁 Cấu trúc thư mục dự án
+## ✨ Các tính năng cốt lõi
 
-```
-BTL JS/
-├── backend/
-│   ├── models/
-│   │   ├── NguoiDung.js    # Schema tài khoản người dùng (admin/GV/SV)
-│   │   ├── ThongBao.js     # Schema thông báo (có trường materialId liên kết bài tập)
-│   │   ├── TaiLieu.js      # Schema tài liệu/bài tập (có trường description, fileName)
-│   │   └── NopBai.js       # Schema bài nộp của sinh viên (có trường fileName)
-│   ├── server.js           # Express API server - tất cả route endpoints
-│   ├── package.json
-│   └── .env                # Chuỗi kết nối MongoDB Atlas (MONGO_URI)
-├── frontend/
-│   ├── css/
-│   │   └── style.css       # Toàn bộ style CSS Glassmorphism (1500+ dòng)
-│   ├── js/
-│   │   ├── app.js          # Core engine: đăng nhập, đồng bộ dữ liệu, thông báo chung
-│   │   ├── admin.js        # Logic dashboard Quản trị viên
-│   │   ├── giaovien.js     # Logic dashboard Giảng viên
-│   │   └── sinhvien.js     # Logic dashboard Sinh viên
-│   ├── index.html          # Trang đăng nhập
-│   ├── admin.html          # Dashboard Admin
-│   ├── teacher-dashboard.html  # Dashboard Giảng viên
-│   └── student-dashboard.html  # Dashboard Sinh viên
-├── README.md
-├── BaoCao.md
-└── KetNoi_MongoDB.md
-```
-
----
-
-## 🗄️ Kiến trúc dữ liệu (Dual-Store)
-
-| Loại dữ liệu | MongoDB Atlas | LocalStorage |
-|-------------|--------------|-------------|
-| Tài khoản (Users) | ✅ | ✅ Cache |
-| Thông báo (Notifications) | ✅ | ✅ Cache |
-| Tài liệu/Bài tập (Materials) | ✅ | ✅ Cache |
-| Bài nộp (Submissions) | ✅ | ✅ Cache |
-| Lớp học, Điểm số, Điểm danh | ❌ | ✅ Chính |
-
-> **Ghi chú:** File nộp và file đính kèm bài tập được mã hóa Base64 và lưu trong trường `link`.
+- **Giao bài & Nộp bài trực tuyến:** Giảng viên upload đề bài (kèm file); Sinh viên làm và nộp trực tiếp.
+- **Xem file inline không cần tải về:** Tự động mở xem trước PDF, ảnh, video, âm thanh, file văn bản và Word (.docx sử dụng `mammoth.js`) ngay trong trang.
+- **Đóng hộp thoại thông minh:** Click ra vùng ngoài (overlay) để tự động ẩn các modal hoặc hộp thoại thông báo, tự động dừng audio/video chạy ngầm.
+- **Đồng bộ cơ sở dữ liệu:** Kết hợp lưu MongoDB Atlas (dữ liệu chính) và LocalStorage (cache offline).
