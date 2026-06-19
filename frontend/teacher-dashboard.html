@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Giảng viên - Edu Report</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -20,7 +21,7 @@
                         <li class="menu-item active" data-target="class-tab">
                             <a href="#">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V3.5A2.5 2.5 0 0 1 6.5 1h13.5v16H6.5a2.5 2.5 0 0 0-2.5 2.5z"/></svg>
-                                Giảng dạy & Điểm danh
+                                Giảng dạy & điểm danh
                             </a>
                         </li>
                         <li class="menu-item" data-target="teacher-notifs">
@@ -54,7 +55,7 @@
             <!-- TAB GIẢNG DẠY & ĐIỂM DANH -->
             <section id="class-tab" class="tab-section" style="display:block;">
                 <header class="top-header">
-                    <h1>Quản lý Giảng dạy</h1>
+                    <h1>Quản lý giảng dạy</h1>
                 </header>
                 
                 <div class="grid-container mb-20">
@@ -179,7 +180,7 @@
             <!-- TAB QUẢN LÝ THÔNG BÁO -->
             <section id="teacher-notifs" class="tab-section">
                 <header class="top-header">
-                    <h1>Quản lý Thông báo</h1>
+                    <h1>Quản lý thông báo</h1>
                 </header>
                 
                 <div class="sub-menu">
@@ -207,7 +208,7 @@
                         <button type="submit" class="btn-primary" style="width: auto;">Gửi Thông báo</button>
                     </form>
                     
-                    <h3 class="border-bottom mb-10 mt-20 font-bold text-primary">Lịch sử Đã gửi</h3>
+                    <h3 class="border-bottom mb-10 mt-20 font-bold text-primary">Lịch sử đã gửi</h3>
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -224,7 +225,7 @@
             <!-- TAB HỒ SƠ CÁ NHÂN -->
             <section id="profile-tab" class="tab-section">
                 <header class="top-header">
-                    <h1>Hồ sơ Giảng viên</h1>
+                    <h1>Hồ sơ giảng viên</h1>
                 </header>
                 
                 <div class="border-box mb-20">
@@ -298,20 +299,35 @@
 
     <!-- Modal Xem danh sách nộp bài tập -->
     <div id="viewSubmissionsModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
+        <div class="modal-content" style="max-width: 800px; width: 90%;">
+            <span class="close-modal" onclick="dongHopThoai('viewSubmissionsModal')">&times;</span>
             <h2 id="viewSubmissionsTitle" class="text-primary mb-20">Danh sách bài tập sinh viên đã nộp</h2>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Ngày nộp</th>
-                        <th>Mã Sinh viên</th>
-                        <th>Họ tên sinh viên</th>
-                        <th>Liên kết bài làm</th>
-                    </tr>
-                </thead>
-                <tbody id="tcSubmissionList"></tbody>
-            </table>
+            <div style="max-height: 250px; overflow-y: auto; margin-bottom: 20px; border-bottom: 2px solid var(--border-color);">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ngày nộp</th>
+                            <th>Mã Sinh viên</th>
+                            <th>Họ tên sinh viên</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tcSubmissionList"></tbody>
+                </table>
+            </div>
+
+            <!-- Phân vùng xem trước bài làm của sinh viên -->
+            <div id="teacherSubmissionPreviewArea" style="display: none; margin-top: 20px; border-top: 2px solid var(--border-color); padding-top: 15px;">
+                <div class="flex-row justify-between align-center mb-10" style="flex-wrap: wrap; gap: 10px;">
+                    <h3 class="text-primary font-bold" id="teacherPreviewStudentTitle" style="font-size: 15px; margin: 0; line-height: 1.4;">👁️ Bản xem trước bài làm</h3>
+                    <button id="teacherDownloadSubmissionBtn" class="btn-primary" style="padding: 6px 12px; font-size: 12px; width: auto; background: linear-gradient(135deg, #6366f1, #4f46e5); display: inline-flex; align-items: center; gap: 5px;">
+                        ⬇️ Tải xuống bản gốc
+                    </button>
+                </div>
+                <div id="teacherSubmissionPreviewBody" style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; max-height: 500px; overflow-y: auto;">
+                    <!-- Bản xem trước động sẽ được chèn ở đây -->
+                </div>
+            </div>
         </div>
     </div>
 

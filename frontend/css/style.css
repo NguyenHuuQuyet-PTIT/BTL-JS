@@ -71,49 +71,53 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
+/* Các lớp tiện ích sắp xếp Flexbox */
 .flex-row { 
     display: flex; 
     gap: 15px; 
-} 
+} /* Sắp xếp các phần tử con theo chiều ngang với khoảng cách 15px */
 
-.flex-wrap { flex-wrap: wrap; } 
-.flex-1 { flex: 1; }
-.align-end { align-items: flex-end; } 
-.align-center { align-items: center; } 
-.justify-between { justify-content: space-between; } 
-.justify-center { justify-content: center; }
-.justify-end { justify-content: flex-end; }
-.text-center { text-align: center; }
+.flex-wrap { flex-wrap: wrap; } /* Cho phép các phần tử tự động xuống hàng khi tràn */
+.flex-1 { flex: 1; } /* Phần tử tự động chiếm toàn bộ diện tích trống còn lại */
+.align-end { align-items: flex-end; } /* Căn chỉnh phần tử con sát mép dưới */
+.align-center { align-items: center; } /* Căn chỉnh dọc các phần tử con ở chính giữa */
+.justify-between { justify-content: space-between; } /* Phân bổ khoảng cách đều giữa các phần tử sát hai biên */
+.justify-center { justify-content: center; } /* Căn chỉnh các phần tử ở giữa theo chiều ngang */
+.justify-end { justify-content: flex-end; } /* Đẩy các phần tử sát về lề bên phải */
+.text-center { text-align: center; } /* Căn lề văn bản ở giữa */
 
-.mt-5 { margin-top: 5px; }
-.mt-10 { margin-top: 10px; } 
-.mt-20 { margin-top: 20px; } 
-.mt-auto { margin-top: auto; }
-.mb-0 { margin-bottom: 0 !important; }
-.mb-10 { margin-bottom: 10px; } 
-.mb-20 { margin-bottom: 20px; }
-.p-10 { padding: 10px; } 
-.p-20 { padding: 20px; }
-.ml-10 { margin-left: 10px; }
+/* Các lớp tiện ích căn khoảng cách (Margin & Padding) */
+.mt-5 { margin-top: 5px; } /* Căn lề trên 5px */
+.mt-10 { margin-top: 10px; } /* Căn lề trên 10px */
+.mt-20 { margin-top: 20px; } /* Căn lề trên 20px */
+.mt-auto { margin-top: auto; } /* Tự động đẩy phần tử lên góc trên cùng hoặc xa nhất có thể */
+.mb-0 { margin-bottom: 0 !important; } /* Loại bỏ căn lề dưới */
+.mb-10 { margin-bottom: 10px; } /* Căn lề dưới 10px */
+.mb-20 { margin-bottom: 20px; } /* Căn lề dưới 20px */
+.p-10 { padding: 10px; } /* Đệm trong 10px */
+.p-20 { padding: 20px; } /* Đệm trong 20px */
+.ml-10 { margin-left: 10px; } /* Căn lề trái 10px */
 
-.font-bold { font-weight: 600; } 
-.text-sm { font-size: 13px; color: var(--text-muted); } 
-.text-xl { font-size: 26px; font-weight: 700; color: var(--primary); }
-.text-success { color: var(--success) !important; } 
-.text-warning { color: var(--warning) !important; } 
-.text-danger { color: var(--danger) !important; }
-.text-muted { color: var(--text-muted); } 
-.text-primary { color: var(--primary) !important; } 
-.text-white { color: #fff; }
-.bg-light { background: var(--primary-light); } 
-.bg-gray { background: #e2e8f0; }
+/* Các lớp tiện ích định dạng chữ viết & màu sắc */
+.font-bold { font-weight: 600; } /* Định dạng chữ in đậm vừa */
+.text-sm { font-size: 13px; color: var(--text-muted); } /* Định dạng chữ nhỏ kèm tông màu xám nhẹ */
+.text-xl { font-size: 26px; font-weight: 700; color: var(--primary); } /* Định dạng tiêu đề lớn rực rỡ */
+.text-success { color: var(--success) !important; } /* Màu chữ xanh lá biểu thị trạng thái thành công */
+.text-warning { color: var(--warning) !important; } /* Màu chữ vàng cam biểu thị trạng thái cảnh báo/đi muộn */
+.text-danger { color: var(--danger) !important; } /* Màu chữ đỏ biểu thị trạng thái lỗi/vắng mặt */
+.text-muted { color: var(--text-muted); } /* Màu chữ xám mô tả ghi chú phụ */
+.text-primary { color: var(--primary) !important; } /* Màu chữ tím chủ đạo hệ thống */
+.text-white { color: #fff; } /* Màu chữ trắng thuần */
+.bg-light { background: var(--primary-light); } /* Màu nền tím nhạt pastel */
+.bg-gray { background: #e2e8f0; } /* Màu nền xám nhạt */
 
+/* Đường gạch phân vùng ngăn chia thông tin */
 .border-bottom { 
     border-bottom: 1px solid var(--border-color); 
     padding-bottom: 14px; 
     margin-bottom: 18px;
 }
-.rounded-full { border-radius: 9999px; }
+.rounded-full { border-radius: 9999px; } /* Tạo bo góc tròn hoàn hảo */
 
 /* ==========================================================================
    3. BỐ CỤC HỆ THỐNG CHÍNH (MAIN LAYOUT)
@@ -578,14 +582,6 @@ canvas {
     height: 100%; 
     transition: width 0.3s; 
 }
-
-/* ==========================================================================
-   7. MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ (BẢN CŨ ĐÃ ĐƯỢC CHUYỂN DÀNH CHO ADMIN)
-   ========================================================================== */
-
-
-
-
 
 /* ==========================================
    8. HỘP THOẠI (MODAL BLUR LAYOUT)

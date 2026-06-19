@@ -762,14 +762,37 @@ if (formTaiLieu) {
         }
     });
 }
+// Hàm hiển thị xem trước bài làm của một sinh viên được chọn trong danh sách nộp bài
+function previewSinhVienBaiLam(base64Data, fileName, studentName, studentId) {
+    let previewArea = document.getElementById('teacherSubmissionPreviewArea');
+    let titleEl = document.getElementById('teacherPreviewStudentTitle');
+    let bodyEl = document.getElementById('teacherSubmissionPreviewBody');
+    let downloadBtn = document.getElementById('teacherDownloadSubmissionBtn');
+    
+    if (!previewArea || !bodyEl) return;
+    
+    // Hiển thị vùng xem thử
+    previewArea.style.display = 'block';
+    if (titleEl) {
+        titleEl.textContent = `👁️ Bài làm của: ${studentName} (${studentId}) - Tệp: ${fileName}`;
+    }
+    
+    // Gán hành động tải file gốc
+    if (downloadBtn) {
+        downloadBtn.onclick = function() {
+            taiFileDinhKem(base64Data, fileName);
+        };
+    }
+    
+    // Gọi hàm xem file inline để kết xuất bản xem thử trực quan
+    hienThiXemFileInline(base64Data, fileName, bodyEl);
+}
 
 // Hàm hiển thị danh sách bài làm sinh viên đã nộp cho bài tập tương ứng
-// GV có thể xem trực tiếp file nộp hoặc tải về máy tùy nhu cầu
 function xemDanhSachNopBai(idTaiLieu) {
     // Lấy toàn bộ danh sách bài nộp và tài liệu từ CSDL cục bộ
     let submissions = layCSDL('Submissions');
     let materials = layCSDL('Materials');
-    // Tìm thông tin bài tập tương ứng để hiển thị tiêu đề
     let assignment = materials.find(m => m.id === idTaiLieu);
     
     // Cập nhật tiêu đề modal theo tên bài tập đang được xem
@@ -778,25 +801,43 @@ function xemDanhSachNopBai(idTaiLieu) {
         titleEl.textContent = `📋 Bài nộp: ${assignment.title}`;
     }
 
+    // Ẩn vùng xem thử ban đầu trước khi hiển thị bảng mới
+    let previewArea = document.getElementById('teacherSubmissionPreviewArea');
+    if (previewArea) previewArea.style.display = 'none';
+
     // Lọc các bài nộp của bài tập tương ứng
     let subsOfAssignment = submissions.filter(s => s.materialId === idTaiLieu);
 
     // Tạo mã HTML hàng bảng danh sách bài nộp
-    let html = subsOfAssignment.map(s => {
+    let html = subsOfAssignment.map((s, idx) => {
         let submissionLink = '';
         if (s.fileName) {
+            let safeLink = s.link.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let safeName = s.fileName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let safeStudentName = s.studentName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let safeStudentId = s.studentId.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            
             submissionLink = `
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="action-btn" style="padding: 4px 10px; font-size:12px; width:auto;" onclick="xemFileTrucTiep('${s.link.replace(/'/g, "\\'")}', '${s.fileName.replace(/'/g, "\\'")}')">👁️ Xem trực tiếp</button>
-                    <button class="btn-primary" style="padding: 4px 10px; font-size:12px; width:auto; background: linear-gradient(135deg, #6366f1, #4f46e5);" onclick="taiFileDinhKem('${s.link.replace(/'/g, "\\'")}', '${s.fileName.replace(/'/g, "\\'")}')">⬇️ Tải xuống</button>
-                </div>
+                <button class="action-btn preview-sub-btn" style="padding: 4px 10px; font-size:12px; width:auto;" 
+                    onclick="event.stopPropagation(); previewSinhVienBaiLam('${safeLink}', '${safeName}', '${safeStudentName}', '${safeStudentId}')">
+                    👁️ Xem bài làm
+                </button>
             `;
         } else {
-            submissionLink = `<a href="${s.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline;">👁️ Xem liên kết</a>`;
+            submissionLink = `<a href="${s.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline; font-size: 12px;" onclick="event.stopPropagation();">👁️ Xem liên kết</a>`;
+        }
+
+        let rowOnclick = '';
+        if (s.fileName) {
+            let safeLink = s.link.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let safeName = s.fileName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let safeStudentName = s.studentName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            let safeStudentId = s.studentId.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            rowOnclick = `onclick="previewSinhVienBaiLam('${safeLink}', '${safeName}', '${safeStudentName}', '${safeStudentId}')" style="cursor: pointer;"`;
         }
 
         return `
-            <tr>
+            <tr ${rowOnclick}>
                 <td>${s.date}</td>
                 <td><strong>${s.studentId}</strong></td>
                 <td>${s.studentName}</td>
@@ -809,6 +850,14 @@ function xemDanhSachNopBai(idTaiLieu) {
     let tbody = document.getElementById('tcSubmissionList');
     if (tbody) {
         tbody.innerHTML = html || '<tr><td colspan="4" class="text-center" style="padding:20px;color:#888;">💭 Chưa có sinh viên nào nộp bài tập này.</td></tr>';
+    }
+
+    // Tự động mở xem trước bài nộp của sinh viên đầu tiên (nếu có tệp đính kèm) sau khi modal hiện
+    if (subsOfAssignment.length > 0 && subsOfAssignment[0].fileName) {
+        let first = subsOfAssignment[0];
+        setTimeout(() => {
+            previewSinhVienBaiLam(first.link, first.fileName, first.studentName, first.studentId);
+        }, 100);
     }
 
     moHopThoai('viewSubmissionsModal');

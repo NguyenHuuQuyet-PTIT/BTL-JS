@@ -40,15 +40,15 @@
 - **Nhập điểm:** Cập nhật điểm chuyên cần (20%), giữa kỳ (30%), cuối kỳ (50%)
 - **Điểm danh:** Tích điểm danh từng buổi học (Có mặt / Đi muộn / Vắng mặt)
 - **Giao bài tập:** Upload file đính kèm (PDF, ảnh, Word...) + viết mô tả đề bài → hệ thống tự động tạo thông báo gửi lớp
-- **Xem bài nộp:** Xem file bài làm SV trực tiếp trong trình duyệt hoặc tải xuống máy
+- **Xem bài nộp:** Tự động mở xem trước bài làm của sinh viên ngay dưới bảng danh sách nộp bài mà không cần bấm nút tải về máy
 - **Thông báo lớp:** Soạn/sửa/xóa thông báo cho sinh viên trong lớp phụ trách
 
 ### 🎓 Sinh viên
 - **Lịch học:** Xem thời khóa biểu tuần cá nhân, lịch các lớp đã đăng ký
 - **Kết quả học tập:** Bảng điểm chi tiết, GPA, biểu đồ chuyên cần & phân loại học lực
 - **Đăng ký tín chỉ:** Đăng ký/hủy lớp học phần khi Admin mở cổng đăng ký
-- **Thông báo bài tập:** Click vào thông báo → hiện popup chi tiết bài tập đầy đủ (tiêu đề, mô tả, file)
-- **Xem file GV giao:** Mở file (PDF/ảnh/Word...) trực tiếp trong tab trình duyệt, không cần tải về
+- **Thông báo bài tập:** Click vào thông báo → hiện popup chi tiết bài tập đầy đủ kèm bản xem trước file trực tiếp ngay bên dưới mô tả
+- **Xem file GV giao:** Tự động xem trực tiếp bản vẽ, file PDF, ảnh hoặc file Word (.docx) được chuyển đổi động sang HTML mà không cần tải về
 - **Nộp bài:** Upload file bài làm hoặc gửi đường dẫn URL (Google Drive, GitHub...)
 
 ---
@@ -64,15 +64,13 @@
          ↓
 [SV] Vào Thông báo → Thấy card bài tập có badge "📋 BÀI TẬP"
          ↓
-[SV] Click vào → Modal chi tiết bài tập: tiêu đề, mô tả, file đính kèm
-         ↓
-[SV] Nhấn "👁️ Xem trực tiếp" → File mở trong tab trình duyệt mới
+[SV] Click vào → Modal chi tiết bài tập: tiêu đề, mô tả, tự động hiển thị xem trước file inline
          ↓
 [SV] Làm bài xong → Nhấn "📤 Nộp bài ngay" → Modal nộp bài
          ↓
 [SV] Upload file hoặc nhập URL → Xác nhận nộp
          ↓
-[GV] Tab "Xem bài nộp" → Danh sách SV nộp + nút xem/tải file từng bài
+[GV] Tab "Xem bài nộp" → Danh sách SV nộp + Tự động hiển thị xem trước bài làm của SV đầu tiên (hoặc SV được chọn) bên dưới bảng
 ```
 
 ---
@@ -99,8 +97,9 @@
 | `hienThiConfirmTuyBien()` | Popup xác nhận thao tác |
 | `layCSDL()` / `ghiCSDL()` | Đọc/ghi LocalStorage |
 | `moHopThoaiDocThongBao()` | Mở chi tiết thông báo - nếu là bài tập sẽ mở modal bài tập |
-| `moModalChiTietBaiTap()` | Hiển thị popup đầy đủ thông tin bài tập + file |
-| `xemFileTrucTiep()` | Mở file Base64 xem trực tiếp trong tab mới |
+| `moModalChiTietBaiTap()` | Hiển thị popup đầy đủ thông tin bài tập + tự động gọi `hienThiXemFileInline` để hiển thị tệp đính kèm |
+| `hienThiXemFileInline()` | **[MỚI]** Tự động phân tích kiểu file (Word .docx, PDF, Ảnh, Video, Audio, Txt) và kết xuất xem thử inline |
+| `xemFileTrucTiep()` | Mở file Base64 xem thử (gọi hàm `hienThiXemFileInline` nhúng vào modal dự phòng) |
 | `taiFileDinhKem()` | Tải file Base64 về máy |
 | `hienThiTheThongBaoChung()` | Render danh sách thông báo, gắn badge bài tập |
 | `capNhatHuyHieuThongBao()` | Cập nhật chấm đỏ số thông báo chưa đọc |
@@ -123,8 +122,9 @@
 | `luuDiemHocSinhGiangVien()` | Lưu điểm thành phần vào LocalStorage |
 | `luuDiemDanhGiangVien()` | Cập nhật điểm danh buổi học |
 | `hienThiTaiLieuGiangVien()` | Hiển thị danh sách tài liệu đã tải lên |
-| `xemDanhSachNopBai()` | Xem bài SV nộp + nút xem trực tiếp/tải xuống |
-| `tuDongTaoThongBaoBaiTap()` | **[MỚI]** Tự động tạo thông báo lớp khi GV giao bài tập |
+| `xemDanhSachNopBai()` | Xem danh sách bài nộp và tự động tải xem trước bài làm của SV đầu tiên |
+| `previewSinhVienBaiLam()` | **[MỚI]** Hiển thị bản xem trước của sinh viên được chọn dưới bảng danh sách |
+| `tuDongTaoThongBaoBaiTap()` | Tự động tạo thông báo lớp khi GV giao bài tập |
 
 ### E. Admin (`frontend/js/admin.js`)
 | Hàm | Chức năng |

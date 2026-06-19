@@ -235,24 +235,25 @@ function taiFileDinhKem(base64Data, fileName) {
         document.body.appendChild(linkTai);
         linkTai.click();
         document.body.removeChild(linkTai);
-    } catch (e) {
+} catch (e) {
         alert("Lỗi khi tải file đính kèm: " + e.message);
     }
 }
 
-// Hàm mở file đính kèm xem trực tiếp trong tab trình duyệt mới (không tải về máy)
-// Dùng cho sinh viên xem file bài tập từ thông báo GV giao
-function xemFileTrucTiep(base64Data, fileName) {
-    try {
-        // Lấy phần đầu của chuỗi Base64 để xác định kiểu MIME của file
-        let mimeType = 'application/octet-stream'; // Mặc định nếu không xác định được
+// Hàm tự động hiển thị file inline trực tiếp trên trang mà không cần click xem trực tiếp hay tự động tải về
+function hienThiXemFileInline(base64Data, fileName, containerElement) {
+    if (!containerElement) return;
+    containerElement.innerHTML = `<div class="text-center" style="padding: 15px; color: var(--text-muted);"><span style="display: inline-block; animation: spin 1s linear infinite; margin-right: 8px;">⏳</span>Đang tải dữ liệu xem trước...</div>`;
 
-        // Xác định kiểu MIME dựa vào phần tiêu đề Data URL
+    try {
+        // Tách lấy đuôi mở rộng của tệp tin để phân loại định dạng
+        let ext = fileName.split('.').pop().toLowerCase();
+        
+        // Xác định kiểu mime-type tương ứng với tệp tin
+        let mimeType = 'application/octet-stream';
         if (base64Data.startsWith('data:')) {
             mimeType = base64Data.split(';')[0].split(':')[1];
         } else {
-            // Xác định kiểu MIME theo phần mở rộng tên file
-            let ext = fileName.split('.').pop().toLowerCase();
             const mimeMap = {
                 'pdf':  'application/pdf',
                 'png':  'image/png',
@@ -264,19 +265,12 @@ function xemFileTrucTiep(base64Data, fileName) {
                 'txt':  'text/plain',
                 'html': 'text/html',
                 'mp4':  'video/mp4',
-                'mp3':  'audio/mpeg',
-                'doc':  'application/msword',
-                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'xls':  'application/vnd.ms-excel',
-                'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'ppt':  'application/vnd.ms-powerpoint',
-                'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                'zip':  'application/zip'
+                'mp3':  'audio/mpeg'
             };
             mimeType = mimeMap[ext] || 'application/octet-stream';
         }
 
-        // Chuyển đổi chuỗi Base64 sang đối tượng Blob nhị phân
+        // Thực hiện giải mã chuỗi Base64 Data URL thành Blob nhị phân cục bộ
         let base64Part = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
         let byteChars = atob(base64Part);
         let byteNumbers = new Array(byteChars.length);
@@ -284,19 +278,122 @@ function xemFileTrucTiep(base64Data, fileName) {
             byteNumbers[i] = byteChars.charCodeAt(i);
         }
         let byteArray = new Uint8Array(byteNumbers);
-        // Tạo đối tượng Blob để có thể tạo URL tạm thời mở trong tab mới
         let blob = new Blob([byteArray], { type: mimeType });
-        // Tạo URL tạm thời từ Blob
         let blobUrl = URL.createObjectURL(blob);
-        // Mở URL trong tab mới của trình duyệt để sinh viên xem trực tiếp
-        window.open(blobUrl, '_blank');
 
-        // Dọn dẹp URL tạm thời sau 60 giây để giải phóng bộ nhớ
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        // Xử lý hiển thị trực tiếp theo từng định dạng tài liệu
+        if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'].includes(ext) || mimeType.startsWith('image/')) {
+            // Hiển thị tệp ảnh trực quan kèm theo bóng mờ nhẹ của hệ thống
+            containerElement.innerHTML = `<img src="${blobUrl}" style="max-width: 100%; max-height: 480px; border-radius: 8px; box-shadow: var(--shadow-sm); display: block; margin: 10px auto;">`;
+        } else if (ext === 'pdf' || mimeType === 'application/pdf') {
+            // Nhúng trực tiếp tài liệu PDF thông qua thẻ iframe an toàn
+            containerElement.innerHTML = `<iframe src="${blobUrl}" style="width: 100%; height: 500px; border: 1px solid var(--border-color); border-radius: 8px;"></iframe>`;
+        } else if (['mp4', 'webm', 'ogg'].includes(ext) || mimeType.startsWith('video/')) {
+            // Nhúng trình phát video HTML5 cho phép giáo viên/học viên xem bài giảng đa phương tiện
+            containerElement.innerHTML = `<video src="${blobUrl}" controls style="max-width: 100%; max-height: 400px; border-radius: 8px; display: block; margin: 10px auto;"></video>`;
+        } else if (['mp3', 'wav', 'ogg'].includes(ext) || mimeType.startsWith('audio/')) {
+            // Nhúng trình phát nhạc audio HTML5
+            containerElement.innerHTML = `<audio src="${blobUrl}" controls style="width: 100%; max-width: 400px; display: block; margin: 10px auto;"></audio>`;
+        } else if (ext === 'txt' || mimeType === 'text/plain') {
+            // Đọc tệp tin dạng văn bản thuần và hiển thị gọn trong khung cuộn pre
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                containerElement.innerHTML = `<pre style="width: 100%; max-height: 400px; overflow-y: auto; background: #f1f5f9; padding: 15px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; word-break: break-all; text-align: left; margin-top: 10px; line-height: 1.5;">${e.target.result}</pre>`;
+            };
+            reader.readAsText(blob);
+        } else if (['doc', 'docx'].includes(ext)) {
+            // Hỗ trợ hiển thị tệp Word (.docx) thông qua thư viện mammoth.js tải động từ CDN
+            if (window.mammoth) {
+                let arrayBufferReader = new FileReader();
+                arrayBufferReader.onload = function(e) {
+                    let arrayBuffer = e.target.result;
+                    window.mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
+                        .then(function(result) {
+                            containerElement.innerHTML = `
+                                <div style="width: 100%; max-height: 500px; overflow-y: auto; background: white; border: 1px solid var(--border-color); padding: 20px; border-radius: 8px; text-align: left; margin-top: 10px; box-shadow: var(--shadow-sm); line-height: 1.6;">
+                                    ${result.value || '<p class="text-muted">Tài liệu không có nội dung chữ.</p>'}
+                                </div>
+                            `;
+                        })
+                        .catch(function(err) {
+                            containerElement.innerHTML = `<p class="text-danger" style="margin-top: 10px;">⚠️ Lỗi hiển thị file Word: ${err.message}</p>`;
+                        });
+                };
+                arrayBufferReader.readAsArrayBuffer(blob);
+            } else {
+                // Nếu thư viện chưa tải xong, tiến hành chèn thẻ script tải mammoth từ CDN
+                containerElement.innerHTML = `<div class="text-center" style="padding: 10px; color: var(--text-muted);">⏳ Đang tải thư viện đọc file Word...</div>`;
+                let script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+                script.onload = function() {
+                    hienThiXemFileInline(base64Data, fileName, containerElement);
+                };
+                script.onerror = function() {
+                    containerElement.innerHTML = `<p class="text-danger" style="margin-top: 10px;">⚠️ Không thể tải thư viện Word từ CDN. Vui lòng tải file về máy để xem.</p>`;
+                };
+                document.head.appendChild(script);
+            }
+        } else {
+            // Đối với các định dạng nén như zip, rar, excel hoặc định dạng lạ, hiển thị cảnh báo yêu cầu tải về
+            let safeLink = base64Data.replace(/'/g, "\\'");
+            let safeName = fileName.replace(/'/g, "\\'");
+            containerElement.innerHTML = `
+                <div style="text-align: center; padding: 15px; background: #fafafa; border-radius: 8px; border: 1px dashed var(--border-color); margin-top: 10px;">
+                    <span style="font-size: 40px;">📎</span>
+                    <p class="font-bold text-primary mt-10" style="font-size: 14px; word-break: break-all;">${fileName}</p>
+                    <p class="text-sm text-muted mb-10">Định dạng này (.${ext}) không hỗ trợ xem trực tiếp trên trình duyệt.</p>
+                    <button onclick="taiFileDinhKem('${safeLink}', '${safeName}')" class="btn-primary" style="width: auto; padding: 8px 20px; font-size: 13px;">
+                        ⬇️ Tải xuống file
+                    </button>
+                </div>
+            `;
+        }
     } catch (e) {
-        // Nếu không mở được, fallback sang tải về
-        alert('Không thể xem trực tiếp file này. Đang chuyển sang tải về...');
-        taiFileDinhKem(base64Data, fileName);
+        containerElement.innerHTML = `<p class="text-danger" style="margin-top: 10px;">⚠️ Lỗi khi kết xuất xem file: ${e.message}</p>`;
+    }
+}
+
+// Hàm tạo động modal xem file trực tiếp trên trang nếu chưa tồn tại
+function taoModalXemFileTrucTiep() {
+    let modal = document.getElementById('globalFilePreviewModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'globalFilePreviewModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 850px; border-top: 4px solid var(--primary); max-height: 90vh; overflow-y: auto;">
+                <span class="close-modal" onclick="dongHopThoai('globalFilePreviewModal')">&times;</span>
+                <h2 id="previewFileTitle" class="text-primary mb-20" style="font-size: 20px; word-break: break-all;">Xem file trực tiếp</h2>
+                <div id="previewFileBody" style="display: flex; justify-content: center; align-items: center; min-height: 200px; flex-direction: column; gap: 15px;">
+                    <!-- Nội dung xem thử tệp sẽ được chèn động qua JS -->
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        modal.querySelector('.close-modal').onclick = function() {
+            dongHopThoai('globalFilePreviewModal');
+        };
+    }
+}
+
+// Hàm mở file đính kèm xem trực tiếp ngay trên trang (bằng Modal trong ứng dụng, dùng làm phương án dự phòng)
+function xemFileTrucTiep(base64Data, fileName) {
+    try {
+        // Khởi tạo modal xem thử tệp nếu chưa có trong HTML
+        taoModalXemFileTrucTiep();
+        
+        // Thiết lập tiêu đề cho hộp thoại xem thử tệp
+        document.getElementById('previewFileTitle').textContent = `👁️ Xem tệp: ${fileName}`;
+        let body = document.getElementById('previewFileBody');
+        
+        // Gọi hàm hiển thị inline chung để chèn nội dung xem thử vào body của modal
+        hienThiXemFileInline(base64Data, fileName, body);
+        
+        // Mở modal hiển thị xem file
+        moHopThoai('globalFilePreviewModal');
+    } catch (e) {
+        alert("Lỗi khi xem file trực tiếp: " + e.message);
     }
 }
 
@@ -664,33 +761,36 @@ function moModalChiTietBaiTap(baiTap, nguoiDung) {
             else if (['zip','rar'].includes(ext)) iconFile = '🗜️';
             else if (['mp4','avi','mov'].includes(ext)) iconFile = '🎬';
             else if (['mp3','wav'].includes(ext)) iconFile = '🎵';
-
-            // Tạo nút xem file trực tiếp (không tải về)
             let safeLink = baiTap.link.replace(/'/g, "\\'");
             let safeName = baiTap.fileName.replace(/'/g, "\\'");
             elFile.innerHTML = `
                 <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #86efac; border-radius: 12px; padding: 16px; margin-top: 16px;">
-                    <p class="font-bold text-primary mb-10" style="font-size: 14px;">📎 File đính kèm từ giảng viên:</p>
-                    <div class="flex-row align-center" style="gap: 12px; flex-wrap: wrap;">
-                        <span style="font-size: 28px;">${iconFile}</span>
-                        <div class="flex-1">
-                            <p class="font-bold" style="word-break: break-all;">${baiTap.fileName}</p>
-                            <p class="text-sm text-muted">Nhấn nút bên dưới để xem file</p>
+                    <div class="flex-row align-center justify-between" style="border-bottom: 1px dashed #86efac; padding-bottom: 10px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+                        <div class="flex-row align-center" style="gap: 10px;">
+                            <span style="font-size: 28px;">${iconFile}</span>
+                            <div>
+                                <p class="font-bold text-primary" style="font-size: 14px; margin: 0;">📎 File đính kèm từ giảng viên:</p>
+                                <p class="font-bold" style="word-break: break-all; margin: 0; font-size: 13px;">${baiTap.fileName}</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="flex-row mt-10" style="gap: 10px; flex-wrap: wrap;">
-                        <button onclick="xemFileTrucTiep('${safeLink}', '${safeName}')" 
-                            style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; border: none; border-radius: 8px; padding: 8px 18px; font-weight: 700; cursor: pointer; font-size: 13px;">
-                            👁️ Xem trực tiếp
-                        </button>
                         <button onclick="taiFileDinhKem('${safeLink}', '${safeName}')" 
-                            style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 8px; padding: 8px 18px; font-weight: 700; cursor: pointer; font-size: 13px;">
-                            ⬇️ Tải xuống
+                            style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 700; cursor: pointer; font-size: 12px; width: auto;">
+                            ⬇️ Tải xuống bản gốc
                         </button>
                     </div>
+                    <!-- Phân vùng tự động hiển thị nội dung tệp tin inline -->
+                    <div id="inline-assignment-file-preview" style="min-height: 100px; background: white; border-radius: 8px; padding: 10px; border: 1px solid #d1fae5;"></div>
                 </div>
             `;
             elFile.style.display = 'block';
+
+            // Chạy bất tuần tự hiển thị file xem thử inline ngay sau khi chèn HTML vào DOM
+            setTimeout(() => {
+                let previewContainer = document.getElementById('inline-assignment-file-preview');
+                if (previewContainer) {
+                    hienThiXemFileInline(baiTap.link, baiTap.fileName, previewContainer);
+                }
+            }, 50);
         } else if (baiTap.link && !baiTap.fileName) {
             // Nếu chỉ có link URL không phải file
             elFile.innerHTML = `
@@ -750,7 +850,7 @@ function taoModalChiTietBaiTap() {
     modal.id = 'assignmentDetailModal';
     modal.className = 'modal';
     modal.innerHTML = `
-        <div class="modal-content" style="max-width: 640px; padding: 32px;">
+        <div class="modal-content" style="max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; padding: 32px;">
             <span class="close-modal" onclick="dongHopThoai('assignmentDetailModal')">&times;</span>
             
             <!-- Header bài tập -->

@@ -42,18 +42,18 @@ npm run dev
 1. **GV giao bài tập** → upload file (PDF/ảnh/Word/...) + viết mô tả đề bài
 2. **Hệ thống tự động tạo thông báo** gửi vào hộp thư lớp học của SV
 3. **SV nhận thông báo** → click vào → hiện popup chi tiết bài tập đầy đủ
-4. **SV xem file đính kèm** trực tiếp trong trình duyệt (không tải về máy)
+4. **SV xem file đính kèm** trực tiếp (file tự động hiển thị inline ngay dưới đề bài, hỗ trợ xem Word .docx bằng mammoth.js, PDF, ảnh... không cần tải về máy)
 5. **SV làm bài xong → nộp lại** bằng file upload hoặc đường dẫn URL
-6. **GV xem danh sách bài nộp** → xem trực tiếp hoặc tải file bài làm của từng SV
+6. **GV xem danh sách bài nộp** → Bản xem trước bài làm tự động tải và hiển thị ngay dưới bảng, không cần bấm xem trực tiếp hay tải về máy
 
 ### 📋 Thông báo thông minh
 - Thông báo bài tập hiển thị **badge "📋 BÀI TẬP"** nổi bật trong hộp thư
-- Click vào thông báo bài tập → **modal chi tiết** hiện đầy đủ (tiêu đề, mô tả, file, nút nộp bài)
+- Click vào thông báo bài tập → **modal chi tiết** hiện đầy đủ kèm bản xem trước file tự động ngay bên dưới
 - Thông báo thường vẫn hiện bình thường như cũ
 
 ### 🗂️ Xem file không cần tải về
-- **PDF, ảnh, video, text** → mở trực tiếp trong tab trình duyệt mới
-- Các loại file khác có nút **"Tải xuống"** dự phòng
+- **PDF, ảnh, video, text, Word (.docx)** → tự động hiển thị bản xem trước inline ngay trên trang
+- Các loại file nén khác (.zip, .rar...) có nút **"Tải xuống"** dự phòng
 
 ---
 
