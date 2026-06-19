@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 /* ==========================================================================
-   1. HỆ THỐNG MÀU SẮC & BIẾN SỐ CHỦ ĐẠO (CANVA & PREMIUM SAAS)
+    1. HỆ THỐNG MÀU SẮC & BIẾN SỐ CHỦ ĐẠO (CANVA & PREMIUM SAAS)
    ========================================================================== */
 :root {
     /* Bảng màu rực rỡ phong cách Canva */
@@ -914,51 +914,51 @@ canvas {
     opacity: 0.65;
 }
 
-/* Bong bóng 1: Tím/Hồng */
+/* Bong bóng 1: Xanh ngọc / Cyan */
 .blob-1 {
     width: 550px;
     height: 550px;
-    background: linear-gradient(135deg, #c084fc 0%, #e879f9 100%);
+    background: linear-gradient(135deg, #a7f3d0 0%, #06b6d4 100%);
     top: -15%;
     left: -10%;
     animation: float1 18s ease-in-out infinite alternate;
 }
 
-/* Bong bóng 2: Xanh dương/Cyan */
+/* Bong bóng 2: Xanh dương nhạt / Indigo */
 .blob-2 {
     width: 650px;
     height: 650px;
-    background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+    background: linear-gradient(135deg, #bae6fd 0%, #6366f1 100%);
     bottom: -15%;
     right: -10%;
     animation: float2 24s ease-in-out infinite alternate-reverse;
 }
 
-/* Bong bóng 3: Xanh ngọc/Emerald */
+/* Bong bóng 3: Xanh mint / Ngọc lục bảo */
 .blob-3 {
     width: 480px;
     height: 480px;
-    background: linear-gradient(135deg, #34d399 0%, #22d3ee 100%);
+    background: linear-gradient(135deg, #a7f3d0 0%, #10b981 100%);
     top: 25%;
     right: 10%;
     animation: float3 22s ease-in-out infinite alternate;
 }
 
-/* Bong bóng 4: Vàng/Cam neon */
+/* Bong bóng 4: Xanh da trời / Sky blue */
 .blob-4 {
     width: 420px;
     height: 420px;
-    background: linear-gradient(135deg, #fef08a 0%, #f97316 100%);
+    background: linear-gradient(135deg, #e0f2fe 0%, #38bdf8 100%);
     bottom: 20%;
     left: 5%;
     animation: float4 16s ease-in-out infinite alternate;
 }
 
-/* Bong bóng 5: Hồng đậm/Rose */
+/* Bong bóng 5: Tím xanh / Lavender */
 .blob-5 {
     width: 380px;
     height: 380px;
-    background: linear-gradient(135deg, #f43f5e 0%, #ec4899 100%);
+    background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
     top: -5%;
     left: 35%;
     animation: float5 20s ease-in-out infinite alternate-reverse;
