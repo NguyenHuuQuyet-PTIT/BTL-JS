@@ -777,7 +777,7 @@ canvas {
     /* Nền nhẹ nhàng xanh lá và xanh da trời mượt mà */
     background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
     position: relative;
-    overflow: hidden;
+    overflow-y: auto; /* Cho phép cuộn dọc */
     padding: 20px;
 }
 
@@ -1089,10 +1089,21 @@ canvas {
     align-items: center;
     font-size: 13px;
     color: var(--text-muted);
-    padding: 6px 10px;
+    padding: 6px 10px 6px 16px;
     background: rgba(255, 255, 255, 0.65);
     border-radius: 8px;
-    border-left: 3px solid #8b3dff;
+    position: relative;
+    overflow: hidden;
+}
+
+.demo-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary);
 }
 
 .demo-item strong {
@@ -1136,8 +1147,8 @@ canvas {
 }
 .auth-box:hover {
     border-color: rgba(139, 61, 255, 0.25);
-    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.65), 
-                0 0 20px rgba(139, 61, 255, 0.15),
+    box-shadow: 0 40px 90px rgba(139, 61, 255, 0.15), 
+                0 20px 40px rgba(0, 0, 0, 0.02),
                 inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
@@ -1427,5 +1438,127 @@ canvas {
     text-align: center;
     color: #a0aec0;
     font-size: 15px;
+}
+
+/* ==========================================================================
+   12. THIẾT KẾ ĐÁP ỨNG TRÊN MỌI THIẾT BỊ (FULLY RESPONSIVE MEDIA QUERIES)
+   ========================================================================== */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 230px;
+        padding: 30px 16px;
+    }
+    .main-content {
+        padding: 30px;
+    }
+    .top-header {
+        padding: 25px 30px;
+    }
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-container {
+        flex-direction: column;
+    }
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid rgba(139, 61, 255, 0.06);
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(139, 61, 255, 0.015);
+    }
+    .sidebar-top {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        margin-bottom: 0;
+    }
+    .logo {
+        margin-bottom: 0;
+        padding-left: 10px;
+    }
+    .menu {
+        width: 100%;
+        margin-top: 15px;
+    }
+    .menu ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .menu li {
+        margin-bottom: 0;
+        flex: 1;
+        min-width: 120px;
+    }
+    .menu a {
+        padding: 8px 12px;
+        justify-content: center;
+        font-size: 13px;
+    }
+    .menu li.active {
+        border-left: none;
+        border-bottom: 3px solid var(--primary);
+        margin-left: 0;
+        padding-left: 0;
+    }
+    .menu li.active a {
+        background: var(--primary-light);
+    }
+    .user-info-sidebar {
+        width: 100%;
+        margin-top: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 15px;
+    }
+    .user-info-sidebar p.user-email {
+        display: none;
+    }
+    .user-info-sidebar .btn-logout {
+        width: auto;
+        margin-top: 0;
+        padding: 6px 14px;
+    }
+    .main-content {
+        padding: 20px;
+    }
+    .top-header {
+        padding: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    .top-header h1 {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-box {
+        padding: 30px 20px;
+        border-radius: 24px;
+        margin: 20px auto;
+    }
+    .auth-header h1 {
+        font-size: 26px;
+    }
+    .role-label {
+        font-size: 12px;
+        padding: 10px 0;
+    }
+    .demo-accounts-board {
+        padding: 12px;
+    }
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
 }
 
