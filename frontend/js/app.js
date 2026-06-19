@@ -801,6 +801,26 @@ document.addEventListener('DOMContentLoaded', () => {
     let user = layCSDL('currentUser');
     let duongDanTrang = window.location.pathname;
 
+    // Tự động đồng bộ danh sách tài khoản từ MongoDB về LocalStorage để cả 3 phân quyền luôn khớp dữ liệu với nhau
+    if (user) {
+        fetch(`${API_BASE}/api/nguoi-dung`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    ghiCSDL('Users', data.users);
+                    // Cập nhật lại giao diện tương ứng sau khi có dữ liệu mới nhất
+                    if (duongDanTrang.includes('admin.html') && typeof hienThiDanhSachTaiKhoan === 'function') {
+                        hienThiDanhSachTaiKhoan();
+                    } else if (duongDanTrang.includes('teacher-dashboard.html') && typeof hienThiBaoCaoGiangVien === 'function') {
+                        hienThiBaoCaoGiangVien(user);
+                    } else if (duongDanTrang.includes('student-dashboard.html') && typeof hienThiBaoCaoHocTapSinhVien === 'function') {
+                        hienThiBaoCaoHocTapSinhVien(user);
+                    }
+                }
+            })
+            .catch(err => console.warn("Chạy ngoại tuyến. Không thể đồng bộ tài khoản từ MongoDB Atlas."));
+    }
+
     // Định tuyến tại trang chủ đăng nhập index.html
     if (duongDanTrang.includes('index.html') || duongDanTrang.endsWith('/') || duongDanTrang === '') {
         if (user) {
