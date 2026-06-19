@@ -1,46 +1,47 @@
-# 🏫 Hệ thống Quản lý Học tập Edu Report LMS
+# Bài tập lớn: Hệ thống Quản lý Học tập Edu Report LMS
 
-Hệ thống quản lý điểm số, chuyên cần, lịch học và thông báo dành cho Sinh viên, Giảng viên và Quản trị viên chuyên ngành Công nghệ thông tin.
+Dự án này là trang web quản lý học tập (LMS) dành cho khoa CNTT, phân chia rõ rệt 3 vai trò: Sinh viên, Giảng viên và Quản trị viên (Admin). 
 
 ---
 
-## 🛠️ Hướng dẫn cài đặt và vận hành
+## 🚀 Hướng dẫn chạy thử dự án
 
-### Bước 1: Khởi tạo cơ sở dữ liệu & Chạy Server Backend
+### 1. Chạy Backend (Server Node.js)
 ```bash
-# Di chuyển vào thư mục backend
+# Truy cập vào thư mục server
 cd backend
 
 # Cài đặt các thư viện cần thiết
 npm install
 
-# Khởi chạy server ở chế độ phát triển
+# Khởi động server Express chạy local
 npm run dev
 ```
-- Server chạy mặc định tại cổng `5000` (`http://localhost:5000`).
-- Cơ sở dữ liệu tự động kết nối tới MongoDB Atlas.
+*Mặc định backend sẽ chạy ở cổng `http://localhost:5000` và kết nối trực tiếp đến database MongoDB Atlas.*
 
-### Bước 2: Mở giao diện Frontend
-- Chạy trực tiếp qua Live Server hoặc mở file [index.html](file:///c:/Users/quyet/Desktop/BTL%20%20JS/frontend/index.html) bằng trình duyệt web.
-
----
-
-## 🔑 Danh sách tài khoản mẫu
-
-| Vai trò | Tên đăng nhập / Email | Mật khẩu | Chức năng chính |
-|---------|-----------------------|----------|-----------------|
-| **Quản trị viên** | `admin` | `admin` | CRUD tài khoản trên MongoDB Atlas, điều phối lớp học phần, lịch học, giảng viên, sinh viên và đóng/mở cổng tín chỉ. |
-| **Giảng viên** | `giaovien` | `giaovien` | Xem danh sách lớp dạy, nhập điểm thành phần, điểm danh từng buổi, soạn và gửi thông báo tới sinh viên. |
-| **Sinh viên** | `sinhvien` | `sinhvien` | Xem thời khóa biểu, điểm số tích lũy, biểu đồ học lực, biểu đồ chuyên cần, đăng ký hoặc hủy lớp học phần. |
+### 2. Chạy Frontend (Giao diện)
+*   **Cách chạy:** Bạn chỉ cần mở file [index.html](file:///c:/Users/quyet/Desktop/BTL%20%20JS/frontend/index.html) bằng trình duyệt web hoặc chạy thông qua extension Live Server của VS Code.
+*   **Deploy online:** Hiện tại dự án đã được deploy giao diện lên Vercel tại địa chỉ: `https://edu--report.vercel.app/`.
 
 ---
 
-## 📁 Cấu trúc thư mục chính của dự án
+## 🔑 Thông tin tài khoản thử nghiệm có sẵn
 
-- `backend/` — Server Node.js/Express và kết nối database MongoDB Atlas.
-- `frontend/` — Giao diện HTML/CSS và mã nguồn điều hướng JavaScript.
-  - `frontend/index.html` — Trang đăng nhập hệ thống.
-  - `frontend/admin.html` — Giao diện của Quản trị viên.
-  - `frontend/teacher-dashboard.html` — Giao diện của Giảng viên.
-  - `frontend/student-dashboard.html` — Giao diện của Sinh viên.
-  - `frontend/js/` — Các file JavaScript xử lý nghiệp vụ cho từng vai trò.
+| Phân quyền | Username / Email đăng nhập | Mật khẩu | Chức năng cốt lõi |
+|-----------|---------------------------|----------|-------------------|
+| **Admin** | `admin` | `admin` | Tạo mới, chỉnh sửa và xóa tài khoản trên MongoDB Atlas; điều phối lớp học và lịch học; mở/khóa cổng đăng ký tín chỉ. |
+| **Giảng viên** | `giaovien` | `giaovien` | Xem danh sách lớp phụ trách; nhập điểm thành phần cho SV; điểm danh từng buổi học; soạn và gửi thông báo. |
+| **Sinh viên** | `sinhvien` | `sinhvien` | Xem thời khóa biểu theo tuần; theo dõi kết quả học tập và chuyên cần; đăng ký hoặc hủy đăng ký lớp tín chỉ khi cổng mở. |
+
+---
+
+## 📁 Tổ chức cấu trúc thư mục dự án
+
+*   `backend/`: Chứa mã nguồn server Node.js, file cấu hình và Mongoose Model (`models/User.js`).
+*   `frontend/`: Chứa file giao diện HTML (`index.html`, `admin.html`, `student-dashboard.html`, `teacher-dashboard.html`).
+*   `frontend/css/`: File định dạng style giao diện (`style.css`).
+*   `frontend/js/`: Các tệp xử lý logic Javascript:
+    *   `app.js`: Xử lý đăng nhập, quản lý thông tin cá nhân và định tuyến trang chung.
+    *   `admin.js`: Logic CRUD tài khoản và quản lý điều phối lớp của Admin.
+    *   `sinhvien.js`: Giao diện thời khóa biểu, đăng ký học phần và xem điểm của Sinh viên.
+    *   `giaovien.js`: Giao diện quản lý lớp dạy, nhập điểm và điểm danh của Giảng viên.
