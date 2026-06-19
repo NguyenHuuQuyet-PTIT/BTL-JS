@@ -882,64 +882,64 @@ canvas {
    10. GIAO DIỆN ĐĂNG NHẬP SAAS CAO CẤP (GLASSMORPHIC LOGIN INTERFACE)
    ========================================================================== */
 
-/* Nền trang đăng nhập kết hợp các bong bóng màu phát sáng (glow effects) */
+/* Nền trang đăng nhập kết hợp các bong bóng màu phát sáng ngũ sắc (bright neon glow effects) */
 .auth-page {
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: #090b11; /* Nền tối sâu */
+    background: linear-gradient(135deg, #f5f3ff 0%, #e0f2fe 50%, #fdf2f8 100%); /* Nền sáng dịu */
     position: relative;
     overflow: hidden;
     padding: 20px;
 }
 
-/* Đốm sáng mờ ảo 1 (Tím) */
+/* Đốm sáng mờ ảo 1 (Hồng/Đỏ neon) */
 .auth-page::before {
-    content: '';
-    position: absolute;
-    width: 500px;
-    height: 500px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(139, 61, 255, 0.25) 0%, rgba(139, 61, 255, 0) 70%);
-    top: -10%;
-    left: -10%;
-    filter: blur(50px);
-    animation: floatingGlow 15s ease-in-out infinite alternate;
-}
-
-/* Đốm sáng mờ ảo 2 (Xanh ngọc) */
-.auth-page::after {
     content: '';
     position: absolute;
     width: 600px;
     height: 600px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(0, 196, 204, 0.2) 0%, rgba(0, 196, 204, 0) 70%);
-    bottom: -15%;
-    right: -10%;
+    background: radial-gradient(circle, rgba(244, 63, 94, 0.28) 0%, rgba(244, 63, 94, 0) 70%);
+    top: -15%;
+    left: -10%;
     filter: blur(60px);
+    animation: floatingGlow 15s ease-in-out infinite alternate;
+}
+
+/* Đốm sáng mờ ảo 2 (Xanh lục/Cyan neon) */
+.auth-page::after {
+    content: '';
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(6, 182, 212, 0.25) 0%, rgba(6, 182, 212, 0) 70%);
+    bottom: -20%;
+    right: -15%;
+    filter: blur(70px);
     animation: floatingGlow 20s ease-in-out infinite alternate-reverse;
 }
 
 /* Hiệu ứng trôi nổi nhẹ nhàng cho các đốm sáng nền */
 @keyframes floatingGlow {
     0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(40px, 40px) scale(1.1); }
+    100% { transform: translate(50px, 50px) scale(1.1); }
 }
 
-/* Hộp đăng nhập kính mờ (Glassmorphism card) */
+/* Hộp đăng nhập kính mờ sáng (Light Glassmorphism card) */
 .auth-box {
     width: 100%;
     max-width: 460px;
-    background: rgba(20, 24, 39, 0.65);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
     border-radius: 28px;
     padding: 45px 40px;
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5), 
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: 0 30px 60px rgba(139, 61, 255, 0.08), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
     z-index: 10;
     position: relative;
     animation: fadeInCard 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -965,30 +965,30 @@ canvas {
 .auth-header h1 {
     font-size: 32px;
     font-weight: 800;
-    background: linear-gradient(135deg, #a855f7 0%, #06b6d4 100%);
+    background: linear-gradient(135deg, #8b3dff 0%, #00c4cc 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -1px;
     margin-bottom: 8px;
-    filter: drop-shadow(0 2px 8px rgba(168, 85, 247, 0.3));
+    filter: drop-shadow(0 2px 8px rgba(139, 61, 255, 0.15));
 }
 
 .auth-header p {
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 500;
 }
 
-/* Hộp chọn vai trò (Premium Segment Control) */
+/* Hộp chọn vai trò sáng (Light Premium Segment Control) */
 .role-select-container {
     display: flex;
     position: relative;
-    background: rgba(14, 17, 29, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(139, 61, 255, 0.1);
     padding: 5px;
     border-radius: 16px;
     margin-bottom: 30px;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+    box-shadow: inset 0 2px 4px rgba(139, 61, 255, 0.03);
 }
 
 /* Nút ẩn của các radio button */
@@ -1003,7 +1003,7 @@ canvas {
     padding: 12px 0;
     font-size: 14px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-muted);
     cursor: pointer;
     border-radius: 12px;
     position: relative;
@@ -1022,7 +1022,7 @@ canvas {
     border-radius: 12px;
     z-index: 1;
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 4px 15px rgba(139, 61, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(139, 61, 255, 0.25);
 }
 
 /* Di chuyển slider dựa trên radio đang check */
@@ -1045,32 +1045,32 @@ canvas {
     color: #ffffff;
 }
 
-/* Căn chỉnh các ô nhập liệu của form trên nền tối */
+/* Căn chỉnh các ô nhập liệu của form trên nền sáng */
 .auth-box .input-group label {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-main);
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     margin-bottom: 8px;
     display: block;
 }
 
 .auth-box .input-group input {
     width: 100%;
-    background: rgba(14, 17, 29, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #ffffff;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(139, 61, 255, 0.15);
+    color: var(--text-main);
     padding: 14px 18px;
     border-radius: 14px;
     font-size: 15px;
     transition: all 0.3s ease;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: inset 0 2px 4px rgba(139, 61, 255, 0.02);
 }
 
 .auth-box .input-group input:focus {
     border-color: #8b3dff;
-    background: rgba(14, 17, 29, 0.8);
+    background: #ffffff;
     box-shadow: 0 0 0 4px rgba(139, 61, 255, 0.15),
-                inset 0 2px 4px rgba(0,0,0,0.1);
+                inset 0 2px 4px rgba(139, 61, 255, 0.02);
     outline: none;
 }
 
@@ -1085,34 +1085,34 @@ canvas {
     font-size: 16px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 8px 25px rgba(139, 61, 255, 0.35);
+    box-shadow: 0 8px 25px rgba(139, 61, 255, 0.25);
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     margin-top: 15px;
 }
 
 .auth-box .btn-submit:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(139, 61, 255, 0.45);
+    box-shadow: 0 12px 30px rgba(139, 61, 255, 0.35);
     filter: brightness(1.05);
 }
 
 .auth-box .btn-submit:active {
     transform: translateY(1px);
-    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.35);
+    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.25);
 }
 
 /* Bảng tài khoản Demo dạng ghim kính mờ siêu đẹp */
 .demo-accounts-board {
     margin-top: 35px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(139, 61, 255, 0.1);
     border-radius: 16px;
     padding: 20px;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: inset 0 2px 4px rgba(139, 61, 255, 0.02);
 }
 
 .demo-title {
-    color: #00c4cc;
+    color: #00b0b8;
     font-weight: 700;
     font-size: 13px;
     text-transform: uppercase;
@@ -1132,21 +1132,21 @@ canvas {
     justify-content: space-between;
     align-items: center;
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--text-muted);
     padding: 6px 10px;
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.65);
     border-radius: 8px;
     border-left: 3px solid #8b3dff;
 }
 
 .demo-item strong {
-    color: #ffffff;
+    color: var(--primary);
 }
 
 .demo-item span {
     font-family: monospace;
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-muted);
 }
 
 /* ==========================================================================
