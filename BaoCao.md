@@ -87,7 +87,7 @@
 | `/api/nguoi-dung` | GET | Lấy toàn bộ danh sách tài khoản |
 | `/api/nguoi-dung/:id` | PUT/DELETE | Sửa/xóa tài khoản |
 | `/api/thong-bao` | GET/POST | Lấy và tạo thông báo (hỗ trợ `materialId`) |
-| `/api/thong-bao/:id` | DELETE | Xóa thông báo |
+| `/api/thong-bao/:id` | PUT/DELETE | Sửa/xóa thông báo |
 | `/api/tai-lieu` | GET/POST | Lấy và tạo tài liệu/bài tập (có `description`, `fileName`) |
 | `/api/tai-lieu/:id` | DELETE | Xóa tài liệu/bài tập |
 | `/api/nop-bai` | GET/POST | Lấy và lưu bài nộp (có `fileName`) |

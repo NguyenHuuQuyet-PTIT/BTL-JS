@@ -301,7 +301,27 @@ function hienThiThongBaoGiangVien(giangVien) {
 function hienThiHopThuDenGiangVien(giangVien) {
     if (!giangVien) giangVien = layCSDL('currentUser');
     let thongBao = layCSDL('Notifications');
-    let tbGiangVien = thongBao.filter(n => n.target === 'tat-ca-giang-vien').reverse();
+    let tbGiangVien = thongBao.filter(n => n.target === 'tat-ca-giang-vien');
+    
+    // Sắp xếp các thông báo theo ID số (timestamp) giảm dần để luôn hiển thị mới nhất lên đầu
+    tbGiangVien.sort((a, b) => {
+        // Hàm phụ trích xuất phần chữ số (timestamp) nằm trong ID thông báo
+        let getVal = x => {
+            // Sử dụng Regex tìm chuỗi chữ số liên tiếp trong thuộc tính ID
+            let match = x.id.match(/\d+/);
+            // Chuyển chuỗi số tìm được thành số nguyên hoặc trả về 0 nếu không khớp
+            return match ? parseInt(match[0]) : 0;
+        };
+        // Lấy giá trị số của đối tượng thông báo a
+        let valA = getVal(a);
+        // Lấy giá trị số của đối tượng thông báo b
+        let valB = getVal(b);
+        // Nếu giá trị số khác nhau, thực hiện sắp xếp giảm dần (số lớn xếp trước)
+        if (valA !== valB) return valB - valA;
+        // Nếu trùng mã số hoặc không chứa số, thực hiện so sánh theo thời gian ngày đăng giảm dần
+        return new Date(b.date) - new Date(a.date);
+    });
+    
     hienThiTheThongBaoChung('teacherInboxList', tbGiangVien, giangVien);
 }
 
@@ -309,7 +329,19 @@ function hienThiHopThuDenGiangVien(giangVien) {
 function hienThiLichSuGuiGiangVien(giangVien) {
     if (!giangVien) giangVien = layCSDL('currentUser');
     // Lọc các thông báo có tên người gửi khớp với giảng viên hiện tại
-    let thongBao = layCSDL('Notifications').filter(n => n.senderName === giangVien.name).reverse();
+    let thongBao = layCSDL('Notifications').filter(n => n.senderName === giangVien.name);
+    
+    // Sắp xếp các thông báo theo ID số (timestamp) giảm dần để luôn hiển thị mới nhất lên đầu
+    thongBao.sort((a, b) => {
+        let getVal = x => {
+            let match = x.id.match(/\d+/);
+            return match ? parseInt(match[0]) : 0;
+        };
+        let valA = getVal(a);
+        let valB = getVal(b);
+        if (valA !== valB) return valB - valA;
+        return new Date(b.date) - new Date(a.date);
+    });
     
     // Ánh xạ thành HTML các hàng bảng lịch sử gửi thông báo
     let html = thongBao.map(n => {
@@ -361,7 +393,7 @@ if (formGuiTB) {
             
             if (response.ok && data.success) {
                 let notifs = layCSDL('Notifications');
-                notifs.push(newNotif);
+                notifs.unshift(newNotif);
                 ghiCSDL('Notifications', notifs);
                 
                 alert("Gửi thông báo lớp thành công!");
@@ -373,7 +405,7 @@ if (formGuiTB) {
         } catch (error) {
             // Lưu dự phòng ngoại tuyến
             let notifs = layCSDL('Notifications');
-            notifs.push(newNotif);
+            notifs.unshift(newNotif);
             ghiCSDL('Notifications', notifs);
             
             alert("Gửi thông báo lớp thành công!");
@@ -478,23 +510,52 @@ function suaThongBaoGiangVien(idThongBao) {
     }
 }
 
-// Hàm lưu lại nội dung thông báo giảng viên vừa sửa đổi
-function luuThongBaoGiangVien(idThongBao) {
-    let vanBanMoi = document.getElementById('editNotifTextarea').value;
-    let thongBao = layCSDL('Notifications');
-    let tb = thongBao.find(x => x.id === idThongBao);
-    if (tb) {
-        tb.text = vanBanMoi;
-        ghiCSDL('Notifications', thongBao);
+// Hàm lưu lại nội dung thông báo giảng viên vừa sửa đổi đồng bộ lên server API MongoDB Atlas
+async function luuThongBaoGiangVien(idThongBao) {
+    let vanBanMoi = document.getElementById('editNotifTextarea').value.trim();
+    if (!vanBanMoi) {
+        alert("Nội dung thông báo không được bỏ trống!");
+        return;
     }
-    
+
+    try {
+        // Gửi yêu cầu PUT cập nhật thông báo lên API server
+        let response = await fetch(`${API_BASE}/api/thong-bao/${idThongBao}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: vanBanMoi })
+        });
+        let data = await response.json();
+
+        if (response.ok && data.success) {
+            let thongBao = layCSDL('Notifications');
+            let tb = thongBao.find(x => x.id === idThongBao);
+            if (tb) {
+                tb.text = vanBanMoi;
+                ghiCSDL('Notifications', thongBao);
+            }
+            alert("Cập nhật thông báo thành công!");
+        } else {
+            alert(data.message || "Cập nhật thông báo thất bại!");
+        }
+    } catch (error) {
+        // Lưu ngoại tuyến nếu kết nối server lỗi
+        let thongBao = layCSDL('Notifications');
+        let tb = thongBao.find(x => x.id === idThongBao);
+        if (tb) {
+            tb.text = vanBanMoi;
+            ghiCSDL('Notifications', thongBao);
+        }
+        alert("Cập nhật thông báo thành công! (Lưu ngoại tuyến)");
+    }
+
     // Quay lại hiển thị nội dung thông báo chi tiết
     document.getElementById('readNotifContent').innerHTML = dinhDangThongBao(vanBanMoi);
     let actions = document.getElementById('readNotifActions');
     if (actions) {
         actions.innerHTML = `
-            <button class="action-btn" onclick="suaThongBaoGiangVien('${tb.id}')">Chỉnh sửa</button>
-            <button class="btn-danger" onclick="xoaThongBaoGiangVien('${tb.id}')">Xóa thông báo</button>
+            <button class="action-btn" onclick="suaThongBaoGiangVien('${idThongBao}')">Chỉnh sửa</button>
+            <button class="btn-danger" onclick="xoaThongBaoGiangVien('${idThongBao}')">Xóa thông báo</button>
         `;
     }
     hienThiLichSuGuiGiangVien();
@@ -662,10 +723,8 @@ if (formTaiLieu) {
                     materials.unshift(newMaterial);
                     ghiCSDL('Materials', materials);
                     
-                    // Nếu loại tài liệu là bài tập, tự động tạo thông báo giao bài cho lớp
-                    if (type === 'assignment') {
-                        await tuDongTaoThongBaoBaiTap(newMaterial, classId, user);
-                    }
+                    // Tự động tạo thông báo giao tài liệu/bài tập/bài giảng cho lớp
+                    await tuDongTaoThongBaoBaiTap(newMaterial, classId, user);
                     
                     alert("Tải tài liệu lên lớp học thành công!");
                     formTaiLieu.reset();
@@ -680,10 +739,8 @@ if (formTaiLieu) {
                 materials.unshift(newMaterial);
                 ghiCSDL('Materials', materials);
                 
-                // Tự động tạo thông báo giao bài tập (chế độ ngoại tuyến)
-                if (type === 'assignment') {
-                    await tuDongTaoThongBaoBaiTap(newMaterial, classId, user);
-                }
+                // Tự động tạo thông báo giao tài liệu/bài tập/bài giảng (chế độ ngoại tuyến)
+                await tuDongTaoThongBaoBaiTap(newMaterial, classId, user);
                 
                 alert("Tải tài liệu lên lớp học thành công! (Lưu ngoại tuyến)");
                 formTaiLieu.reset();
@@ -728,9 +785,14 @@ function xemDanhSachNopBai(idTaiLieu) {
     let html = subsOfAssignment.map(s => {
         let submissionLink = '';
         if (s.fileName) {
-            submissionLink = `<a href="#" onclick="event.preventDefault(); taiFileDinhKem('${s.link.replace(/'/g, "\\'")}', '${s.fileName.replace(/'/g, "\\'")}')" class="text-primary font-bold" style="text-decoration: underline;">Tải bài nộp: ${s.fileName}</a>`;
+            submissionLink = `
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="action-btn" style="padding: 4px 10px; font-size:12px; width:auto;" onclick="xemFileTrucTiep('${s.link.replace(/'/g, "\\'")}', '${s.fileName.replace(/'/g, "\\'")}')">👁️ Xem trực tiếp</button>
+                    <button class="btn-primary" style="padding: 4px 10px; font-size:12px; width:auto; background: linear-gradient(135deg, #6366f1, #4f46e5);" onclick="taiFileDinhKem('${s.link.replace(/'/g, "\\'")}', '${s.fileName.replace(/'/g, "\\'")}')">⬇️ Tải xuống</button>
+                </div>
+            `;
         } else {
-            submissionLink = `<a href="${s.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline;">Xem liên kết</a>`;
+            submissionLink = `<a href="${s.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline;">👁️ Xem liên kết</a>`;
         }
 
         return `
@@ -756,29 +818,41 @@ function xemDanhSachNopBai(idTaiLieu) {
 // 6. TỰ ĐỘNG TẠO THÔNG BÁO GIAO BÀI TẬP CHO LỚP HỌC (AUTO ASSIGNMENT NOTIFICATION)
 // --------------------------------------------------------------------------
 
-// Hàm tự động tạo thông báo khi giảng viên đăng tải một bài tập mới lên lớp học
-async function tuDongTaoThongBaoBaiTap(baiTap, classId, giangVien) {
-    // Tạo nội dung thông báo mô tả chi tiết bài tập vừa được giao
-    let noiDung = `📋 [BÀI TẬP MỚI] ${baiTap.title}`;
-    // Nếu có mô tả bài tập, thêm vào nội dung thông báo
-    if (baiTap.description && baiTap.description.trim()) {
-        noiDung += `\n\n📝 Nội dung: ${baiTap.description}`;
+// Hàm tự động tạo thông báo khi giảng viên đăng tải một tài liệu/bài giảng/bài tập mới lên lớp học
+async function tuDongTaoThongBaoBaiTap(taiLieu, classId, giangVien) {
+    let tieuDeIcon = '📎';
+    let loaiNhan = 'TÀI LIỆU MỚI';
+    let huongDan = 'xem chi tiết tài liệu';
+    
+    if (taiLieu.type === 'assignment') {
+        tieuDeIcon = '📋';
+        loaiNhan = 'BÀI TẬP MỚI';
+        huongDan = 'xem đề bài và nộp bài làm';
+    } else if (taiLieu.type === 'lecture') {
+        tieuDeIcon = '📄';
+        loaiNhan = 'BÀI GIẢNG MỚI';
+        huongDan = 'xem và học bài giảng';
     }
-    // Nếu có file đính kèm, thông báo cho sinh viên biết
-    if (baiTap.fileName) {
-        noiDung += `\n\n📎 File đính kèm: ${baiTap.fileName}`;
+
+    // Tạo nội dung thông báo mô tả chi tiết tài liệu vừa được giao
+    let noiDung = `${tieuDeIcon} [${loaiNhan}] ${taiLieu.title}`;
+    if (taiLieu.description && taiLieu.description.trim()) {
+        noiDung += `\n\n📝 Mô tả: ${taiLieu.description}`;
     }
-    noiDung += `\n\n⏰ Ngày giao: ${baiTap.date}\n👆 Nhấp vào thông báo này để xem chi tiết bài tập và nộp bài.`;
+    if (taiLieu.fileName) {
+        noiDung += `\n\n📎 File đính kèm: ${taiLieu.fileName}`;
+    }
+    noiDung += `\n\n⏰ Ngày đăng: ${taiLieu.date}\n👆 Nhấp vào thông báo này để ${huongDan}.`;
 
     // Tạo đối tượng thông báo kèm liên kết tài liệu bài tập
     let newNotif = {
-        id: 'NOTIF_BT_' + Date.now(),         // Mã thông báo duy nhất với tiền tố BT (Bài Tập)
+        id: 'NOTIF_TL_' + Date.now(),         // Mã thông báo duy nhất với tiền tố TL (Tài Liệu)
         senderName: giangVien.name,             // Tên giảng viên gửi thông báo
         target: classId,                        // Gửi tới toàn bộ sinh viên trong lớp học này
-        text: noiDung,                          // Nội dung mô tả bài tập được giao
-        date: baiTap.date,                      // Ngày giao bài tập
-        materialId: baiTap.id,                  // Mã bài tập liên kết để sinh viên click xem chi tiết
-        materialType: 'assignment'              // Loại tài liệu là bài tập (assignment)
+        text: noiDung,                          // Nội dung mô tả tài liệu được giao
+        date: taiLieu.date,                      // Ngày giao bài tập
+        materialId: taiLieu.id,                  // Mã bài tập liên kết để sinh viên click xem chi tiết
+        materialType: taiLieu.type              // Loại tài liệu
     };
 
     try {

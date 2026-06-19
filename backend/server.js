@@ -294,6 +294,26 @@ app.post('/api/thong-bao', async (req, res) => {
     }
 });
 
+// API cập nhật thông báo trực tuyến theo ID
+app.put('/api/thong-bao/:id', async (req, res) => {
+    try {
+        const { id } = req.params; // Lấy ID thông báo từ URL
+        const { text } = req.body; // Lấy nội dung thông báo mới từ body
+
+        // Tìm và cập nhật thông tin nội dung thông báo
+        const result = await ThongBaoModel.findOneAndUpdate({ id }, { text }, { new: true });
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy thông báo!' });
+        }
+        
+        // Phản hồi cập nhật thành công cho client
+        res.status(200).json({ success: true, message: 'Cập nhật thông báo thành công.', notification: result });
+    } catch (error) {
+        // Phản hồi lỗi hệ thống
+        res.status(500).json({ success: false, message: 'Lỗi cập nhật thông báo.' });
+    }
+});
+
 // API xóa thông báo khỏi hệ thống theo Mã ID thông báo tương ứng
 app.delete('/api/thong-bao/:id', async (req, res) => {
     try {

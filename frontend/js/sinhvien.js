@@ -500,7 +500,26 @@ function hienThiThongBaoSinhVien(sinhVien) {
         } else {
             return n.target === giaTriLoc;
         }
-    }).reverse();
+    });
+
+    // Sắp xếp các thông báo theo ID số (timestamp) giảm dần để luôn hiển thị mới nhất lên đầu
+    tbLoc.sort((a, b) => {
+        // Hàm phụ trích xuất phần chữ số (timestamp) nằm trong ID thông báo
+        let getVal = x => {
+            // Sử dụng Regex tìm chuỗi chữ số liên tiếp trong thuộc tính ID
+            let match = x.id.match(/\d+/);
+            // Chuyển chuỗi số tìm được thành số nguyên hoặc trả về 0 nếu không khớp
+            return match ? parseInt(match[0]) : 0;
+        };
+        // Lấy giá trị số của đối tượng thông báo a
+        let valA = getVal(a);
+        // Lấy giá trị số của đối tượng thông báo b
+        let valB = getVal(b);
+        // Nếu giá trị số khác nhau, thực hiện sắp xếp giảm dần (số lớn xếp trước)
+        if (valA !== valB) return valB - valA;
+        // Nếu trùng mã số hoặc không chứa số, thực hiện so sánh theo thời gian ngày đăng giảm dần
+        return new Date(b.date) - new Date(a.date);
+    });
     
     // Gọi hàm render danh sách thẻ thông báo chung
     hienThiTheThongBaoChung('studentNotifList', tbLoc, sinhVien);

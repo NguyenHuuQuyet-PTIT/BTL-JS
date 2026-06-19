@@ -780,19 +780,33 @@ function khoiTaoLangNgheSuKienDieuPhoi() {
 // Hàm hiển thị danh sách các thông báo do Admin đã gửi
 function hienThiDanhSachThongBaoAdmin() {
     let notifications = layCSDL('Notifications');
+    
+    // Sắp xếp các thông báo theo ID số (timestamp) giảm dần để luôn hiển thị mới nhất lên đầu
+    notifications.sort((a, b) => {
+        let getVal = x => {
+            let match = x.id.match(/\d+/);
+            return match ? parseInt(match[0]) : 0;
+        };
+        let valA = getVal(a);
+        let valB = getVal(b);
+        if (valA !== valB) return valB - valA;
+        return new Date(b.date) - new Date(a.date);
+    });
+
     // Lọc các thông báo do Hệ thống Đào tạo (Admin) gửi
-    let adminNotifs = notifications.filter(n => n.senderName === 'Hệ thống Đào tạo').reverse();
+    let adminNotifs = notifications.filter(n => n.senderName === 'Hệ thống Đào tạo');
 
     let html = adminNotifs.map(n => {
         let targetText = n.target === 'tat-ca-sinh-vien' ? 'Sinh viên' : 'Giảng viên';
         let previewText = n.text.length > 60 ? n.text.substring(0, 60) + '...' : n.text;
         return `
-            <tr>
+            <tr class="cursor-pointer" onclick="moQuanLyThongBaoAdmin('${n.id}')">
                 <td>${n.date}</td>
                 <td><span class="text-primary font-bold">${targetText}</span></td>
                 <td>${previewText}</td>
                 <td>
-                    <button class="btn-danger" onclick="xoaThongBaoAdmin('${n.id}')">Xóa</button>
+                    <button class="action-btn" style="padding: 4px 8px; font-size:12px; width:auto; margin-right: 5px;" onclick="event.stopPropagation(); moQuanLyThongBaoAdmin('${n.id}')">Sửa</button>
+                    <button class="btn-danger" style="padding: 4px 8px; font-size:12px; width:auto;" onclick="event.stopPropagation(); xoaThongBaoAdmin('${n.id}')">Xóa</button>
                 </td>
             </tr>
         `;
@@ -802,6 +816,96 @@ function hienThiDanhSachThongBaoAdmin() {
     if (container) {
         container.innerHTML = html || '<tr><td colspan="4">Chưa gửi thông báo nào.</td></tr>';
     }
+}
+
+// Hàm mở xem và quản lý chi tiết thông báo của Admin (Sửa/Xóa)
+function moQuanLyThongBaoAdmin(idThongBao) {
+    let thongBao = layCSDL('Notifications');
+    let tb = thongBao.find(x => x.id === idThongBao);
+    if (!tb) return;
+
+    document.getElementById('readNotifTitle').textContent = tb.senderName;
+    document.getElementById('readNotifDate').textContent = tb.date;
+    document.getElementById('readNotifContent').innerHTML = dinhDangThongBao(tb.text);
+
+    let vungHanhDong = document.getElementById('readNotifActions');
+    if (vungHanhDong) {
+        vungHanhDong.innerHTML = `
+            <button class="action-btn" onclick="suaThongBaoAdmin('${tb.id}')">Chỉnh sửa</button>
+            <button class="btn-danger" onclick="xoaThongBaoAdmin('${tb.id}')">Xóa thông báo</button>
+        `;
+    }
+    moHopThoai('readNotifModal');
+}
+
+// Hàm chuyển đổi nội dung thông báo của Admin thành khung soạn thảo textarea để sửa đổi
+function suaThongBaoAdmin(idThongBao) {
+    let thongBao = layCSDL('Notifications');
+    let tb = thongBao.find(x => x.id === idThongBao);
+    if (!tb) return;
+
+    let contentDiv = document.getElementById('readNotifContent');
+    contentDiv.innerHTML = `
+        <textarea id="editNotifTextareaAdmin" rows="6" class="input-group" style="width:100%; border:1px solid var(--border-color); border-radius:6px; padding:10px; font-family:inherit;">${tb.text}</textarea>
+    `;
+
+    let actions = document.getElementById('readNotifActions');
+    if (actions) {
+        actions.innerHTML = `
+            <button class="btn-primary" style="width: auto;" onclick="luuThongBaoAdmin('${tb.id}')">Cập nhật</button>
+        `;
+    }
+}
+
+// Hàm lưu lại nội dung thông báo Admin đã sửa đổi đồng bộ lên server API MongoDB Atlas
+async function luuThongBaoAdmin(idThongBao) {
+    let vanBanMoi = document.getElementById('editNotifTextareaAdmin').value.trim();
+    if (!vanBanMoi) {
+        alert("Nội dung thông báo không được bỏ trống!");
+        return;
+    }
+
+    try {
+        // Gửi yêu cầu PUT cập nhật thông báo lên API server
+        let response = await fetch(`${API_BASE}/api/thong-bao/${idThongBao}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: vanBanMoi })
+        });
+        let data = await response.json();
+
+        if (response.ok && data.success) {
+            let thongBao = layCSDL('Notifications');
+            let tb = thongBao.find(x => x.id === idThongBao);
+            if (tb) {
+                tb.text = vanBanMoi;
+                ghiCSDL('Notifications', thongBao);
+            }
+            alert("Cập nhật thông báo thành công!");
+        } else {
+            alert(data.message || "Cập nhật thông báo thất bại!");
+        }
+    } catch (error) {
+        // Lưu ngoại tuyến nếu kết nối server lỗi
+        let thongBao = layCSDL('Notifications');
+        let tb = thongBao.find(x => x.id === idThongBao);
+        if (tb) {
+            tb.text = vanBanMoi;
+            ghiCSDL('Notifications', thongBao);
+        }
+        alert("Cập nhật thông báo thành công! (Lưu ngoại tuyến)");
+    }
+
+    // Quay lại chế độ hiển thị nội dung thông thường
+    document.getElementById('readNotifContent').innerHTML = dinhDangThongBao(vanBanMoi);
+    let actions = document.getElementById('readNotifActions');
+    if (actions) {
+        actions.innerHTML = `
+            <button class="action-btn" onclick="suaThongBaoAdmin('${idThongBao}')">Chỉnh sửa</button>
+            <button class="btn-danger" onclick="xoaThongBaoAdmin('${idThongBao}')">Xóa thông báo</button>
+        `;
+    }
+    hienThiDanhSachThongBaoAdmin();
 }
 
 // Hàm gửi yêu cầu xóa thông báo lên MongoDB Atlas và cập nhật Local
@@ -817,6 +921,7 @@ function xoaThongBaoAdmin(idThongBao) {
                 let notifs = layCSDL('Notifications').filter(n => n.id !== idThongBao);
                 ghiCSDL('Notifications', notifs);
                 alert("Xóa thông báo thành công!");
+                dongHopThoai('readNotifModal');
                 hienThiDanhSachThongBaoAdmin();
             } else {
                 alert(data.message || "Xóa thất bại!");
@@ -826,6 +931,7 @@ function xoaThongBaoAdmin(idThongBao) {
             let notifs = layCSDL('Notifications').filter(n => n.id !== idThongBao);
             ghiCSDL('Notifications', notifs);
             alert("Xóa thông báo thành công!");
+            dongHopThoai('readNotifModal');
             hienThiDanhSachThongBaoAdmin();
         }
     });
@@ -860,7 +966,7 @@ function khoiTaoLangNgheThongBaoAdmin() {
 
                 if (response.ok && data.success) {
                     let notifs = layCSDL('Notifications');
-                    notifs.push(newNotif);
+                    notifs.unshift(newNotif); // Thêm lên đầu danh sách
                     ghiCSDL('Notifications', notifs);
 
                     alert("Gửi thông báo thành công!");
@@ -872,7 +978,7 @@ function khoiTaoLangNgheThongBaoAdmin() {
             } catch (error) {
                 // Hỗ trợ gửi ngoại tuyến
                 let notifs = layCSDL('Notifications');
-                notifs.push(newNotif);
+                notifs.unshift(newNotif); // Thêm lên đầu danh sách
                 ghiCSDL('Notifications', notifs);
 
                 alert("Gửi thông báo thành công!");

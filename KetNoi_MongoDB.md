@@ -190,6 +190,7 @@ function xemFileTrucTiep(base64Data, fileName) {
 | DELETE | `/api/nguoi-dung/:id` | - | Xóa tài khoản |
 | GET | `/api/thong-bao` | - | Lấy tất cả thông báo |
 | POST | `/api/thong-bao` | `{ id, senderName, target, text, date, materialId?, materialType? }` | Tạo thông báo |
+| PUT | `/api/thong-bao/:id` | `{ text }` | Cập nhật thông báo |
 | DELETE | `/api/thong-bao/:id` | - | Xóa thông báo |
 | GET | `/api/tai-lieu` | - | Lấy tất cả tài liệu |
 | POST | `/api/tai-lieu` | `{ id, classId, title, type, link, date, description?, fileName? }` | Tạo tài liệu/bài tập |

@@ -29,12 +29,7 @@
                                 Điều phối Lớp học
                             </a>
                         </li>
-                        <li class="menu-item" data-target="profile-tab">
-                            <a href="#">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                Thông tin cá nhân
-                            </a>
-                        </li>
+
                         <li class="menu-item" data-target="admin-notifs-tab" onclick="hienThiDanhSachThongBaoAdmin()">
                             <a href="#">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -248,48 +243,7 @@
                 </div>
             </section>
 
-            <!-- TAB HỒ SƠ CÁ NHÂN -->
-            <section id="profile-tab" class="tab-section">
-                <header class="top-header">
-                    <h1>Hồ sơ Quản trị viên</h1>
-                </header>
-                
-                <div class="border-box mb-20">
-                    <div class="flex-row align-center flex-wrap">
-                        <div class="bg-light text-primary font-bold flex-row justify-center align-center rounded-full" style="width: 80px; height: 80px; font-size: 24px; border: 2px solid var(--primary);">AD</div>
-                        <div style="margin-left: 10px;">
-                            <p class="mb-5"><strong>Mã Quản trị viên:</strong> <span id="profId"></span></p>
-                            <p class="mb-5"><strong>Họ và tên:</strong> <span class="user-name"></span></p>
-                            <p class="mb-5"><strong>Email:</strong> <span class="user-email"></span></p>
-                            <p class="mb-5"><strong>Ngày sinh:</strong> <span id="profDob"></span></p>
-                            <p class="mb-5"><strong>Số điện thoại:</strong> <span id="profPhone"></span></p>
-                            <button id="btnShowEditProfile" class="action-btn mt-10">Thay đổi thông tin</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="editProfileFormContainer" style="display:none; max-width:480px;" class="border-box">
-                    <h3 class="mb-20 font-bold text-primary">Cập nhật thông tin</h3>
-                    <form id="editProfileForm">
-                        <div class="input-group">
-                            <label>Mật khẩu mới</label>
-                            <input type="password" name="password" placeholder="Bỏ trống nếu giữ nguyên">
-                        </div>
-                        <div class="input-group">
-                            <label>Số điện thoại</label>
-                            <input type="text" name="phone">
-                        </div>
-                        <div class="input-group">
-                            <label>Ngày sinh</label>
-                            <input type="date" name="dob">
-                        </div>
-                        <div class="flex-row mt-20">
-                            <button type="submit" class="btn-primary" style="width: auto;">Cập nhật</button>
-                            <button type="button" id="btnCancelEditProfile" class="action-btn">Hủy bỏ</button>
-                        </div>
-                    </form>
-                </div>
-            </section>
+
 
             <!-- TAB QUẢN LÝ THÔNG BÁO -->
             <section id="admin-notifs-tab" class="tab-section" style="display: none;">

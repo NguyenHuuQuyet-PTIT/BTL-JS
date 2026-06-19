@@ -365,8 +365,8 @@ function khoiTaoGiaoDienChung() {
             // Đặt trạng thái hoạt động cho nút vừa chọn
             this.classList.add('active');
 
-            // Tìm phân vùng cha chứa toàn bộ nội dung của các sub-tab
-            let vungChua = menuCha.parentElement;
+            // Tìm phân vùng cha chứa toàn bộ nội dung của các sub-tab (hỗ trợ phân cấp phức tạp ở Admin)
+            let vungChua = menuCha.closest('.tab-section') || menuCha.parentElement;
             // Ẩn toàn bộ nội dung của các sub-tab con
             vungChua.querySelectorAll('.sub-tab-content').forEach(tab => tab.style.display = 'none');
             
@@ -527,10 +527,16 @@ function hienThiTheThongBaoChung(idVungChua, danhSachTB, nguoiDung) {
         let xemTruoc = n.text.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
         xemTruoc = xemTruoc.length > 90 ? xemTruoc.substring(0, 90) + '...' : xemTruoc;
 
-        // Tạo nhãn badge nếu là thông báo bài tập (có materialId)
+        // Tạo nhãn badge tương ứng với loại tài liệu liên kết nếu có
         let nhanhBaiTap = '';
-        if (n.materialId && n.materialType === 'assignment') {
-            nhanhBaiTap = '<span style="background: #f59e0b; color: #fff; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 7px; margin-left: 8px; letter-spacing: 0.5px;">📋 BÀI TẬP</span>';
+        if (n.materialId) {
+            if (n.materialType === 'assignment') {
+                nhanhBaiTap = '<span style="background: #f59e0b; color: #fff; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 7px; margin-left: 8px; letter-spacing: 0.5px;">📋 BÀI TẬP</span>';
+            } else if (n.materialType === 'lecture') {
+                nhanhBaiTap = '<span style="background: #3b82f6; color: #fff; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 7px; margin-left: 8px; letter-spacing: 0.5px;">📄 BÀI GIẢNG</span>';
+            } else {
+                nhanhBaiTap = '<span style="background: #10b981; color: #fff; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 7px; margin-left: 8px; letter-spacing: 0.5px;">📎 TÀI LIỆU</span>';
+            }
         }
         
         return `
@@ -584,21 +590,19 @@ function moHopThoaiDocThongBao(idThongBao) {
     }
 
     // -----------------------------------------------------------------------
-    // Kiểm tra nếu thông báo này là thông báo giao bài tập (có materialId)
-    // Nếu đúng: mở modal xem chi tiết bài tập thay vì modal thông báo thông thường
+    // Kiểm tra nếu thông báo này là thông báo đăng tài liệu/bài tập (có materialId)
+    // Nếu đúng: mở modal xem chi tiết thay vì modal thông báo thông thường
     // -----------------------------------------------------------------------
-    if (tb.materialId && tb.materialType === 'assignment') {
-        // Tìm thông tin bài tập trong CSDL Materials
+    if (tb.materialId) {
+        // Tìm thông tin tài liệu trong CSDL Materials
         let materials = layCSDL('Materials');
         let baiTap = materials.find(m => m.id === tb.materialId);
 
         if (baiTap) {
-            // Mở modal xem chi tiết bài tập thay vì modal thông báo thông thường
+            // Mở modal xem chi tiết tài liệu/bài tập
             moModalChiTietBaiTap(baiTap, nguoiDung);
             return; // Dừng ở đây, không mở modal thông báo thông thường
         }
-        // Nếu không tìm được bài tập trong local cache (có thể chưa đồng bộ)
-        // thì vẫn hiển thị thông báo bình thường bên dưới
     }
     
     // Gán dữ liệu thông báo vào các phần tử của modal đọc chi tiết (thông báo thường)
@@ -701,10 +705,10 @@ function moModalChiTietBaiTap(baiTap, nguoiDung) {
         }
     }
 
-    // Hiển thị nút nộp bài nếu người dùng là sinh viên
+    // Hiển thị nút nộp bài nếu người dùng là sinh viên và loại tài liệu là bài tập (assignment)
     let elNopBai = document.getElementById('adm-submit-btn');
     if (elNopBai) {
-        if (nguoiDung && nguoiDung.role === 'sinh-vien') {
+        if (nguoiDung && nguoiDung.role === 'sinh-vien' && baiTap.type === 'assignment') {
             // Kiểm tra xem sinh viên đã nộp bài chưa
             let submissions = layCSDL('Submissions');
             let daNop = submissions.find(s => s.materialId === baiTap.id && s.studentId === nguoiDung.id);
