@@ -8,45 +8,63 @@
 </head>
 <body class="auth-page">
     <div class="auth-box">
-        <h2 class="text-center mb-10">EDU REPORT</h2>
-        <p class="text-muted text-sm text-center mb-20">Hệ thống quản lý giảng dạy & học tập</p>
-        <h3 class="text-center mb-20 text-primary">Đăng nhập Hệ thống</h3>
+        <!-- Header Logo và tiêu đề -->
+        <div class="auth-header">
+            <h1>EDU REPORT</h1>
+            <p>Hệ thống Quản lý Giảng dạy & Học tập</p>
+        </div>
 
-        <!-- FORM ĐĂNG NHẬP -->
+        <!-- Biểu mẫu đăng nhập -->
         <form id="loginForm" autocomplete="off">
-            <div class="role-toggle" style="justify-content: space-around; margin-bottom: 20px;">
+            <!-- Bộ chọn vai trò dạng trượt (SaaS Segment Control) -->
+            <div class="role-select-container">
                 <input type="radio" id="loginRoleStudent" name="loginRole" value="sinh-vien" checked>
-                <label for="loginRoleStudent">Sinh viên</label>
-                
                 <input type="radio" id="loginRoleTeacher" name="loginRole" value="giang-vien">
-                <label for="loginRoleTeacher">Giảng viên</label>
-
                 <input type="radio" id="loginRoleAdmin" name="loginRole" value="admin">
-                <label for="loginRoleAdmin">Quản trị viên</label>
+                
+                <span class="role-slider"></span>
+                
+                <label for="loginRoleStudent" class="role-label">Sinh viên</label>
+                <label for="loginRoleTeacher" class="role-label">Giảng viên</label>
+                <label for="loginRoleAdmin" class="role-label">Quản trị viên</label>
             </div>
             
+            <!-- Trường nhập tên đăng nhập -->
             <div class="input-group">
-                <label>Email hoặc Tên đăng nhập</label>
-                <input type="text" name="email" required placeholder="Nhập tên đăng nhập hoặc email..." autocomplete="off">
+                <label>Email hoặc Mã định danh</label>
+                <input type="text" name="email" required placeholder="Nhập email hoặc mã ID của bạn..." autocomplete="off">
             </div>
             
+            <!-- Trường nhập mật khẩu -->
             <div class="input-group">
-                <label>Mật khẩu</label>
-                <input type="password" name="password" required placeholder="Nhập mật khẩu..." autocomplete="new-password">
+                <label>Mật khẩu đầu khóa</label>
+                <input type="password" name="password" required placeholder="Nhập mật khẩu của bạn..." autocomplete="new-password">
             </div>
             
-            <button type="submit" class="btn-primary mt-10">Đăng nhập</button>
+            <!-- Nút nhấn submit đăng nhập -->
+            <button type="submit" class="btn-submit">Đăng nhập</button>
             
-            <div class="border-box mt-20 p-10 bg-light">
-                <p class="text-sm font-bold text-primary mb-10 text-center">Tài khoản demo:</p>
-                <div class="flex-row justify-between text-sm flex-wrap" style="gap: 5px; flex-direction: column;">
-                    <span><strong>SV:</strong> sinhvien (Mật khẩu: sinhvien)</span>
-                    <span><strong>GV:</strong> giaovien (Mật khẩu: giaovien)</span>
-                    <span><strong>Admin:</strong> admin (Mật khẩu: admin)</span>
+            <!-- Bảng thông tin tài khoản demo ghim kính mờ -->
+            <div class="demo-accounts-board">
+                <div class="demo-title">Tài khoản thử nghiệm</div>
+                <div class="demo-accounts-list">
+                    <div class="demo-item">
+                        <span>Sinh viên</span>
+                        <strong>sinhvien</strong>
+                    </div>
+                    <div class="demo-item">
+                        <span>Giảng viên</span>
+                        <strong>giaovien</strong>
+                    </div>
+                    <div class="demo-item">
+                        <span>Quản trị viên</span>
+                        <strong>admin</strong>
+                    </div>
                 </div>
             </div>
         </form>
     </div>
+    
     <script src="js/app.js"></script>
 </body>
 </html>

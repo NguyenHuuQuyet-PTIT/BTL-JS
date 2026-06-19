@@ -803,12 +803,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tự động đồng bộ danh sách tài khoản từ MongoDB về LocalStorage để cả 3 phân quyền luôn khớp dữ liệu với nhau
     if (user) {
+        // 1. Đồng bộ tài khoản người dùng
         fetch(`${API_BASE}/api/nguoi-dung`)
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
                     ghiCSDL('Users', data.users);
-                    // Cập nhật lại giao diện tương ứng sau khi có dữ liệu mới nhất
                     if (duongDanTrang.includes('admin.html') && typeof hienThiDanhSachTaiKhoan === 'function') {
                         hienThiDanhSachTaiKhoan();
                     } else if (duongDanTrang.includes('teacher-dashboard.html') && typeof hienThiBaoCaoGiangVien === 'function') {
@@ -819,6 +819,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             })
             .catch(err => console.warn("Chạy ngoại tuyến. Không thể đồng bộ tài khoản từ MongoDB Atlas."));
+
+        // 2. Đồng bộ danh sách thông báo hệ thống
+        fetch(`${API_BASE}/api/thong-bao`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    ghiCSDL('Notifications', data.notifications);
+                    // Cập nhật lại giao diện hòm thư của từng vai trò
+                    if (duongDanTrang.includes('admin.html') && typeof hienThiDanhSachThongBaoAdmin === 'function') {
+                        hienThiDanhSachThongBaoAdmin();
+                    } else if (duongDanTrang.includes('teacher-dashboard.html')) {
+                        if (typeof hienThiHopThuDenGiangVien === 'function') hienThiHopThuDenGiangVien(user);
+                        if (typeof hienThiLichSuGuiGiangVien === 'function') hienThiLichSuGuiGiangVien(user);
+                    } else if (duongDanTrang.includes('student-dashboard.html')) {
+                        if (typeof hienThiThongBaoSinhVien === 'function') hienThiThongBaoSinhVien(user);
+                    }
+                }
+            })
+            .catch(err => console.warn("Chạy ngoại tuyến. Không thể đồng bộ thông báo từ MongoDB Atlas."));
+
+        // 3. Đồng bộ danh sách tài liệu giảng dạy và bài tập lớp học
+        fetch(`${API_BASE}/api/tai-lieu`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Lưu tài liệu vào LocalStorage để đồng bộ hiển thị
+                    ghiCSDL('Materials', data.materials);
+                    // Nếu đang ở trang giảng viên và tab chi tiết lớp học đang hoạt động, làm mới lại danh sách tài liệu
+                    if (duongDanTrang.includes('teacher-dashboard.html')) {
+                        let classDetailTab = document.getElementById('class-detail-tab');
+                        if (classDetailTab && classDetailTab.style.display === 'block' && typeof hienThiTaiLieuGiangVien === 'function') {
+                            hienThiTaiLieuGiangVien();
+                        }
+                    }
+                }
+            })
+            .catch(err => console.warn("Chạy ngoại tuyến. Không thể đồng bộ tài liệu từ MongoDB Atlas."));
+
+        // 4. Đồng bộ danh sách bài tập sinh viên nộp trực tuyến
+        fetch(`${API_BASE}/api/nop-bai`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Lưu danh sách bài tập đã nộp vào Local CSDL
+                    ghiCSDL('Submissions', data.submissions);
+                }
+            })
+            .catch(err => console.warn("Chạy ngoại tuyến. Không thể đồng bộ danh sách bài nộp từ MongoDB Atlas."));
     }
 
     // Định tuyến tại trang chủ đăng nhập index.html

@@ -35,6 +35,12 @@
                                 Thông tin cá nhân
                             </a>
                         </li>
+                        <li class="menu-item" data-target="admin-notifs-tab" onclick="hienThiDanhSachThongBaoAdmin()">
+                            <a href="#">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                                Gửi Thông Báo
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             </div>
@@ -282,6 +288,50 @@
                             <button type="button" id="btnCancelEditProfile" class="action-btn">Hủy bỏ</button>
                         </div>
                     </form>
+                </div>
+            </section>
+
+            <!-- TAB QUẢN LÝ THÔNG BÁO -->
+            <section id="admin-notifs-tab" class="tab-section" style="display: none;">
+                <header class="top-header">
+                    <h1>Gửi Thông Báo Hệ Thống</h1>
+                </header>
+
+                <div class="flex-row flex-wrap align-start">
+                    <!-- Form soạn thông báo bên trái -->
+                    <div class="border-box flex-1" style="min-width: 320px;">
+                        <h3 class="mb-20 font-bold text-primary">Soạn thông báo mới</h3>
+                        <form id="adminCreateNotifForm">
+                            <div class="input-group">
+                                <label>Đối tượng nhận</label>
+                                <select name="target" required style="width: 100%; padding: 10px; border-radius: var(--border-radius); border: 1px solid var(--border-color);">
+                                    <option value="tat-ca-sinh-vien">Tất cả sinh viên</option>
+                                    <option value="tat-ca-giang-vien">Tất cả giảng viên</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Nội dung thông báo</label>
+                                <textarea name="text" rows="6" placeholder="Nhập nội dung thông báo tại đây..." required style="width: 100%; padding: 10px; border-radius: var(--border-radius); border: 1px solid var(--border-color); font-family: inherit; font-size: 14px;"></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary mt-10" style="width: auto;">Gửi thông báo</button>
+                        </form>
+                    </div>
+
+                    <!-- Bảng lịch sử thông báo bên phải -->
+                    <div class="border-box flex-1" style="min-width: 400px;">
+                        <h3 class="mb-20 font-bold text-primary">Lịch sử thông báo đã gửi</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Ngày gửi</th>
+                                    <th>Đối tượng</th>
+                                    <th>Nội dung</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admSentNotifList"></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
         </main>

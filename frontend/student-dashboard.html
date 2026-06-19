@@ -215,6 +215,35 @@
                 </thead>
                 <tbody id="modalSessionList"></tbody>
             </table>
+
+            <h3 class="border-bottom mt-20 mb-10 text-primary font-bold">Tài liệu & Bài tập lớp học</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Ngày tải</th>
+                        <th>Loại</th>
+                        <th>Tiêu đề tài liệu</th>
+                        <th>Liên kết</th>
+                    </tr>
+                </thead>
+                <tbody id="modalMaterialList"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Hộp thoại Popup nộp bài tập -->
+    <div id="submitAssignmentModal" class="modal">
+        <div class="modal-content" style="max-width: 480px;">
+            <span class="close-modal">&times;</span>
+            <h2 id="submitAssignmentTitle" class="text-primary mb-20">Nộp bài làm trực tuyến</h2>
+            <form id="stuSubmitAssignmentForm">
+                <input type="hidden" name="materialId" id="submitMaterialId">
+                <div class="input-group">
+                    <label>Đường dẫn bài làm (Google Drive / GitHub / ...)</label>
+                    <input type="url" name="link" required placeholder="https://..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;">
+                </div>
+                <button type="submit" class="btn-primary mt-20" style="width: auto;">Xác nhận nộp bài</button>
+            </form>
         </div>
     </div>
     

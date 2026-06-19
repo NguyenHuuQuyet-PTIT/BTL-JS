@@ -773,11 +773,124 @@ function khoiTaoLangNgheSuKienDieuPhoi() {
 // 4. KHỞI CHẠY CORE ADMIN (BOOTSTRAP INTERFACE)
 // --------------------------------------------------------------------------
 
+// ==========================================================================
+// 5. QUẢN LÝ THÔNG BÁO HỆ THỐNG (ADMIN NOTIFICATIONS MANAGEMENT)
+// ==========================================================================
+
+// Hàm hiển thị danh sách các thông báo do Admin đã gửi
+function hienThiDanhSachThongBaoAdmin() {
+    let notifications = layCSDL('Notifications');
+    // Lọc các thông báo do Hệ thống Đào tạo (Admin) gửi
+    let adminNotifs = notifications.filter(n => n.senderName === 'Hệ thống Đào tạo').reverse();
+
+    let html = adminNotifs.map(n => {
+        let targetText = n.target === 'tat-ca-sinh-vien' ? 'Sinh viên' : 'Giảng viên';
+        let previewText = n.text.length > 60 ? n.text.substring(0, 60) + '...' : n.text;
+        return `
+            <tr>
+                <td>${n.date}</td>
+                <td><span class="text-primary font-bold">${targetText}</span></td>
+                <td>${previewText}</td>
+                <td>
+                    <button class="btn-danger" onclick="xoaThongBaoAdmin('${n.id}')">Xóa</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    let container = document.getElementById('admSentNotifList');
+    if (container) {
+        container.innerHTML = html || '<tr><td colspan="4">Chưa gửi thông báo nào.</td></tr>';
+    }
+}
+
+// Hàm gửi yêu cầu xóa thông báo lên MongoDB Atlas và cập nhật Local
+function xoaThongBaoAdmin(idThongBao) {
+    hienThiConfirmTuyBien("Bạn có chắc chắn muốn xóa thông báo này khỏi hệ thống?", async () => {
+        try {
+            let response = await fetch(`${API_BASE}/api/thong-bao/${idThongBao}`, {
+                method: 'DELETE'
+            });
+            let data = await response.json();
+
+            if (response.ok && data.success) {
+                let notifs = layCSDL('Notifications').filter(n => n.id !== idThongBao);
+                ghiCSDL('Notifications', notifs);
+                alert("Xóa thông báo thành công!");
+                hienThiDanhSachThongBaoAdmin();
+            } else {
+                alert(data.message || "Xóa thất bại!");
+            }
+        } catch (error) {
+            // Hỗ trợ xóa offline nếu mất kết nối
+            let notifs = layCSDL('Notifications').filter(n => n.id !== idThongBao);
+            ghiCSDL('Notifications', notifs);
+            alert("Xóa thông báo thành công!");
+            hienThiDanhSachThongBaoAdmin();
+        }
+    });
+}
+
+// Đăng ký sự kiện nộp biểu mẫu gửi thông báo mới của Admin
+function khoiTaoLangNgheThongBaoAdmin() {
+    let form = document.getElementById('adminCreateNotifForm');
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            let targetVal = form.elements['target'].value;
+            let textVal = form.elements['text'].value.trim();
+
+            let newNotif = {
+                id: 'NOTIF_' + Date.now(),
+                senderName: 'Hệ thống Đào tạo',
+                target: targetVal,
+                text: textVal,
+                date: new Date().toLocaleDateString('en-CA')
+            };
+
+            try {
+                // Gọi API gửi thông báo lưu lên MongoDB Atlas
+                let response = await fetch(`${API_BASE}/api/thong-bao`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newNotif)
+                });
+                let data = await response.json();
+
+                if (response.ok && data.success) {
+                    let notifs = layCSDL('Notifications');
+                    notifs.push(newNotif);
+                    ghiCSDL('Notifications', notifs);
+
+                    alert("Gửi thông báo thành công!");
+                    form.reset();
+                    hienThiDanhSachThongBaoAdmin();
+                } else {
+                    alert(data.message || "Gửi thông báo thất bại!");
+                }
+            } catch (error) {
+                // Hỗ trợ gửi ngoại tuyến
+                let notifs = layCSDL('Notifications');
+                notifs.push(newNotif);
+                ghiCSDL('Notifications', notifs);
+
+                alert("Gửi thông báo thành công!");
+                form.reset();
+                hienThiDanhSachThongBaoAdmin();
+            }
+        });
+    }
+}
+
 // Hàm khởi chạy nạp cấu hình khi Admin đăng nhập thành công vào admin.html
 function khoiTaoGiaoDienAdmin(adminUser) {
     // Đăng ký sự kiện lắng nghe của các Form trong tab Điều phối lớp học
     khoiTaoLangNgheSuKienDieuPhoi();
     
+    // Đăng ký sự kiện gửi thông báo
+    khoiTaoLangNgheThongBaoAdmin();
+
     // Gọi nạp danh sách điều phối lớp học và cổng đăng ký tín chỉ
     khoiTaoTabDieuPhoiLop();
     

@@ -275,8 +275,62 @@ function moHopThoaiLopSinhVien(idLop) {
         `;
     }).join('');
     
-    // Đổ nội dung danh sách vào bảng và mở modal popup lên màn hình
+    // Đổ nội dung danh sách vào bảng
     document.getElementById('modalSessionList').innerHTML = htmlDong || '<tr><td colspan="2">Lớp này chưa được tạo buổi học.</td></tr>';
+    
+    // Đổ danh mục tài liệu & bài tập của lớp học học phần
+    let materials = layCSDL('Materials');
+    let materialsOfClass = materials.filter(m => m.classId === idLop);
+
+    // Bản đồ nhãn loại tài liệu hiển thị cho sinh viên
+    let typeMap = {
+        'lecture': '<span class="text-primary font-bold">Bài giảng</span>',
+        'assignment': '<span class="text-warning font-bold">Bài tập</span>',
+        'other': '<span class="text-muted">Khác</span>'
+    };
+
+    // Tạo mã HTML hàng bảng danh sách tài liệu
+    let htmlMaterials = materialsOfClass.map(m => {
+        let linkHtml = '';
+        if (m.type === 'assignment') {
+            // Lấy danh sách bài nộp từ CSDL offline
+            let submissions = layCSDL('Submissions');
+            // Tìm bài nộp của sinh viên này
+            let mySub = submissions.find(s => s.materialId === m.id && s.studentId === user.id);
+            
+            if (mySub) {
+                // Nếu đã nộp, hiển thị đường dẫn xem và nút nộp lại
+                linkHtml = `
+                    <div class="flex-row align-center" style="gap: 5px;">
+                        <a href="${mySub.link}" target="_blank" class="text-success font-bold" style="text-decoration: underline;">Đã nộp bài</a>
+                        <button class="action-btn" style="padding: 2px 6px; font-size:11px; width: auto;" onclick="moModalNopBai('${m.id}', '${m.title.replace(/'/g, "\\'")}')">Nộp lại</button>
+                    </div>
+                `;
+            } else {
+                // Nếu chưa nộp, hiển thị nút nộp bài màu nổi bật
+                linkHtml = `<button class="btn-primary" style="padding: 4px 10px; font-size:12px; width:auto;" onclick="moModalNopBai('${m.id}', '${m.title.replace(/'/g, "\\'")}')">Nộp bài</button>`;
+            }
+        } else {
+            // Đối với bài giảng hoặc tài liệu khác, chỉ hiển thị liên kết xem tài liệu thông thường
+            linkHtml = `<a href="${m.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline;">Xem tài liệu</a>`;
+        }
+
+        return `
+            <tr>
+                <td>${m.date}</td>
+                <td>${typeMap[m.type] || m.type}</td>
+                <td><strong>${m.title}</strong></td>
+                <td>${linkHtml}</td>
+            </tr>
+        `;
+    }).join('');
+
+    let elMatList = document.getElementById('modalMaterialList');
+    if (elMatList) {
+        elMatList.innerHTML = htmlMaterials || '<tr><td colspan="4" class="text-center">Chưa có tài liệu học tập nào được chia sẻ trong lớp này.</td></tr>';
+    }
+
+    // Mở modal popup lên màn hình
     moHopThoai('stuClassModal');
 }
 
@@ -480,4 +534,105 @@ function danhDauDaDocTatCaThongBaoSinhVien() {
         capNhatHuyHieuThongBao(user);
         hienThiThongBaoSinhVien(user);
     }
+}
+
+// --------------------------------------------------------------------------
+// 4. QUẢN LÝ NỘP BÀI TẬP TRỰC TUYẾN (STUDENT ASSIGNMENTS SUBMISSION)
+// --------------------------------------------------------------------------
+
+// Hàm mở Modal nộp bài và điền thông tin bài tập tương ứng
+function moModalNopBai(idTaiLieu, tieuDeBaiTap) {
+    document.getElementById('submitMaterialId').value = idTaiLieu;
+    document.getElementById('submitAssignmentTitle').textContent = `Nộp bài làm: ${tieuDeBaiTap}`;
+    
+    // Đổ đường dẫn bài nộp cũ vào form nếu đã nộp trước đó
+    let user = layCSDL('currentUser');
+    let submissions = layCSDL('Submissions');
+    let mySub = submissions.find(s => s.materialId === idTaiLieu && s.studentId === user.id);
+    let formNop = document.getElementById('stuSubmitAssignmentForm');
+    if (formNop) {
+        formNop.elements['link'].value = mySub ? mySub.link : '';
+    }
+
+    moHopThoai('submitAssignmentModal');
+}
+
+// Lắng nghe sự kiện nộp biểu mẫu nộp bài làm của sinh viên
+let formNopBai = document.getElementById('stuSubmitAssignmentForm');
+if (formNopBai) {
+    formNopBai.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        let user = layCSDL('currentUser');
+        let idTaiLieu = document.getElementById('submitMaterialId').value;
+        let duongDan = formNopBai.elements['link'].value.trim();
+        
+        // Tạo đối tượng bài nộp mới
+        let newSubmission = {
+            id: 'SUBM_' + Date.now(),
+            materialId: idTaiLieu,
+            studentId: user.id,
+            studentName: user.name,
+            link: duongDan,
+            date: new Date().toLocaleDateString('en-CA')
+        };
+
+        try {
+            // Gửi dữ liệu bài nộp lên API backend
+            let response = await fetch(`${API_BASE}/api/nop-bai`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newSubmission)
+            });
+            let data = await response.json();
+            
+            if (response.ok && data.success) {
+                // Cập nhật lại vào Local CSDL offline
+                let listSubs = layCSDL('Submissions');
+                let vt = listSubs.findIndex(s => s.materialId === idTaiLieu && s.studentId === user.id);
+                if (vt > -1) {
+                    listSubs[vt] = { ...listSubs[vt], link: duongDan, date: newSubmission.date };
+                } else {
+                    listSubs.unshift(newSubmission);
+                }
+                ghiCSDL('Submissions', listSubs);
+                
+                alert("Nộp bài tập trực tuyến thành công!");
+                dongHopThoai('submitAssignmentModal');
+                formNopBai.reset();
+                
+                // Làm mới lại bảng chi tiết lớp học
+                let classes = layCSDL('Classes');
+                let lop = classes.find(c => c.enrolledStudents.includes(user.id) && c.sessions.length > 0); 
+                // Sử dụng mã ID lớp học hiện đang chọn
+                let modalTitle = document.getElementById('modalClassName').textContent;
+                let activeClass = classes.find(c => modalTitle.includes(layTenLopHienThi(c.id)));
+                if (activeClass) {
+                    moHopThoaiLopSinhVien(activeClass.id);
+                }
+            } else {
+                alert(data.message || "Nộp bài tập thất bại!");
+            }
+        } catch (error) {
+            // Lưu trữ cục bộ dự phòng nếu lỗi kết nối
+            let listSubs = layCSDL('Submissions');
+            let vt = listSubs.findIndex(s => s.materialId === idTaiLieu && s.studentId === user.id);
+            if (vt > -1) {
+                listSubs[vt] = { ...listSubs[vt], link: duongDan, date: newSubmission.date };
+            } else {
+                listSubs.unshift(newSubmission);
+            }
+            ghiCSDL('Submissions', listSubs);
+            
+            alert("Nộp bài tập trực tuyến thành công!");
+            dongHopThoai('submitAssignmentModal');
+            formNopBai.reset();
+            
+            let modalTitle = document.getElementById('modalClassName').textContent;
+            let activeClass = layCSDL('Classes').find(c => modalTitle.includes(layTenLopHienThi(c.id)));
+            if (activeClass) {
+                moHopThoaiLopSinhVien(activeClass.id);
+            }
+        }
+    });
 }

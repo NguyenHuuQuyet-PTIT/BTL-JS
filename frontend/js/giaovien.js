@@ -334,7 +334,7 @@ function hienThiLichSuGuiGiangVien(giangVien) {
 // Đăng ký sự kiện nộp form để giảng viên gửi một thông báo mới tới lớp phụ trách
 let formGuiTB = document.getElementById('teacherNotifForm');
 if (formGuiTB) {
-    formGuiTB.addEventListener('submit', function(e) {
+    formGuiTB.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         let user = layCSDL('currentUser');
@@ -350,15 +350,36 @@ if (formGuiTB) {
             date: new Date().toLocaleDateString('en-CA')
         };
         
-        // Ghi nhận thông báo vào danh sách LocalStorage
-        let notifs = layCSDL('Notifications');
-        notifs.push(newNotif);
-        ghiCSDL('Notifications', notifs);
-        
-        // Reset form và tải lại lịch sử gửi thông báo
-        alert("Gửi thông báo lớp thành công!");
-        this.reset();
-        hienThiLichSuGuiGiangVien(user);
+        try {
+            // Gửi thông báo trực tuyến lên MongoDB Atlas qua API
+            let response = await fetch(`${API_BASE}/api/thong-bao`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newNotif)
+            });
+            let data = await response.json();
+            
+            if (response.ok && data.success) {
+                let notifs = layCSDL('Notifications');
+                notifs.push(newNotif);
+                ghiCSDL('Notifications', notifs);
+                
+                alert("Gửi thông báo lớp thành công!");
+                formGuiTB.reset();
+                hienThiLichSuGuiGiangVien(user);
+            } else {
+                alert(data.message || "Gửi thông báo thất bại!");
+            }
+        } catch (error) {
+            // Lưu dự phòng ngoại tuyến
+            let notifs = layCSDL('Notifications');
+            notifs.push(newNotif);
+            ghiCSDL('Notifications', notifs);
+            
+            alert("Gửi thông báo lớp thành công!");
+            formGuiTB.reset();
+            hienThiLichSuGuiGiangVien(user);
+        }
     });
 }
 
@@ -412,11 +433,27 @@ function moQuanLyThongBaoGiangVien(idThongBao) {
 
 // Hàm xóa thông báo giảng viên đã gửi
 function xoaThongBaoGiangVien(idThongBao) {
-    hienThiConfirmTuyBien("Bạn có chắc chắn muốn xóa thông báo này?", () => {
-        let thongBao = layCSDL('Notifications').filter(n => n.id !== idThongBao);
-        ghiCSDL('Notifications', thongBao);
-        dongHopThoai('readNotifModal');
-        hienThiLichSuGuiGiangVien();
+    hienThiConfirmTuyBien("Bạn có chắc chắn muốn xóa thông báo này?", async () => {
+        try {
+            let response = await fetch(`${API_BASE}/api/thong-bao/${idThongBao}`, { method: 'DELETE' });
+            let data = await response.json();
+            
+            if (response.ok && data.success) {
+                let thongBao = layCSDL('Notifications').filter(n => n.id !== idThongBao);
+                ghiCSDL('Notifications', thongBao);
+                alert("Xóa thông báo thành công!");
+                dongHopThoai('readNotifModal');
+                hienThiLichSuGuiGiangVien();
+            } else {
+                alert(data.message || "Xóa thất bại!");
+            }
+        } catch (error) {
+            let thongBao = layCSDL('Notifications').filter(n => n.id !== idThongBao);
+            ghiCSDL('Notifications', thongBao);
+            alert("Xóa thông báo thành công!");
+            dongHopThoai('readNotifModal');
+            hienThiLichSuGuiGiangVien();
+        }
     });
 }
 
@@ -464,7 +501,173 @@ function luuThongBaoGiangVien(idThongBao) {
 }
 
 // --------------------------------------------------------------------------
+// 4. QUẢN LÝ TÀI LIỆU & BÀI TẬP LỚP HỌC (TEACHER MATERIALS & ASSIGNMENTS)
+// --------------------------------------------------------------------------
+
+// Hàm hiển thị danh sách tài liệu và bài tập của giảng viên trong lớp học phần
+function hienThiTaiLieuGiangVien() {
+    let classDetailTab = document.getElementById('class-detail-tab');
+    let classId = classDetailTab ? classDetailTab.dataset.classId : null;
+    if (!classId) return;
+
+    // Lấy danh sách tài liệu học tập từ Local CSDL
+    let materials = layCSDL('Materials');
+    // Lọc ra các tài liệu thuộc về mã lớp học phần hiện tại
+    let materialsOfClass = materials.filter(m => m.classId === classId);
+
+    // Bản đồ nhãn hiển thị loại tài liệu
+    let typeMap = {
+        'lecture': '<span class="text-primary font-bold">Bài giảng</span>',
+        'assignment': '<span class="text-warning font-bold">Bài tập</span>',
+        'other': '<span class="text-muted">Khác</span>'
+    };
+
+    // Tạo mã HTML hàng bảng danh sách tài liệu
+    let html = materialsOfClass.map(m => {
+        let viewSubsBtn = '';
+        if (m.type === 'assignment') {
+            // Hiển thị thêm nút Xem bài nộp nếu là bài tập giao về nhà
+            viewSubsBtn = `<button class="action-btn" style="padding: 4px 8px; font-size:12px; width:auto; margin-right: 5px;" onclick="xemDanhSachNopBai('${m.id}')">Xem bài nộp</button>`;
+        }
+        
+        return `
+            <tr>
+                <td>${m.date}</td>
+                <td>${typeMap[m.type] || m.type}</td>
+                <td><strong>${m.title}</strong></td>
+                <td><a href="${m.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline;">Xem liên kết</a></td>
+                <td>
+                    ${viewSubsBtn}
+                    <button class="btn-danger" style="padding: 4px 8px; font-size:12px; width:auto;" onclick="xoaTaiLieuGiangVien('${m.id}')">Xóa</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    let tbody = document.getElementById('tcMaterialList');
+    if (tbody) {
+        tbody.innerHTML = html || '<tr><td colspan="5" class="text-center">Chưa có tài liệu hoặc bài tập nào được đăng lên lớp này.</td></tr>';
+    }
+}
+
+// Hàm xóa tài liệu/bài tập của giảng viên đã tải lên lớp qua API và cập nhật Local CSDL
+function xoaTaiLieuGiangVien(idTaiLieu) {
+    hienThiConfirmTuyBien("Bạn có chắc chắn muốn xóa tài liệu này khỏi lớp học?", async () => {
+        try {
+            // Gửi yêu cầu xóa tài liệu lên API backend
+            let response = await fetch(`${API_BASE}/api/tai-lieu/${idTaiLieu}`, {
+                method: 'DELETE'
+            });
+            let data = await response.json();
+            
+            if (response.ok && data.success) {
+                let materials = layCSDL('Materials').filter(m => m.id !== idTaiLieu);
+                ghiCSDL('Materials', materials);
+                alert("Xóa tài liệu thành công!");
+                hienThiTaiLieuGiangVien();
+            } else {
+                alert(data.message || "Xóa tài liệu thất bại!");
+            }
+        } catch (error) {
+            // Tự động xử lý ngoại tuyến nếu mất kết nối
+            let materials = layCSDL('Materials').filter(m => m.id !== idTaiLieu);
+            ghiCSDL('Materials', materials);
+            alert("Xóa tài liệu thành công!");
+            hienThiTaiLieuGiangVien();
+        }
+    });
+}
+
+// Đăng ký sự kiện nộp form tải tài liệu/bài tập của giảng viên
+let formTaiLieu = document.getElementById('tcCreateMaterialForm');
+if (formTaiLieu) {
+    formTaiLieu.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        let classDetailTab = document.getElementById('class-detail-tab');
+        let classId = classDetailTab ? classDetailTab.dataset.classId : null;
+        if (!classId) return;
+
+        let title = formTaiLieu.elements['title'].value.trim();
+        let type = formTaiLieu.elements['type'].value;
+        let link = formTaiLieu.elements['link'].value.trim();
+        
+        // Tạo đối tượng tài liệu mới
+        let newMaterial = {
+            id: 'MAT_' + Date.now(),
+            classId: classId,
+            title: title,
+            type: type,
+            link: link,
+            date: new Date().toLocaleDateString('en-CA')
+        };
+
+        try {
+            // Gửi dữ liệu tài liệu mới lên backend
+            let response = await fetch(`${API_BASE}/api/tai-lieu`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newMaterial)
+            });
+            let data = await response.json();
+            
+            if (response.ok && data.success) {
+                let materials = layCSDL('Materials');
+                materials.unshift(newMaterial);
+                ghiCSDL('Materials', materials);
+                
+                alert("Tải tài liệu lên lớp thành công!");
+                formTaiLieu.reset();
+                hienThiTaiLieuGiangVien();
+            } else {
+                alert(data.message || "Tải tài liệu thất bại!");
+            }
+        } catch (error) {
+            // Lưu trữ cục bộ dự phòng
+            let materials = layCSDL('Materials');
+            materials.unshift(newMaterial);
+            ghiCSDL('Materials', materials);
+            
+            alert("Tải tài liệu lên lớp thành công!");
+            formTaiLieu.reset();
+            hienThiTaiLieuGiangVien();
+        }
+    });
+}
+
+// --------------------------------------------------------------------------
 // LƯU Ý: Phần code Điều phối Lớp học (Coordinator Engine) trước đây ở đây đã
 // được chuyển toàn bộ sang tệp js/admin.js. Giảng viên không có quyền truy cập
 // hay thao tác các chức năng điều phối này.
 // --------------------------------------------------------------------------
+
+// Hàm hiển thị danh sách bài làm sinh viên đã nộp cho bài tập tương ứng
+function xemDanhSachNopBai(idTaiLieu) {
+    let submissions = layCSDL('Submissions');
+    let materials = layCSDL('Materials');
+    let assignment = materials.find(m => m.id === idTaiLieu);
+    
+    // Đổi tiêu đề modal khớp với tên bài tập
+    if (assignment) {
+        document.getElementById('viewSubmissionsTitle').textContent = `Bài nộp: ${assignment.title}`;
+    }
+
+    // Lọc các bài nộp của bài tập tương ứng
+    let subsOfAssignment = submissions.filter(s => s.materialId === idTaiLieu);
+
+    // Tạo mã HTML hàng bảng danh sách bài nộp
+    let html = subsOfAssignment.map(s => `
+        <tr>
+            <td>${s.date}</td>
+            <td><strong>${s.studentId}</strong></td>
+            <td>${s.studentName}</td>
+            <td><a href="${s.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline;">Xem bài làm</a></td>
+        </tr>
+    `).join('');
+
+    let tbody = document.getElementById('tcSubmissionList');
+    if (tbody) {
+        tbody.innerHTML = html || '<tr><td colspan="4" class="text-center">Chưa có sinh viên nào nộp bài tập này.</td></tr>';
+    }
+
+    moHopThoai('viewSubmissionsModal');
+}

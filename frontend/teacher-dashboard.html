@@ -92,6 +92,7 @@
                 <div class="sub-menu">
                     <button data-target="tc-sub-grades" class="sub-btn active" onclick="hienThiDiemHocSinhGiangVien()">Nhập Điểm số</button>
                     <button data-target="tc-sub-sessions" class="sub-btn" onclick="hienThiBuoiHocGiangVien()">Danh sách Buổi học</button>
+                    <button data-target="tc-sub-materials" class="sub-btn" onclick="hienThiTaiLieuGiangVien()">Tài liệu & Bài tập</button>
                 </div>
                 
                 <div id="tc-sub-grades" class="border-box sub-tab-content">
@@ -120,6 +121,43 @@
                             </tr>
                         </thead>
                         <tbody id="tcSessionList"></tbody>
+                    </table>
+                </div>
+
+                <div id="tc-sub-materials" class="border-box sub-tab-content" style="display:none;">
+                    <form id="tcCreateMaterialForm" class="mb-20">
+                        <div class="grid-container mb-10" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; width: 100%;">
+                            <div class="input-group mb-0">
+                                <label class="text-sm">Tiêu đề tài liệu / bài tập</label>
+                                <input type="text" name="title" required placeholder="Ví dụ: Slide bài giảng 1">
+                            </div>
+                            <div class="input-group mb-0">
+                                <label class="text-sm">Loại tài liệu</label>
+                                <select name="type" required>
+                                    <option value="lecture">Bài giảng</option>
+                                    <option value="assignment">Bài tập</option>
+                                    <option value="other">Khác</option>
+                                </select>
+                            </div>
+                            <div class="input-group mb-0">
+                                <label class="text-sm">Đường dẫn liên kết (Link)</label>
+                                <input type="url" name="link" required placeholder="https://drive.google.com/...">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: auto; margin-top: 10px;">Tải lên lớp học</button>
+                    </form>
+                    <hr class="mb-20" style="border: 0; border-top: 1px solid var(--border-color);">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày tải</th>
+                                <th>Loại</th>
+                                <th>Tiêu đề</th>
+                                <th>Liên kết</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tcMaterialList"></tbody>
                     </table>
                 </div>
             </section>
@@ -242,6 +280,25 @@
             <p id="readNotifDate" class="text-muted text-sm mb-20 border-bottom"></p>
             <div id="readNotifContent" style="line-height: 1.6;"></div>
             <div id="readNotifActions" class="flex-row mt-20"></div>
+        </div>
+    </div>
+
+    <!-- Modal Xem danh sách nộp bài tập -->
+    <div id="viewSubmissionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="viewSubmissionsTitle" class="text-primary mb-20">Danh sách bài tập sinh viên đã nộp</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Ngày nộp</th>
+                        <th>Mã Sinh viên</th>
+                        <th>Họ tên sinh viên</th>
+                        <th>Liên kết bài làm</th>
+                    </tr>
+                </thead>
+                <tbody id="tcSubmissionList"></tbody>
+            </table>
         </div>
     </div>
 

@@ -877,3 +877,355 @@ canvas {
     transform: translateY(0);
     box-shadow: 0 4px 12px rgba(139, 61, 255, 0.15);
 }
+
+/* ==========================================================================
+   10. GIAO DIỆN ĐĂNG NHẬP SAAS CAO CẤP (GLASSMORPHIC LOGIN INTERFACE)
+   ========================================================================== */
+
+/* Nền trang đăng nhập kết hợp các bong bóng màu phát sáng (glow effects) */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #090b11; /* Nền tối sâu */
+    position: relative;
+    overflow: hidden;
+    padding: 20px;
+}
+
+/* Đốm sáng mờ ảo 1 (Tím) */
+.auth-page::before {
+    content: '';
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(139, 61, 255, 0.25) 0%, rgba(139, 61, 255, 0) 70%);
+    top: -10%;
+    left: -10%;
+    filter: blur(50px);
+    animation: floatingGlow 15s ease-in-out infinite alternate;
+}
+
+/* Đốm sáng mờ ảo 2 (Xanh ngọc) */
+.auth-page::after {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 196, 204, 0.2) 0%, rgba(0, 196, 204, 0) 70%);
+    bottom: -15%;
+    right: -10%;
+    filter: blur(60px);
+    animation: floatingGlow 20s ease-in-out infinite alternate-reverse;
+}
+
+/* Hiệu ứng trôi nổi nhẹ nhàng cho các đốm sáng nền */
+@keyframes floatingGlow {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(40px, 40px) scale(1.1); }
+}
+
+/* Hộp đăng nhập kính mờ (Glassmorphism card) */
+.auth-box {
+    width: 100%;
+    max-width: 460px;
+    background: rgba(20, 24, 39, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border-radius: 28px;
+    padding: 45px 40px;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    z-index: 10;
+    position: relative;
+    animation: fadeInCard 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInCard {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Header logo của hệ thống đăng nhập */
+.auth-header {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.auth-header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #a855f7 0%, #06b6d4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 2px 8px rgba(168, 85, 247, 0.3));
+}
+
+.auth-header p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    font-weight: 400;
+}
+
+/* Hộp chọn vai trò (Premium Segment Control) */
+.role-select-container {
+    display: flex;
+    position: relative;
+    background: rgba(14, 17, 29, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 5px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+}
+
+/* Nút ẩn của các radio button */
+.role-select-container input[type="radio"] {
+    display: none;
+}
+
+/* Giao diện nút nhấn thay thế cho radio */
+.role-label {
+    flex: 1;
+    text-align: center;
+    padding: 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    border-radius: 12px;
+    position: relative;
+    z-index: 2;
+    transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Nền trượt khi chọn vai trò (Slide indicator) */
+.role-slider {
+    position: absolute;
+    top: 5px;
+    bottom: 5px;
+    /* Độ rộng chiếm 1/3 hộp chọn */
+    width: calc(33.333% - 6.666px);
+    background: linear-gradient(135deg, #8b3dff 0%, #00c4cc 100%);
+    border-radius: 12px;
+    z-index: 1;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(139, 61, 255, 0.4);
+}
+
+/* Di chuyển slider dựa trên radio đang check */
+#loginRoleStudent:checked ~ .role-slider {
+    transform: translateX(0);
+}
+
+#loginRoleTeacher:checked ~ .role-slider {
+    transform: translateX(100%);
+}
+
+#loginRoleAdmin:checked ~ .role-slider {
+    transform: translateX(200%);
+}
+
+/* Bật chữ sáng rõ khi vai trò được chọn */
+#loginRoleStudent:checked ~ label[for="loginRoleStudent"],
+#loginRoleTeacher:checked ~ label[for="loginRoleTeacher"],
+#loginRoleAdmin:checked ~ label[for="loginRoleAdmin"] {
+    color: #ffffff;
+}
+
+/* Căn chỉnh các ô nhập liệu của form trên nền tối */
+.auth-box .input-group label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.auth-box .input-group input {
+    width: 100%;
+    background: rgba(14, 17, 29, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    padding: 14px 18px;
+    border-radius: 14px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.auth-box .input-group input:focus {
+    border-color: #8b3dff;
+    background: rgba(14, 17, 29, 0.8);
+    box-shadow: 0 0 0 4px rgba(139, 61, 255, 0.15),
+                inset 0 2px 4px rgba(0,0,0,0.1);
+    outline: none;
+}
+
+/* Nút Submit Đăng nhập dạng lớn lộng lẫy */
+.auth-box .btn-submit {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #8b3dff 0%, #00c4cc 100%);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(139, 61, 255, 0.35);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    margin-top: 15px;
+}
+
+.auth-box .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(139, 61, 255, 0.45);
+    filter: brightness(1.05);
+}
+
+.auth-box .btn-submit:active {
+    transform: translateY(1px);
+    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.35);
+}
+
+/* Bảng tài khoản Demo dạng ghim kính mờ siêu đẹp */
+.demo-accounts-board {
+    margin-top: 35px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.demo-title {
+    color: #00c4cc;
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.demo-accounts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.demo-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    border-left: 3px solid #8b3dff;
+}
+
+.demo-item strong {
+    color: #ffffff;
+}
+
+.demo-item span {
+    font-family: monospace;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* ==========================================================================
+   11. HIỆU ỨNG CHUYỂN ĐỘNG CAO CẤP TOÀN TRANG (PREMIUM SITE-WIDE ANIMATIONS)
+   ========================================================================== */
+
+/* Thêm hiệu ứng xuất hiện cho các phân vùng tab chính */
+.tab-section {
+    display: none;
+    animation: premiumFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Thêm hiệu ứng xuất hiện cho các tab con */
+.sub-tab-content {
+    animation: premiumFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Hiệu ứng zoom nhẹ khi di chuột qua các hàng của bảng */
+.data-table tbody tr {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.data-table tbody tr:hover {
+    background-color: rgba(139, 61, 255, 0.05) !important;
+    transform: scale(1.006) translateX(4px);
+    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.04);
+}
+
+/* Hiệu ứng phát sáng nhẹ khi hover vào Auth Box ở trang đăng nhập */
+.auth-box {
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.auth-box:hover {
+    border-color: rgba(139, 61, 255, 0.25);
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.65), 
+                0 0 20px rgba(139, 61, 255, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Hiệu ứng chuyển động trượt nhẹ cho sidebar menu */
+.menu a {
+    position: relative;
+    overflow: hidden;
+}
+.menu a::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(139, 61, 255, 0.05) 0%, transparent 100%);
+    transform: translateX(-100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: -1;
+}
+.menu a:hover::before {
+    transform: translateX(0);
+}
+
+/* Keyframes cho các hiệu ứng chuyển động */
+@keyframes premiumFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.99);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes premiumFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.995);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
