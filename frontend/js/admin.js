@@ -3,8 +3,13 @@
 // TẤT CẢ CÁC HÀM ĐƯỢC CHÚ THÍCH CHI TIẾT TỪNG DÒNG TIẾNG VIỆT CÓ DẤU
 // ==========================================================================
 
-const API_NGUOI_DUNG = 'http://localhost:5000/api/nguoi-dung'; // Đường dẫn cơ sở kết nối API người dùng của Backend
-const API_DANG_KY = 'http://localhost:5000/api/auth/dang-ky'; // Đường dẫn API tạo tài khoản mới của Backend
+// Cấu hình URL cơ sở của backend (Tự động nhận diện chạy localhost hoặc chạy online khi deploy)
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5000'
+    : 'https://btl-js.onrender.com'; // Thay URL backend thực tế của bạn sau khi deploy lên Render/Railway
+
+const API_NGUOI_DUNG = `${API_BASE}/api/nguoi-dung`; // Đường dẫn cơ sở kết nối API người dùng của Backend
+const API_DANG_KY = `${API_BASE}/api/auth/dang-ky`; // Đường dẫn API tạo tài khoản mới của Backend
 
 // --------------------------------------------------------------------------
 // 1. QUẢN LÝ TÀI KHOẢN NGƯỜI DÙNG (CRUD USER MANAGEMENT - ONLINE + OFFLINE)
