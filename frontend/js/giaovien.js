@@ -653,6 +653,11 @@ if (formTaiLieu) {
                     materials.unshift(newMaterial);
                     ghiCSDL('Materials', materials);
                     
+                    // Nếu loại tài liệu là bài tập, tự động tạo thông báo giao bài cho lớp
+                    if (type === 'assignment') {
+                        await tuDongTaoThongBaoBaiTap(newMaterial, classId, user);
+                    }
+                    
                     alert("Tải tài liệu lên lớp học thành công!");
                     formTaiLieu.reset();
                     if (statusText) statusText.textContent = 'Chưa có file nào được chọn';
@@ -665,6 +670,11 @@ if (formTaiLieu) {
                 let materials = layCSDL('Materials');
                 materials.unshift(newMaterial);
                 ghiCSDL('Materials', materials);
+                
+                // Tự động tạo thông báo giao bài tập (chế độ ngoại tuyến)
+                if (type === 'assignment') {
+                    await tuDongTaoThongBaoBaiTap(newMaterial, classId, user);
+                }
                 
                 alert("Tải tài liệu lên lớp học thành công! (Lưu ngoại tuyến)");
                 formTaiLieu.reset();
@@ -687,21 +697,19 @@ if (formTaiLieu) {
     });
 }
 
-// --------------------------------------------------------------------------
-// LƯU Ý: Phần code Điều phối Lớp học (Coordinator Engine) trước đây ở đây đã
-// được chuyển toàn bộ sang tệp js/admin.js. Giảng viên không có quyền truy cập
-// hay thao tác các chức năng điều phối này.
-// --------------------------------------------------------------------------
-
 // Hàm hiển thị danh sách bài làm sinh viên đã nộp cho bài tập tương ứng
+// GV có thể xem trực tiếp file nộp hoặc tải về máy tùy nhu cầu
 function xemDanhSachNopBai(idTaiLieu) {
+    // Lấy toàn bộ danh sách bài nộp và tài liệu từ CSDL cục bộ
     let submissions = layCSDL('Submissions');
     let materials = layCSDL('Materials');
+    // Tìm thông tin bài tập tương ứng để hiển thị tiêu đề
     let assignment = materials.find(m => m.id === idTaiLieu);
     
-    // Đổi tiêu đề modal khớp với tên bài tập
-    if (assignment) {
-        document.getElementById('viewSubmissionsTitle').textContent = `Bài nộp: ${assignment.title}`;
+    // Cập nhật tiêu đề modal theo tên bài tập đang được xem
+    let titleEl = document.getElementById('viewSubmissionsTitle');
+    if (assignment && titleEl) {
+        titleEl.textContent = `📋 Bài nộp: ${assignment.title}`;
     }
 
     // Lọc các bài nộp của bài tập tương ứng
@@ -726,10 +734,68 @@ function xemDanhSachNopBai(idTaiLieu) {
         `;
     }).join('');
 
+    // Đổ HTML vào tbody của bảng trong modal xem bài nộp
     let tbody = document.getElementById('tcSubmissionList');
     if (tbody) {
-        tbody.innerHTML = html || '<tr><td colspan="4" class="text-center">Chưa có sinh viên nào nộp bài tập này.</td></tr>';
+        tbody.innerHTML = html || '<tr><td colspan="4" class="text-center" style="padding:20px;color:#888;">💭 Chưa có sinh viên nào nộp bài tập này.</td></tr>';
     }
 
     moHopThoai('viewSubmissionsModal');
+}
+
+// --------------------------------------------------------------------------
+// 6. TỰ ĐỘNG TẠO THÔNG BÁO GIAO BÀI TẬP CHO LỚP HỌC (AUTO ASSIGNMENT NOTIFICATION)
+// --------------------------------------------------------------------------
+
+// Hàm tự động tạo thông báo khi giảng viên đăng tải một bài tập mới lên lớp học
+async function tuDongTaoThongBaoBaiTap(baiTap, classId, giangVien) {
+    // Tạo nội dung thông báo mô tả chi tiết bài tập vừa được giao
+    let noiDung = `📋 [BÀI TẬP MỚI] ${baiTap.title}`;
+    // Nếu có mô tả bài tập, thêm vào nội dung thông báo
+    if (baiTap.description && baiTap.description.trim()) {
+        noiDung += `\n\n📝 Nội dung: ${baiTap.description}`;
+    }
+    // Nếu có file đính kèm, thông báo cho sinh viên biết
+    if (baiTap.fileName) {
+        noiDung += `\n\n📎 File đính kèm: ${baiTap.fileName}`;
+    }
+    noiDung += `\n\n⏰ Ngày giao: ${baiTap.date}\n👆 Nhấp vào thông báo này để xem chi tiết bài tập và nộp bài.`;
+
+    // Tạo đối tượng thông báo kèm liên kết tài liệu bài tập
+    let newNotif = {
+        id: 'NOTIF_BT_' + Date.now(),         // Mã thông báo duy nhất với tiền tố BT (Bài Tập)
+        senderName: giangVien.name,             // Tên giảng viên gửi thông báo
+        target: classId,                        // Gửi tới toàn bộ sinh viên trong lớp học này
+        text: noiDung,                          // Nội dung mô tả bài tập được giao
+        date: baiTap.date,                      // Ngày giao bài tập
+        materialId: baiTap.id,                  // Mã bài tập liên kết để sinh viên click xem chi tiết
+        materialType: 'assignment'              // Loại tài liệu là bài tập (assignment)
+    };
+
+    try {
+        // Gửi thông báo bài tập lên API backend để lưu vào MongoDB Atlas
+        let response = await fetch(`${API_BASE}/api/thong-bao`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newNotif)
+        });
+        let data = await response.json();
+
+        if (response.ok && data.success) {
+            // Nếu gửi thành công online, đồng bộ thêm vào LocalStorage offline cache
+            let notifs = layCSDL('Notifications');
+            notifs.unshift(newNotif);
+            ghiCSDL('Notifications', notifs);
+        } else {
+            // Nếu API thất bại, vẫn lưu offline để đảm bảo sinh viên thấy thông báo
+            let notifs = layCSDL('Notifications');
+            notifs.unshift(newNotif);
+            ghiCSDL('Notifications', notifs);
+        }
+    } catch (error) {
+        // Ngoại tuyến: vẫn lưu thông báo vào LocalStorage để sinh viên trên máy này thấy
+        let notifs = layCSDL('Notifications');
+        notifs.unshift(newNotif);
+        ghiCSDL('Notifications', notifs);
+    }
 }

@@ -1298,3 +1298,247 @@ canvas {
     }
 }
 
+/* ==========================================================================
+   MODAL XEM CHI TIẾT BÀI TẬP (ASSIGNMENT DETAIL MODAL)
+   ========================================================================== */
+
+/* Hiệu ứng mở modal bài tập với animation trượt lên mượt mà */
+#assignmentDetailModal .modal-content {
+    animation: assignmentModalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    border-top: 4px solid #f59e0b; /* Đường viền cam vàng đặc trưng bài tập */
+    max-height: 90vh;              /* Giới hạn chiều cao để có scroll khi nội dung dài */
+    overflow-y: auto;              /* Cuộn dọc nội dung khi tràn */
+}
+
+@keyframes assignmentModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Badge nhãn BÀI TẬP trong danh sách thông báo */
+.notif-badge-assignment {
+    display: inline-block;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 5px;
+    padding: 2px 8px;
+    margin-left: 8px;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+}
+
+/* Phần file đính kèm trong modal bài tập */
+#adm-file-section > div {
+    transition: all 0.3s ease;
+}
+#adm-file-section > div:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);
+}
+
+/* Nút xem trực tiếp và tải xuống trong modal */
+#adm-file-section button {
+    transition: all 0.25s ease;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+}
+#adm-file-section button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+/* Nút nộp bài trong modal bài tập */
+#adm-submit-btn button {
+    transition: all 0.3s ease;
+}
+#adm-submit-btn button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+}
+
+/* ==========================================================================
+   GIAO DIỆN GIAO BÀI TẬP - PHẦN GIẢNG VIÊN (TEACHER ASSIGNMENT SECTION)
+   ========================================================================== */
+
+/* Form giao bài tập của giảng viên - khung nền đẹp */
+#tcCreateMaterialForm {
+    background: linear-gradient(135deg, rgba(139,61,255,0.03) 0%, rgba(0,196,204,0.03) 100%);
+    border: 1px solid rgba(139,61,255,0.10);
+    border-radius: 16px;
+    padding: 24px;
+}
+
+/* Tiêu đề form tải tài liệu */
+#tcCreateMaterialForm label {
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* Input chọn file trong form GV - kiểu đẹp hơn */
+#tcMaterialFile {
+    cursor: pointer;
+    background: linear-gradient(135deg, #f8f9fd, #ffffff);
+    border: 1.5px dashed rgba(139,61,255,0.3) !important;
+    border-radius: 10px !important;
+    transition: border-color 0.25s, background 0.25s;
+}
+#tcMaterialFile:hover {
+    border-color: rgba(139,61,255,0.6) !important;
+    background: rgba(139,61,255,0.03) !important;
+}
+
+/* Trạng thái file đã chọn - màu nhấn mạnh */
+#fileStatusText {
+    font-size: 12px;
+    color: var(--primary);
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* Bảng danh sách tài liệu/bài tập trong tab GV - làm sắc nét hơn */
+#tcMaterialList tr:hover {
+    background: rgba(139, 61, 255, 0.03);
+}
+
+/* Nút "Xem bài nộp" - thiết kế nổi bật màu cam */
+.view-submissions-btn {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    color: white !important;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.25s;
+    box-shadow: 0 3px 10px rgba(245,158,11,0.3);
+}
+.view-submissions-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(245,158,11,0.4);
+}
+
+/* ==========================================================================
+   GIAO DIỆN NỘP BÀI TẬP - PHẦN SINH VIÊN (STUDENT SUBMISSION SECTION)
+   ========================================================================== */
+
+/* Modal nộp bài tập sinh viên - khung glassmorphism đẹp */
+#submitAssignmentModal .modal-content {
+    background: linear-gradient(160deg, #ffffff 0%, #f8f9fd 100%);
+    border-top: 4px solid #10b981; /* Đường xanh lá trên đầu - đặc trưng nộp bài */
+    border-radius: 20px;
+    animation: submitModalIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes submitModalIn {
+    from { opacity: 0; transform: translateY(24px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Tiêu đề modal nộp bài */
+#submitAssignmentTitle {
+    background: linear-gradient(135deg, #10b981, #059669);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 20px;
+}
+
+/* Input file trong modal nộp bài SV */
+#stuSubmitFile {
+    cursor: pointer;
+    border: 1.5px dashed rgba(16,185,129,0.4) !important;
+    border-radius: 10px !important;
+    background: linear-gradient(135deg, #f0fdf4, #ecfeff) !important;
+    transition: all 0.25s;
+}
+#stuSubmitFile:hover {
+    border-color: rgba(16,185,129,0.7) !important;
+    background: rgba(16,185,129,0.05) !important;
+}
+
+/* Nhãn trạng thái file SV đã chọn */
+#stuFileStatusText {
+    font-size: 12px;
+    color: #10b981;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* Nút xác nhận nộp bài - hiệu ứng nổi bật */
+#stuSubmitAssignmentForm button[type="submit"] {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 13px 32px;
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 6px 20px rgba(16,185,129,0.35);
+    width: auto;
+    min-width: 180px;
+}
+#stuSubmitAssignmentForm button[type="submit"]:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(16,185,129,0.45);
+    filter: brightness(1.05);
+}
+#stuSubmitAssignmentForm button[type="submit"]:active {
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   MODAL XEM BÀI NỘP - PHẦN GIẢNG VIÊN (TEACHER VIEW SUBMISSIONS MODAL)
+   ========================================================================== */
+
+/* Modal xem bài nộp - thiết kế premium */
+#viewSubmissionsModal .modal-content {
+    border-top: 4px solid #8b3dff;
+    max-width: 720px;
+    animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slideUpModal {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Tiêu đề modal xem bài nộp */
+#viewSubmissionsTitle {
+    font-size: 20px;
+    color: var(--primary);
+}
+
+/* Nút xem/tải trong bảng bài nộp - hiệu ứng hover mượt */
+#viewSubmissionsModal button {
+    transition: all 0.22s ease;
+}
+#viewSubmissionsModal button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+    box-shadow: 0 5px 16px rgba(0,0,0,0.18);
+}
+
+/* Hàng bảng bài nộp có hover nhẹ */
+#viewSubmissionsModal tr:hover td {
+    background: rgba(139,61,255,0.03);
+}
+
+/* Đặc trưng cho hàng trống chưa có bài nộp */
+#tcSubmissionList td[colspan] {
+    padding: 32px;
+    text-align: center;
+    color: #a0aec0;
+    font-size: 15px;
+}
+

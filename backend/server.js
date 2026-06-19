@@ -270,15 +270,19 @@ app.get('/api/thong-bao', async (req, res) => {
 app.post('/api/thong-bao', async (req, res) => {
     try {
         // Nhận thông tin thông báo từ phần Body của Request
-        const { id, senderName, target, text, date } = req.body;
+        const { id, senderName, target, text, date, materialId, materialType } = req.body;
         
         // Yêu cầu bắt buộc đầy đủ thông tin trước khi thực hiện ghi vào database
         if (!id || !senderName || !target || !text || !date) {
             return res.status(400).json({ success: false, message: 'Thiếu thông tin thông báo!' });
         }
 
-        // Khởi tạo đối tượng model thông báo mới
-        const thongBaoMoi = new ThongBaoModel({ id, senderName, target, text, date });
+        // Khởi tạo đối tượng model thông báo mới (kèm trường materialId nếu là thông báo bài tập)
+        const thongBaoMoi = new ThongBaoModel({ 
+            id, senderName, target, text, date, 
+            materialId: materialId || '',     // Mã bài tập liên kết (nếu có)
+            materialType: materialType || ''  // Loại tài liệu liên kết (nếu có)
+        });
         // Lưu thông báo mới vào database MongoDB
         await thongBaoMoi.save();
 

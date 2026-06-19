@@ -225,7 +225,7 @@ function layHtmlDiemDanh(trangThai) {
     return '<span class="text-muted">Chưa điểm danh</span>';
 }
 
-// Hàm hỗ trợ tải file đính kèm lưu dưới dạng chuỗi Base64 Data URL
+// Hàm hỗ trợ tải file đính kèm lưu dưới dạng chuỗi Base64 Data URL (dùng cho nộp bài thầy xem)
 function taiFileDinhKem(base64Data, fileName) {
     try {
         // Tạo một phần tử thẻ a liên kết ảo để kích hoạt chức năng download của trình duyệt
@@ -237,6 +237,66 @@ function taiFileDinhKem(base64Data, fileName) {
         document.body.removeChild(linkTai);
     } catch (e) {
         alert("Lỗi khi tải file đính kèm: " + e.message);
+    }
+}
+
+// Hàm mở file đính kèm xem trực tiếp trong tab trình duyệt mới (không tải về máy)
+// Dùng cho sinh viên xem file bài tập từ thông báo GV giao
+function xemFileTrucTiep(base64Data, fileName) {
+    try {
+        // Lấy phần đầu của chuỗi Base64 để xác định kiểu MIME của file
+        let mimeType = 'application/octet-stream'; // Mặc định nếu không xác định được
+
+        // Xác định kiểu MIME dựa vào phần tiêu đề Data URL
+        if (base64Data.startsWith('data:')) {
+            mimeType = base64Data.split(';')[0].split(':')[1];
+        } else {
+            // Xác định kiểu MIME theo phần mở rộng tên file
+            let ext = fileName.split('.').pop().toLowerCase();
+            const mimeMap = {
+                'pdf':  'application/pdf',
+                'png':  'image/png',
+                'jpg':  'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'gif':  'image/gif',
+                'webp': 'image/webp',
+                'bmp':  'image/bmp',
+                'txt':  'text/plain',
+                'html': 'text/html',
+                'mp4':  'video/mp4',
+                'mp3':  'audio/mpeg',
+                'doc':  'application/msword',
+                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'xls':  'application/vnd.ms-excel',
+                'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'ppt':  'application/vnd.ms-powerpoint',
+                'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'zip':  'application/zip'
+            };
+            mimeType = mimeMap[ext] || 'application/octet-stream';
+        }
+
+        // Chuyển đổi chuỗi Base64 sang đối tượng Blob nhị phân
+        let base64Part = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+        let byteChars = atob(base64Part);
+        let byteNumbers = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) {
+            byteNumbers[i] = byteChars.charCodeAt(i);
+        }
+        let byteArray = new Uint8Array(byteNumbers);
+        // Tạo đối tượng Blob để có thể tạo URL tạm thời mở trong tab mới
+        let blob = new Blob([byteArray], { type: mimeType });
+        // Tạo URL tạm thời từ Blob
+        let blobUrl = URL.createObjectURL(blob);
+        // Mở URL trong tab mới của trình duyệt để sinh viên xem trực tiếp
+        window.open(blobUrl, '_blank');
+
+        // Dọn dẹp URL tạm thời sau 60 giây để giải phóng bộ nhớ
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    } catch (e) {
+        // Nếu không mở được, fallback sang tải về
+        alert('Không thể xem trực tiếp file này. Đang chuyển sang tải về...');
+        taiFileDinhKem(base64Data, fileName);
     }
 }
 
@@ -463,16 +523,23 @@ function hienThiTheThongBaoChung(idVungChua, danhSachTB, nguoiDung) {
         let lopChu = checkDaDoc ? 'text-muted' : 'text-primary';
         // Hiển thị dấu tròn đỏ nếu là thông báo mới tinh
         let dotDo = checkDaDoc ? '' : '<span class="text-danger ml-10">●</span>';
-        // Cắt ngắn nội dung để hiển thị xem trước
-        let xemTruoc = n.text.length > 80 ? n.text.substring(0, 80) + '...' : n.text;
+        // Cắt ngắn nội dung để hiển thị xem trước (bỏ các emoji đặc biệt cho gọn)
+        let xemTruoc = n.text.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+        xemTruoc = xemTruoc.length > 90 ? xemTruoc.substring(0, 90) + '...' : xemTruoc;
+
+        // Tạo nhãn badge nếu là thông báo bài tập (có materialId)
+        let nhanhBaiTap = '';
+        if (n.materialId && n.materialType === 'assignment') {
+            nhanhBaiTap = '<span style="background: #f59e0b; color: #fff; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 2px 7px; margin-left: 8px; letter-spacing: 0.5px;">📋 BÀI TẬP</span>';
+        }
         
         return `
             <div class="border-box border-left-dark mb-10 cursor-pointer ${lopNen}" onclick="moHopThoaiDocThongBao('${n.id}')">
-                <div class="flex-row justify-between mb-10">
-                    <strong class="${lopChu}">${n.senderName} ${dotDo}</strong>
+                <div class="flex-row justify-between mb-10" style="flex-wrap: wrap; gap: 4px;">
+                    <span class="${lopChu} font-bold flex-row align-center" style="flex-wrap: wrap; gap: 4px;">${n.senderName} ${nhanhBaiTap} ${dotDo}</span>
                     <span class="text-muted text-sm">${n.date}</span>
                 </div>
-                <p class="${checkDaDoc ? 'text-muted' : ''}">${xemTruoc}</p>
+                <p class="${checkDaDoc ? 'text-muted' : ''}" style="white-space: pre-line; line-height: 1.5;">${xemTruoc}</p>
             </div>
         `;
     }).join('');
@@ -515,8 +582,26 @@ function moHopThoaiDocThongBao(idThongBao) {
             }
         }
     }
+
+    // -----------------------------------------------------------------------
+    // Kiểm tra nếu thông báo này là thông báo giao bài tập (có materialId)
+    // Nếu đúng: mở modal xem chi tiết bài tập thay vì modal thông báo thông thường
+    // -----------------------------------------------------------------------
+    if (tb.materialId && tb.materialType === 'assignment') {
+        // Tìm thông tin bài tập trong CSDL Materials
+        let materials = layCSDL('Materials');
+        let baiTap = materials.find(m => m.id === tb.materialId);
+
+        if (baiTap) {
+            // Mở modal xem chi tiết bài tập thay vì modal thông báo thông thường
+            moModalChiTietBaiTap(baiTap, nguoiDung);
+            return; // Dừng ở đây, không mở modal thông báo thông thường
+        }
+        // Nếu không tìm được bài tập trong local cache (có thể chưa đồng bộ)
+        // thì vẫn hiển thị thông báo bình thường bên dưới
+    }
     
-    // Gán dữ liệu thông báo vào các phần tử của modal đọc chi tiết
+    // Gán dữ liệu thông báo vào các phần tử của modal đọc chi tiết (thông báo thường)
     document.getElementById('readNotifTitle').textContent = tb.senderName;
     document.getElementById('readNotifDate').textContent = tb.date;
     document.getElementById('readNotifContent').innerHTML = dinhDangThongBao(tb.text);
@@ -527,6 +612,172 @@ function moHopThoaiDocThongBao(idThongBao) {
     
     // Bật hiển thị modal thông báo chi tiết
     moHopThoai('readNotifModal');
+}
+
+// Hàm mở modal xem chi tiết bài tập (hiển thị đầy đủ nội dung + file đính kèm để xem trực tiếp)
+function moModalChiTietBaiTap(baiTap, nguoiDung) {
+    // Lấy các phần tử modal xem bài tập
+    let modal = document.getElementById('assignmentDetailModal');
+    if (!modal) {
+        // Nếu modal chưa tồn tại trên trang, tạo mới và chèn vào body
+        taoModalChiTietBaiTap();
+        modal = document.getElementById('assignmentDetailModal');
+    }
+
+    // Điền tiêu đề bài tập vào modal
+    let elTitle = document.getElementById('adm-title');
+    if (elTitle) elTitle.textContent = baiTap.title;
+
+    // Điền ngày giao bài tập
+    let elDate = document.getElementById('adm-date');
+    if (elDate) elDate.textContent = `📅 Ngày giao: ${baiTap.date}`;
+
+    // Điền nội dung mô tả bài tập (hiển thị với xuống dòng)
+    let elDesc = document.getElementById('adm-description');
+    if (elDesc) {
+        if (baiTap.description && baiTap.description.trim()) {
+            // Render mô tả kèm định dạng xuống dòng và liên kết URL
+            elDesc.innerHTML = dinhDangThongBao(baiTap.description);
+            elDesc.style.display = 'block';
+        } else {
+            elDesc.innerHTML = '<em class="text-muted">Không có mô tả bài tập.</em>';
+            elDesc.style.display = 'block';
+        }
+    }
+
+    // Xây dựng phần hiển thị file đính kèm GV tải lên
+    let elFile = document.getElementById('adm-file-section');
+    if (elFile) {
+        if (baiTap.fileName && baiTap.link) {
+            // Xác định icon phù hợp theo đuôi file
+            let ext = baiTap.fileName.split('.').pop().toLowerCase();
+            let iconFile = '📄';
+            if (['png','jpg','jpeg','gif','webp','bmp'].includes(ext)) iconFile = '🖼️';
+            else if (ext === 'pdf') iconFile = '📕';
+            else if (['doc','docx'].includes(ext)) iconFile = '📝';
+            else if (['xls','xlsx'].includes(ext)) iconFile = '📊';
+            else if (['ppt','pptx'].includes(ext)) iconFile = '📊';
+            else if (['zip','rar'].includes(ext)) iconFile = '🗜️';
+            else if (['mp4','avi','mov'].includes(ext)) iconFile = '🎬';
+            else if (['mp3','wav'].includes(ext)) iconFile = '🎵';
+
+            // Tạo nút xem file trực tiếp (không tải về)
+            let safeLink = baiTap.link.replace(/'/g, "\\'");
+            let safeName = baiTap.fileName.replace(/'/g, "\\'");
+            elFile.innerHTML = `
+                <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #86efac; border-radius: 12px; padding: 16px; margin-top: 16px;">
+                    <p class="font-bold text-primary mb-10" style="font-size: 14px;">📎 File đính kèm từ giảng viên:</p>
+                    <div class="flex-row align-center" style="gap: 12px; flex-wrap: wrap;">
+                        <span style="font-size: 28px;">${iconFile}</span>
+                        <div class="flex-1">
+                            <p class="font-bold" style="word-break: break-all;">${baiTap.fileName}</p>
+                            <p class="text-sm text-muted">Nhấn nút bên dưới để xem file</p>
+                        </div>
+                    </div>
+                    <div class="flex-row mt-10" style="gap: 10px; flex-wrap: wrap;">
+                        <button onclick="xemFileTrucTiep('${safeLink}', '${safeName}')" 
+                            style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; border: none; border-radius: 8px; padding: 8px 18px; font-weight: 700; cursor: pointer; font-size: 13px;">
+                            👁️ Xem trực tiếp
+                        </button>
+                        <button onclick="taiFileDinhKem('${safeLink}', '${safeName}')" 
+                            style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 8px; padding: 8px 18px; font-weight: 700; cursor: pointer; font-size: 13px;">
+                            ⬇️ Tải xuống
+                        </button>
+                    </div>
+                </div>
+            `;
+            elFile.style.display = 'block';
+        } else if (baiTap.link && !baiTap.fileName) {
+            // Nếu chỉ có link URL không phải file
+            elFile.innerHTML = `
+                <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 16px; margin-top: 16px;">
+                    <p class="font-bold text-primary mb-10">🔗 Tài nguyên bài tập:</p>
+                    <a href="${baiTap.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline; word-break: break-all;">${baiTap.link}</a>
+                </div>
+            `;
+            elFile.style.display = 'block';
+        } else {
+            elFile.style.display = 'none';
+        }
+    }
+
+    // Hiển thị nút nộp bài nếu người dùng là sinh viên
+    let elNopBai = document.getElementById('adm-submit-btn');
+    if (elNopBai) {
+        if (nguoiDung && nguoiDung.role === 'sinh-vien') {
+            // Kiểm tra xem sinh viên đã nộp bài chưa
+            let submissions = layCSDL('Submissions');
+            let daNop = submissions.find(s => s.materialId === baiTap.id && s.studentId === nguoiDung.id);
+
+            if (daNop) {
+                // Đã nộp: hiển thị trạng thái và nút nộp lại
+                elNopBai.innerHTML = `
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <span style="background: #10b981; color: white; border-radius: 8px; padding: 6px 14px; font-weight: 700; font-size: 13px;">✅ Đã nộp bài</span>
+                        <button onclick="dongHopThoai('assignmentDetailModal'); moModalNopBai('${baiTap.id}', '${baiTap.title.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" 
+                            style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 700; cursor: pointer; font-size: 13px;">
+                            🔄 Nộp lại
+                        </button>
+                    </div>
+                `;
+            } else {
+                // Chưa nộp: hiển thị nút nộp bài nổi bật
+                elNopBai.innerHTML = `
+                    <button onclick="dongHopThoai('assignmentDetailModal'); moModalNopBai('${baiTap.id}', '${baiTap.title.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" 
+                        style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 12px; padding: 12px 28px; font-weight: 700; cursor: pointer; font-size: 15px; width: 100%; box-shadow: 0 4px 15px rgba(16,185,129,0.4);">
+                        📤 Nộp bài ngay
+                    </button>
+                `;
+            }
+            elNopBai.style.display = 'block';
+        } else {
+            // Giảng viên/admin không hiện nút nộp bài
+            elNopBai.style.display = 'none';
+        }
+    }
+
+    // Mở modal chi tiết bài tập
+    modal.style.display = 'block';
+}
+
+// Hàm tạo động modal xem chi tiết bài tập nếu chưa tồn tại trong HTML
+function taoModalChiTietBaiTap() {
+    let modal = document.createElement('div');
+    modal.id = 'assignmentDetailModal';
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 640px; padding: 32px;">
+            <span class="close-modal" onclick="dongHopThoai('assignmentDetailModal')">&times;</span>
+            
+            <!-- Header bài tập -->
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                <span style="font-size: 32px;">📋</span>
+                <div>
+                    <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; font-size: 10px; font-weight: 800; border-radius: 6px; padding: 2px 10px; letter-spacing: 1px; display: inline-block; margin-bottom: 6px;">BÀI TẬP</div>
+                    <h2 id="adm-title" class="text-primary" style="margin: 0; font-size: 20px; line-height: 1.4;"></h2>
+                </div>
+            </div>
+            <p id="adm-date" class="text-muted text-sm mb-20" style="margin-left: 44px;"></p>
+
+            <!-- Mô tả / Đề bài -->
+            <div style="background: #f8fafc; border-radius: 12px; padding: 18px; border-left: 4px solid #6366f1; margin-bottom: 8px;">
+                <p class="font-bold text-primary mb-10" style="font-size: 14px;">📝 Nội dung bài tập:</p>
+                <div id="adm-description" style="line-height: 1.7; white-space: pre-line;"></div>
+            </div>
+
+            <!-- File đính kèm -->
+            <div id="adm-file-section"></div>
+
+            <!-- Nút nộp bài (chỉ hiển thị với sinh viên) -->
+            <div id="adm-submit-btn" class="mt-20"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Đăng ký sự kiện click ngoài để đóng modal
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) dongHopThoai('assignmentDetailModal');
+    });
 }
 
 // --------------------------------------------------------------------------
