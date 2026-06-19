@@ -613,16 +613,25 @@ if (formTaiLieu) {
         let classId = classDetailTab ? classDetailTab.dataset.classId : null;
         if (!classId) return;
 
+        // Lấy thông tin giảng viên đang đăng nhập từ LocalStorage (dùng để tạo thông báo giảng viên gửi)
+        let user = layCSDL('currentUser');
+
         let title = formTaiLieu.elements['title'].value.trim();
         let type = formTaiLieu.elements['type'].value;
         let linkVal = formTaiLieu.elements['link'].value.trim();
         let description = formTaiLieu.elements['description'].value.trim();
+
+        // Kiểm tra tiêu đề bắt buộc phải có
+        if (!title) {
+            alert('Vui lòng nhập tiêu đề tài liệu / bài tập!');
+            return;
+        }
         
         let fileObj = fileInp ? fileInp.files[0] : null;
         
         // Kiểm tra xem giảng viên đã nhập link hoặc đính kèm file chưa
         if (!linkVal && !fileObj) {
-            alert("Vui lòng nhập đường dẫn URL hoặc chọn tệp đính kèm!");
+            alert('Vui lòng nhập đường dẫn URL hoặc chọn tệp đính kèm!');
             return;
         }
 
