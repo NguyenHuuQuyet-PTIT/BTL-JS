@@ -574,10 +574,10 @@ canvas {
     align-items: center; 
     min-height: 100vh; 
     padding: 20px;
-    /* Nền Gradient mờ ảo Canva */
-    background: radial-gradient(circle at 10% 10%, #edd3ff 0%, transparent 30%), 
-                radial-gradient(circle at 90% 90%, #cbfafe 0%, transparent 35%), 
-                linear-gradient(135deg, #f3f6ff 0%, #e8f0fe 100%);
+    /* Nền Gradient xanh mát phong cách Canva mới */
+    background: radial-gradient(circle at 10% 10%, #e6fffa 0%, transparent 40%), 
+                radial-gradient(circle at 90% 90%, #e0f2fe 0%, transparent 40%), 
+                linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
     position: relative;
 }
 
@@ -888,7 +888,8 @@ canvas {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: #f1f5f9; /* Nền trung tính làm nền cho bong bóng nổi bật */
+    /* Nền nhẹ nhàng xanh lá và xanh da trời mượt mà */
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
     position: relative;
     overflow: hidden;
     padding: 20px;
@@ -954,11 +955,11 @@ canvas {
     animation: float4 16s ease-in-out infinite alternate;
 }
 
-/* Bong bóng 5: Tím xanh / Lavender */
+/* Bong bóng 5: Xanh ngọc mint nhạt / Soft mint teal */
 .blob-5 {
     width: 380px;
     height: 380px;
-    background: linear-gradient(135deg, #c7d2fe 0%, #818cf8 100%);
+    background: linear-gradient(135deg, #ccfbf1 0%, #14b8a6 100%);
     top: -5%;
     left: 35%;
     animation: float5 20s ease-in-out infinite alternate-reverse;

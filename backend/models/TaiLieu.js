@@ -27,6 +27,14 @@ const TaiLieuSchema = new mongoose.Schema({
     date: {
         type: String,       // Kiểu dữ liệu chuỗi lưu ngày đăng tài liệu (YYYY-MM-DD)
         required: true      // Bắt buộc phải lưu trữ ngày đăng tải
+    },
+    description: {
+        type: String,       // Kiểu dữ liệu chuỗi lưu mô tả, đề bài giảng/bài tập
+        default: ''         // Mặc định là chuỗi rỗng
+    },
+    fileName: {
+        type: String,       // Kiểu dữ liệu chuỗi lưu tên file đính kèm nếu tải trực tiếp từ máy
+        default: ''         // Mặc định là chuỗi rỗng
     }
 }, {
     timestamps: true        // Tự động ghi nhận thời gian tạo và sửa bản ghi (createdAt, updatedAt)

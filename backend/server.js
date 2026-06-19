@@ -329,7 +329,7 @@ app.get('/api/tai-lieu', async (req, res) => {
 app.post('/api/tai-lieu', async (req, res) => {
     try {
         // Nhận dữ liệu tài liệu truyền từ Client
-        const { id, classId, title, type, link, date } = req.body;
+        const { id, classId, title, type, link, date, description, fileName } = req.body;
         
         // Kiểm tra các trường dữ liệu bắt buộc của một tài liệu lớp học
         if (!id || !classId || !title || !type || !link || !date) {
@@ -337,7 +337,7 @@ app.post('/api/tai-lieu', async (req, res) => {
         }
 
         // Tạo đối tượng tài liệu mới và tiến hành lưu vào cơ sở dữ liệu MongoDB
-        const taiLieuMoi = new TaiLieuModel({ id, classId, title, type, link, date });
+        const taiLieuMoi = new TaiLieuModel({ id, classId, title, type, link, date, description, fileName });
         await taiLieuMoi.save();
 
         // Báo lưu tài liệu thành công về cho giảng viên
@@ -387,7 +387,7 @@ app.get('/api/nop-bai', async (req, res) => {
 app.post('/api/nop-bai', async (req, res) => {
     try {
         // Nhận dữ liệu nộp bài gửi lên từ form của sinh viên
-        const { id, materialId, studentId, studentName, link, date } = req.body;
+        const { id, materialId, studentId, studentName, link, date, fileName } = req.body;
         
         // Xác thực thông tin: tất cả các trường dữ liệu đều là bắt buộc
         if (!id || !materialId || !studentId || !studentName || !link || !date) {
@@ -401,12 +401,13 @@ app.post('/api/nop-bai', async (req, res) => {
             // Nếu đã tồn tại, thực hiện cập nhật đè liên kết bài làm mới và ngày cập nhật mới
             duplicate.link = link;
             duplicate.date = date;
+            if (fileName !== undefined) duplicate.fileName = fileName;
             await duplicate.save(); // Lưu thay đổi vào MongoDB Atlas
             return res.status(200).json({ success: true, message: 'Cập nhật bài nộp thành công.', submission: duplicate });
         }
 
         // Nếu chưa nộp lần nào, tạo một bản ghi nộp bài tập mới tinh
-        const baiNopMoi = new NopBaiModel({ id, materialId, studentId, studentName, link, date });
+        const baiNopMoi = new NopBaiModel({ id, materialId, studentId, studentName, link, date, fileName });
         await baiNopMoi.save(); // Lưu vào MongoDB Atlas
 
         // Phản hồi kết quả nộp bài thành công về client

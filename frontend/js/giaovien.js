@@ -530,12 +530,25 @@ function hienThiTaiLieuGiangVien() {
             viewSubsBtn = `<button class="action-btn" style="padding: 4px 8px; font-size:12px; width:auto; margin-right: 5px;" onclick="xemDanhSachNopBai('${m.id}')">Xem bài nộp</button>`;
         }
         
+        let fileLinkHtml = '';
+        if (m.fileName) {
+            fileLinkHtml = `<div class="mt-5"><span class="text-sm font-bold text-success">Đính kèm: </span><a href="#" onclick="event.preventDefault(); taiFileDinhKem('${m.link.replace(/'/g, "\\'")}', '${m.fileName.replace(/'/g, "\\'")}')" class="text-primary font-bold" style="text-decoration: underline;">${m.fileName}</a></div>`;
+        }
+        
+        let columnLink = m.fileName 
+            ? `<a href="#" onclick="event.preventDefault(); taiFileDinhKem('${m.link.replace(/'/g, "\\'")}', '${m.fileName.replace(/'/g, "\\'")}')" class="text-primary font-bold" style="text-decoration: underline;">Tải file</a>` 
+            : `<a href="${m.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline;">Xem liên kết</a>`;
+
         return `
             <tr>
                 <td>${m.date}</td>
                 <td>${typeMap[m.type] || m.type}</td>
-                <td><strong>${m.title}</strong></td>
-                <td><a href="${m.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline;">Xem liên kết</a></td>
+                <td>
+                    <strong>${m.title}</strong>
+                    ${m.description ? `<p class="text-sm text-muted mt-5" style="white-space: pre-line;">${m.description}</p>` : ''}
+                    ${fileLinkHtml}
+                </td>
+                <td>${columnLink}</td>
                 <td>
                     ${viewSubsBtn}
                     <button class="btn-danger" style="padding: 4px 8px; font-size:12px; width:auto;" onclick="xoaTaiLieuGiangVien('${m.id}')">Xóa</button>
@@ -581,6 +594,19 @@ function xoaTaiLieuGiangVien(idTaiLieu) {
 // Đăng ký sự kiện nộp form tải tài liệu/bài tập của giảng viên
 let formTaiLieu = document.getElementById('tcCreateMaterialForm');
 if (formTaiLieu) {
+    // Đăng ký sự kiện thay đổi file để cập nhật nhãn trạng thái file đính kèm
+    let fileInp = document.getElementById('tcMaterialFile');
+    let statusText = document.getElementById('fileStatusText');
+    if (fileInp && statusText) {
+        fileInp.addEventListener('change', () => {
+            if (fileInp.files.length > 0) {
+                statusText.textContent = `Đã chọn file: ${fileInp.files[0].name}`;
+            } else {
+                statusText.textContent = 'Chưa có file nào được chọn';
+            }
+        });
+    }
+
     formTaiLieu.addEventListener('submit', async function(e) {
         e.preventDefault();
         let classDetailTab = document.getElementById('class-detail-tab');
@@ -589,47 +615,74 @@ if (formTaiLieu) {
 
         let title = formTaiLieu.elements['title'].value.trim();
         let type = formTaiLieu.elements['type'].value;
-        let link = formTaiLieu.elements['link'].value.trim();
+        let linkVal = formTaiLieu.elements['link'].value.trim();
+        let description = formTaiLieu.elements['description'].value.trim();
         
-        // Tạo đối tượng tài liệu mới
-        let newMaterial = {
-            id: 'MAT_' + Date.now(),
-            classId: classId,
-            title: title,
-            type: type,
-            link: link,
-            date: new Date().toLocaleDateString('en-CA')
-        };
+        let fileObj = fileInp ? fileInp.files[0] : null;
+        
+        // Kiểm tra xem giảng viên đã nhập link hoặc đính kèm file chưa
+        if (!linkVal && !fileObj) {
+            alert("Vui lòng nhập đường dẫn URL hoặc chọn tệp đính kèm!");
+            return;
+        }
 
-        try {
-            // Gửi dữ liệu tài liệu mới lên backend
-            let response = await fetch(`${API_BASE}/api/tai-lieu`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newMaterial)
-            });
-            let data = await response.json();
-            
-            if (response.ok && data.success) {
+        // Định nghĩa hàm phụ thực hiện gọi API gửi tài liệu
+        const guiTaiLieu = async (finalLink, finalFileName) => {
+            let newMaterial = {
+                id: 'MAT_' + Date.now(),
+                classId: classId,
+                title: title,
+                type: type,
+                link: finalLink,
+                fileName: finalFileName,
+                description: description,
+                date: new Date().toLocaleDateString('en-CA')
+            };
+
+            try {
+                // Gửi dữ liệu tài liệu mới lên backend
+                let response = await fetch(`${API_BASE}/api/tai-lieu`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newMaterial)
+                });
+                let data = await response.json();
+                
+                if (response.ok && data.success) {
+                    let materials = layCSDL('Materials');
+                    materials.unshift(newMaterial);
+                    ghiCSDL('Materials', materials);
+                    
+                    alert("Tải tài liệu lên lớp học thành công!");
+                    formTaiLieu.reset();
+                    if (statusText) statusText.textContent = 'Chưa có file nào được chọn';
+                    hienThiTaiLieuGiangVien();
+                } else {
+                    alert(data.message || "Tải tài liệu thất bại!");
+                }
+            } catch (error) {
+                // Lưu trữ cục bộ dự phòng nếu kết nối lỗi
                 let materials = layCSDL('Materials');
                 materials.unshift(newMaterial);
                 ghiCSDL('Materials', materials);
                 
-                alert("Tải tài liệu lên lớp thành công!");
+                alert("Tải tài liệu lên lớp học thành công! (Lưu ngoại tuyến)");
                 formTaiLieu.reset();
+                if (statusText) statusText.textContent = 'Chưa có file nào được chọn';
                 hienThiTaiLieuGiangVien();
-            } else {
-                alert(data.message || "Tải tài liệu thất bại!");
             }
-        } catch (error) {
-            // Lưu trữ cục bộ dự phòng
-            let materials = layCSDL('Materials');
-            materials.unshift(newMaterial);
-            ghiCSDL('Materials', materials);
-            
-            alert("Tải tài liệu lên lớp thành công!");
-            formTaiLieu.reset();
-            hienThiTaiLieuGiangVien();
+        };
+
+        if (fileObj) {
+            // Đọc file đính kèm dạng Base64 Data URL trước khi gửi
+            let reader = new FileReader();
+            reader.onload = function(evt) {
+                guiTaiLieu(evt.target.result, fileObj.name);
+            };
+            reader.readAsDataURL(fileObj);
+        } else {
+            // Không có file đính kèm, gửi link URL
+            guiTaiLieu(linkVal, '');
         }
     });
 }
@@ -655,14 +708,23 @@ function xemDanhSachNopBai(idTaiLieu) {
     let subsOfAssignment = submissions.filter(s => s.materialId === idTaiLieu);
 
     // Tạo mã HTML hàng bảng danh sách bài nộp
-    let html = subsOfAssignment.map(s => `
-        <tr>
-            <td>${s.date}</td>
-            <td><strong>${s.studentId}</strong></td>
-            <td>${s.studentName}</td>
-            <td><a href="${s.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline;">Xem bài làm</a></td>
-        </tr>
-    `).join('');
+    let html = subsOfAssignment.map(s => {
+        let submissionLink = '';
+        if (s.fileName) {
+            submissionLink = `<a href="#" onclick="event.preventDefault(); taiFileDinhKem('${s.link.replace(/'/g, "\\'")}', '${s.fileName.replace(/'/g, "\\'")}')" class="text-primary font-bold" style="text-decoration: underline;">Tải bài nộp: ${s.fileName}</a>`;
+        } else {
+            submissionLink = `<a href="${s.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline;">Xem liên kết</a>`;
+        }
+
+        return `
+            <tr>
+                <td>${s.date}</td>
+                <td><strong>${s.studentId}</strong></td>
+                <td>${s.studentName}</td>
+                <td>${submissionLink}</td>
+            </tr>
+        `;
+    }).join('');
 
     let tbody = document.getElementById('tcSubmissionList');
     if (tbody) {

@@ -225,6 +225,21 @@ function layHtmlDiemDanh(trangThai) {
     return '<span class="text-muted">Chưa điểm danh</span>';
 }
 
+// Hàm hỗ trợ tải file đính kèm lưu dưới dạng chuỗi Base64 Data URL
+function taiFileDinhKem(base64Data, fileName) {
+    try {
+        // Tạo một phần tử thẻ a liên kết ảo để kích hoạt chức năng download của trình duyệt
+        const linkTai = document.createElement("a");
+        linkTai.href = base64Data;
+        linkTai.download = fileName;
+        document.body.appendChild(linkTai);
+        linkTai.click();
+        document.body.removeChild(linkTai);
+    } catch (e) {
+        alert("Lỗi khi tải file đính kèm: " + e.message);
+    }
+}
+
 // Hàm thực hiện đăng xuất tài khoản khỏi hệ thống
 function xuLyDangXuat() {
     // Xóa đối tượng người dùng hiện tại trong LocalStorage

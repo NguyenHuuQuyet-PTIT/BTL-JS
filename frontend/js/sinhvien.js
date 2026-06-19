@@ -300,9 +300,15 @@ function moHopThoaiLopSinhVien(idLop) {
             
             if (mySub) {
                 // Nếu đã nộp, hiển thị đường dẫn xem và nút nộp lại
+                let customLinkHtml = '';
+                if (mySub.fileName) {
+                    customLinkHtml = `<a href="#" onclick="event.preventDefault(); taiFileDinhKem('${mySub.link.replace(/'/g, "\\'")}', '${mySub.fileName.replace(/'/g, "\\'")}')" class="text-success font-bold" style="text-decoration: underline;">Đã nộp: ${mySub.fileName}</a>`;
+                } else {
+                    customLinkHtml = `<a href="${mySub.link}" target="_blank" class="text-success font-bold" style="text-decoration: underline;">Đã nộp bài (URL)</a>`;
+                }
                 linkHtml = `
-                    <div class="flex-row align-center" style="gap: 5px;">
-                        <a href="${mySub.link}" target="_blank" class="text-success font-bold" style="text-decoration: underline;">Đã nộp bài</a>
+                    <div class="flex-row align-center" style="gap: 5px; flex-wrap: wrap;">
+                        ${customLinkHtml}
                         <button class="action-btn" style="padding: 2px 6px; font-size:11px; width: auto;" onclick="moModalNopBai('${m.id}', '${m.title.replace(/'/g, "\\'")}')">Nộp lại</button>
                     </div>
                 `;
@@ -312,14 +318,27 @@ function moHopThoaiLopSinhVien(idLop) {
             }
         } else {
             // Đối với bài giảng hoặc tài liệu khác, chỉ hiển thị liên kết xem tài liệu thông thường
-            linkHtml = `<a href="${m.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline;">Xem tài liệu</a>`;
+            if (m.fileName) {
+                linkHtml = `<a href="#" onclick="event.preventDefault(); taiFileDinhKem('${m.link.replace(/'/g, "\\'")}', '${m.fileName.replace(/'/g, "\\'")}')" class="text-primary font-bold" style="text-decoration: underline;">Tải file</a>`;
+            } else {
+                linkHtml = `<a href="${m.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline;">Xem tài liệu</a>`;
+            }
+        }
+
+        // Dựng phần mô tả bài tập & file đính kèm nếu có
+        let detailHtml = `<strong>${m.title}</strong>`;
+        if (m.description) {
+            detailHtml += `<p class="text-sm text-muted mt-5" style="white-space: pre-line;">${m.description}</p>`;
+        }
+        if (m.fileName) {
+            detailHtml += `<div class="mt-5 text-sm"><span class="font-bold text-success">Đính kèm: </span><a href="#" onclick="event.preventDefault(); taiFileDinhKem('${m.link.replace(/'/g, "\\'")}', '${m.fileName.replace(/'/g, "\\'")}')" class="text-primary font-bold" style="text-decoration: underline;">${m.fileName}</a></div>`;
         }
 
         return `
             <tr>
                 <td>${m.date}</td>
                 <td>${typeMap[m.type] || m.type}</td>
-                <td><strong>${m.title}</strong></td>
+                <td>${detailHtml}</td>
                 <td>${linkHtml}</td>
             </tr>
         `;
@@ -379,27 +398,27 @@ function hienThiTabDangKyTinChi(sinhVien) {
             let daDangKyLopKhacCungMon = (lopMonNayDaDangKy && lopMonNayDaDangKy.id !== c.id);
             let biTrungLich = lopDaDangKy.some(lopDaDK => kiemTraTrungLich(c, lopDaDK));
             
-            // Vô hiệu hóa nút bấm nếu vi phạm điều kiện ràng buộc (trùng lịch hoặc đã học lớp môn khác)
-            let biVoHieuCard = !congDangKyMo || (!daDangKy && (daDangKyLopKhacCungMon || biTrungLich));
-            let thuocTinhDisabled = biVoHieuCard ? 'disabled' : '';
-            
-            // Xây dựng mã HTML cho các nút bấm hành động tương tác
+            // Xây dựng mã HTML cho các nút bấm hành động tương tác (Không vô hiệu hóa click của card)
             let htmlNutAction = '';
             if (congDangKyMo) {
                 if (daDangKy) {
                     htmlNutAction = `<button class="btn-danger" style="width: auto;" onclick="huyDangKyLopHoc('${c.id}')">Hủy đăng ký</button>`;
-                } else if (!daDangKyLopKhacCungMon && !biTrungLich) {
+                } else if (daDangKyLopKhacCungMon) {
+                    htmlNutAction = `<button class="btn-primary" style="width: auto; opacity: 0.55; cursor: not-allowed;" disabled>Đã học môn này</button>`;
+                } else if (biTrungLich) {
+                    htmlNutAction = `<button class="btn-primary" style="width: auto; opacity: 0.55; cursor: not-allowed;" disabled>Trùng lịch học</button>`;
+                } else {
                     htmlNutAction = `<button class="btn-primary" style="width: auto;" onclick="dangKyLopHoc('${c.id}')">Đăng ký</button>`;
                 }
             } else {
-                htmlNutAction = daDangKy ? `<strong class="text-success">Đã đăng ký</strong>` : `<span class="text-muted">Đã khóa</span>`;
+                htmlNutAction = daDangKy ? `<strong class="text-success">Đã đăng ký</strong>` : `<button class="btn-primary" style="width: auto; opacity: 0.55; cursor: not-allowed;" disabled>Cổng đã đóng</button>`;
             }
 
-            // Gán sự kiện bấm xem chi tiết lịch học lớp học phần
-            let suKienClick = biVoHieuCard ? '' : `onclick="moHopThoaiLopSinhVien('${c.id}')"`;
+            // Gán sự kiện bấm xem chi tiết lịch học lớp học phần (luôn cho phép click xem lịch)
+            let suKienClick = `onclick="moHopThoaiLopSinhVien('${c.id}')"`;
 
             htmlResult += `
-                <div class="border-box border-left-dark flex-row align-center justify-between mb-10 ${thuocTinhDisabled}">
+                <div class="border-box border-left-dark flex-row align-center justify-between mb-10">
                     <div class="flex-1 cursor-pointer" ${suKienClick}>
                         <h4 class="mb-10 text-primary">Tên lớp: ${tenHienThi}</h4>
                         <p class="text-sm text-muted">Giáo viên: ${tenGV} | Phòng: ${c.room}</p>
@@ -550,8 +569,25 @@ function moModalNopBai(idTaiLieu, tieuDeBaiTap) {
     let submissions = layCSDL('Submissions');
     let mySub = submissions.find(s => s.materialId === idTaiLieu && s.studentId === user.id);
     let formNop = document.getElementById('stuSubmitAssignmentForm');
+    
+    // Reset file input và nhãn hiển thị file
+    let fileInp = document.getElementById('stuSubmitFile');
+    if (fileInp) fileInp.value = '';
+    let statusText = document.getElementById('stuFileStatusText');
+    
     if (formNop) {
-        formNop.elements['link'].value = mySub ? mySub.link : '';
+        if (mySub) {
+            if (mySub.fileName) {
+                formNop.elements['link'].value = '';
+                if (statusText) statusText.textContent = `Tệp đã nộp: ${mySub.fileName}`;
+            } else {
+                formNop.elements['link'].value = mySub.link;
+                if (statusText) statusText.textContent = 'Chưa có file nào được chọn';
+            }
+        } else {
+            formNop.elements['link'].value = '';
+            if (statusText) statusText.textContent = 'Chưa có file nào được chọn';
+        }
     }
 
     moHopThoai('submitAssignmentModal');
@@ -560,6 +596,19 @@ function moModalNopBai(idTaiLieu, tieuDeBaiTap) {
 // Lắng nghe sự kiện nộp biểu mẫu nộp bài làm của sinh viên
 let formNopBai = document.getElementById('stuSubmitAssignmentForm');
 if (formNopBai) {
+    // Thêm lắng nghe sự kiện đổi file hiển thị tên file
+    let fileInp = document.getElementById('stuSubmitFile');
+    let statusText = document.getElementById('stuFileStatusText');
+    if (fileInp && statusText) {
+        fileInp.addEventListener('change', () => {
+            if (fileInp.files.length > 0) {
+                statusText.textContent = `Đã chọn file: ${fileInp.files[0].name}`;
+            } else {
+                statusText.textContent = 'Chưa có file nào được chọn';
+            }
+        });
+    }
+
     formNopBai.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -567,72 +616,96 @@ if (formNopBai) {
         let idTaiLieu = document.getElementById('submitMaterialId').value;
         let duongDan = formNopBai.elements['link'].value.trim();
         
-        // Tạo đối tượng bài nộp mới
-        let newSubmission = {
-            id: 'SUBM_' + Date.now(),
-            materialId: idTaiLieu,
-            studentId: user.id,
-            studentName: user.name,
-            link: duongDan,
-            date: new Date().toLocaleDateString('en-CA')
-        };
+        let fileInp = document.getElementById('stuSubmitFile');
+        let fileObj = fileInp ? fileInp.files[0] : null;
+        
+        // Kiểm tra xem sinh viên có nhập link hoặc tải file lên không
+        if (!duongDan && !fileObj) {
+            alert("Vui lòng nhập đường dẫn URL hoặc chọn file đính kèm bài làm!");
+            return;
+        }
 
-        try {
-            // Gửi dữ liệu bài nộp lên API backend
-            let response = await fetch(`${API_BASE}/api/nop-bai`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newSubmission)
-            });
-            let data = await response.json();
-            
-            if (response.ok && data.success) {
-                // Cập nhật lại vào Local CSDL offline
+        // Định nghĩa hàm phụ xử lý gửi dữ liệu lên server
+        const guiBaiNop = async (linkValue, nameValue) => {
+            let newSubmission = {
+                id: 'SUBM_' + Date.now(),
+                materialId: idTaiLieu,
+                studentId: user.id,
+                studentName: user.name,
+                link: linkValue,
+                fileName: nameValue || '',
+                date: new Date().toLocaleDateString('en-CA')
+            };
+
+            try {
+                // Gửi dữ liệu bài nộp lên API backend
+                let response = await fetch(`${API_BASE}/api/nop-bai`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newSubmission)
+                });
+                let data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Cập nhật lại vào Local CSDL offline
+                    let listSubs = layCSDL('Submissions');
+                    let vt = listSubs.findIndex(s => s.materialId === idTaiLieu && s.studentId === user.id);
+                    if (vt > -1) {
+                        listSubs[vt] = { ...listSubs[vt], link: linkValue, fileName: newSubmission.fileName, date: newSubmission.date };
+                    } else {
+                        listSubs.unshift(newSubmission);
+                    }
+                    ghiCSDL('Submissions', listSubs);
+                    
+                    alert("Nộp bài tập trực tuyến thành công!");
+                    dongHopThoai('submitAssignmentModal');
+                    formNopBai.reset();
+                    if (statusText) statusText.textContent = 'Chưa có file nào được chọn';
+                    
+                    // Làm mới lại bảng chi tiết lớp học
+                    let classes = layCSDL('Classes');
+                    let modalTitle = document.getElementById('modalClassName').textContent;
+                    let activeClass = classes.find(c => modalTitle.includes(layTenLopHienThi(c.id)));
+                    if (activeClass) {
+                        moHopThoaiLopSinhVien(activeClass.id);
+                    }
+                } else {
+                    alert(data.message || "Nộp bài tập thất bại!");
+                }
+            } catch (error) {
+                // Lưu trữ cục bộ dự phòng nếu lỗi kết nối
                 let listSubs = layCSDL('Submissions');
                 let vt = listSubs.findIndex(s => s.materialId === idTaiLieu && s.studentId === user.id);
                 if (vt > -1) {
-                    listSubs[vt] = { ...listSubs[vt], link: duongDan, date: newSubmission.date };
+                    listSubs[vt] = { ...listSubs[vt], link: linkValue, fileName: newSubmission.fileName, date: newSubmission.date };
                 } else {
                     listSubs.unshift(newSubmission);
                 }
                 ghiCSDL('Submissions', listSubs);
                 
-                alert("Nộp bài tập trực tuyến thành công!");
+                alert("Nộp bài tập trực tuyến thành công! (Lưu ngoại tuyến)");
                 dongHopThoai('submitAssignmentModal');
                 formNopBai.reset();
+                if (statusText) statusText.textContent = 'Chưa có file nào được chọn';
                 
-                // Làm mới lại bảng chi tiết lớp học
-                let classes = layCSDL('Classes');
-                let lop = classes.find(c => c.enrolledStudents.includes(user.id) && c.sessions.length > 0); 
-                // Sử dụng mã ID lớp học hiện đang chọn
                 let modalTitle = document.getElementById('modalClassName').textContent;
-                let activeClass = classes.find(c => modalTitle.includes(layTenLopHienThi(c.id)));
+                let activeClass = layCSDL('Classes').find(c => modalTitle.includes(layTenLopHienThi(c.id)));
                 if (activeClass) {
                     moHopThoaiLopSinhVien(activeClass.id);
                 }
-            } else {
-                alert(data.message || "Nộp bài tập thất bại!");
             }
-        } catch (error) {
-            // Lưu trữ cục bộ dự phòng nếu lỗi kết nối
-            let listSubs = layCSDL('Submissions');
-            let vt = listSubs.findIndex(s => s.materialId === idTaiLieu && s.studentId === user.id);
-            if (vt > -1) {
-                listSubs[vt] = { ...listSubs[vt], link: duongDan, date: newSubmission.date };
-            } else {
-                listSubs.unshift(newSubmission);
-            }
-            ghiCSDL('Submissions', listSubs);
-            
-            alert("Nộp bài tập trực tuyến thành công!");
-            dongHopThoai('submitAssignmentModal');
-            formNopBai.reset();
-            
-            let modalTitle = document.getElementById('modalClassName').textContent;
-            let activeClass = layCSDL('Classes').find(c => modalTitle.includes(layTenLopHienThi(c.id)));
-            if (activeClass) {
-                moHopThoaiLopSinhVien(activeClass.id);
-            }
+        };
+
+        if (fileObj) {
+            // Nếu có file đính kèm, thực hiện đọc file dạng Base64 Data URL trước
+            let reader = new FileReader();
+            reader.onload = function(evt) {
+                guiBaiNop(evt.target.result, fileObj.name);
+            };
+            reader.readAsDataURL(fileObj);
+        } else {
+            // Nếu không có file, gửi link URL thông thường
+            guiBaiNop(duongDan, '');
         }
     });
 }

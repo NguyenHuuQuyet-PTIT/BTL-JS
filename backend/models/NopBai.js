@@ -26,6 +26,10 @@ const NopBaiSchema = new mongoose.Schema({
     date: {
         type: String,       // Kiểu dữ liệu chuỗi lưu ngày sinh viên gửi bài nộp (YYYY-MM-DD)
         required: true      // Bắt buộc phải ghi nhận ngày nộp bài tập
+    },
+    fileName: {
+        type: String,       // Kiểu dữ liệu chuỗi lưu tên file đính kèm bài làm sinh viên tải lên
+        default: ''         // Mặc định là chuỗi rỗng
     }
 }, {
     timestamps: true        // Tự động lưu vết ngày giờ tạo và ngày giờ chỉnh sửa bài nộp (createdAt, updatedAt)

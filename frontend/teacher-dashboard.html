@@ -126,9 +126,9 @@
 
                 <div id="tc-sub-materials" class="border-box sub-tab-content" style="display:none;">
                     <form id="tcCreateMaterialForm" class="mb-20">
-                        <div class="grid-container mb-10" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; width: 100%;">
+                        <div class="grid-container mb-10" style="grid-template-columns: 1fr 1fr; gap: 15px;">
                             <div class="input-group mb-0">
-                                <label class="text-sm">Tiêu đề tài liệu / bài tập</label>
+                                <label class="text-sm">Tiêu đề tài liệu / bài tập / thông báo</label>
                                 <input type="text" name="title" required placeholder="Ví dụ: Slide bài giảng 1">
                             </div>
                             <div class="input-group mb-0">
@@ -139,12 +139,25 @@
                                     <option value="other">Khác</option>
                                 </select>
                             </div>
+                        </div>
+                        
+                        <div class="input-group mt-15 mb-15">
+                            <label class="text-sm">Mô tả chi tiết / Đề bài hoặc Nội dung thông báo kèm theo</label>
+                            <textarea name="description" rows="3" placeholder="Nhập nội dung thông báo hoặc mô tả yêu cầu bài tập..." style="width: 100%; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;"></textarea>
+                        </div>
+
+                        <div class="grid-container mb-10" style="grid-template-columns: 1fr 1fr; gap: 15px;">
                             <div class="input-group mb-0">
-                                <label class="text-sm">Đường dẫn liên kết (Link)</label>
-                                <input type="url" name="link" required placeholder="https://drive.google.com/...">
+                                <label class="text-sm">Đường dẫn liên kết (Link URL)</label>
+                                <input type="url" name="link" id="tcMaterialLink" placeholder="https://drive.google.com/...">
+                            </div>
+                            <div class="input-group mb-0">
+                                <label class="text-sm">Hoặc tải lên File / Ảnh từ thiết bị</label>
+                                <input type="file" id="tcMaterialFile" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; background: #fff;">
+                                <p class="text-sm text-muted mt-5" id="fileStatusText">Chưa có file nào được chọn</p>
                             </div>
                         </div>
-                        <button type="submit" class="btn-primary" style="width: auto; margin-top: 10px;">Tải lên lớp học</button>
+                        <button type="submit" class="btn-primary" style="width: auto; margin-top: 15px;">Tải lên lớp học</button>
                     </form>
                     <hr class="mb-20" style="border: 0; border-top: 1px solid var(--border-color);">
                     <table class="data-table">
