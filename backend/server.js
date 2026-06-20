@@ -22,7 +22,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://quyetnguyen15112007_db_user:BTL-JS@cluster0.yz79rrw.mongodb.net/edu-report?retryWrites=true&w=majority';
@@ -395,18 +396,21 @@ app.get('/api/thong-bao', async (req, res) => {
 app.post('/api/thong-bao', async (req, res) => {
     try {
         // Nhận thông tin thông báo từ phần Body của Request
-        const { id, senderName, target, text, date, materialId, materialType } = req.body;
+        const { id, senderName, target, text, date, materialId, materialType, submissionId, fileName, link } = req.body;
         
         // Yêu cầu bắt buộc đầy đủ thông tin trước khi thực hiện ghi vào database
         if (!id || !senderName || !target || !text || !date) {
             return res.status(400).json({ success: false, message: 'Thiếu thông tin thông báo!' });
         }
 
-        // Khởi tạo đối tượng model thông báo mới (kèm trường materialId nếu là thông báo bài tập)
+        // Khởi tạo đối tượng model thông báo mới (kèm các trường liên kết động nếu có)
         const thongBaoMoi = new ThongBaoModel({ 
             id, senderName, target, text, date, 
             materialId: materialId || '',     // Mã bài tập liên kết (nếu có)
-            materialType: materialType || ''  // Loại tài liệu liên kết (nếu có)
+            materialType: materialType || '', // Loại tài liệu liên kết (nếu có)
+            submissionId: submissionId || '',  // Mã bài nộp liên kết (nếu có)
+            fileName: fileName || '',
+            link: link || ''
         });
         // Lưu thông báo mới vào database MongoDB
         await thongBaoMoi.save();
@@ -423,10 +427,15 @@ app.post('/api/thong-bao', async (req, res) => {
 app.put('/api/thong-bao/:id', async (req, res) => {
     try {
         const { id } = req.params; // Lấy ID thông báo từ URL
-        const { text } = req.body; // Lấy nội dung thông báo mới từ body
+        const { text, fileName, link } = req.body; // Lấy nội dung mới từ body
+
+        const updateData = {};
+        if (text !== undefined) updateData.text = text;
+        if (fileName !== undefined) updateData.fileName = fileName;
+        if (link !== undefined) updateData.link = link;
 
         // Tìm và cập nhật thông tin nội dung thông báo
-        const result = await ThongBaoModel.findOneAndUpdate({ id }, { text }, { new: true });
+        const result = await ThongBaoModel.findOneAndUpdate({ id }, updateData, { new: true });
         if (!result) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy thông báo!' });
         }
@@ -474,6 +483,20 @@ app.get('/api/tai-lieu', async (req, res) => {
     }
 });
 
+// API lấy thông tin chi tiết một tài liệu môn học theo Mã ID
+app.get('/api/tai-lieu/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const material = await TaiLieuModel.findOne({ id });
+        if (!material) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy tài liệu!' });
+        }
+        res.status(200).json({ success: true, material });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi lấy chi tiết tài liệu học phần.' });
+    }
+});
+
 // API đăng tải một tài liệu môn học hoặc bài tập mới từ phía Giảng viên
 app.post('/api/tai-lieu', async (req, res) => {
     try {
@@ -516,6 +539,30 @@ app.delete('/api/tai-lieu/:id', async (req, res) => {
     }
 });
 
+// API cập nhật tài liệu học tập / bài tập theo ID
+app.put('/api/tai-lieu/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, type, link, description, fileName } = req.body;
+
+        const updateData = {};
+        if (title !== undefined) updateData.title = title;
+        if (type !== undefined) updateData.type = type;
+        if (link !== undefined) updateData.link = link;
+        if (description !== undefined) updateData.description = description;
+        if (fileName !== undefined) updateData.fileName = fileName;
+
+        const result = await TaiLieuModel.findOneAndUpdate({ id }, updateData, { new: true });
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy tài liệu!' });
+        }
+        
+        res.status(200).json({ success: true, message: 'Cập nhật tài liệu thành công.', material: result });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi cập nhật tài liệu.' });
+    }
+});
+
 // ==========================================================================
 // CÁC ROUTE API DÀNH CHO NỘP BÀI TẬP TRỰC TUYẾN (ASSIGNMENT SUBMISSIONS ENDPOINTS)
 // ==========================================================================
@@ -529,6 +576,20 @@ app.get('/api/nop-bai', async (req, res) => {
     } catch (error) {
         // Phản hồi lỗi truy vấn
         res.status(500).json({ success: false, message: 'Lỗi lấy danh sách bài nộp.' });
+    }
+});
+
+// API lấy chi tiết một bài nộp theo Mã ID
+app.get('/api/nop-bai/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const submission = await NopBaiModel.findOne({ id });
+        if (!submission) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy bài nộp!' });
+        }
+        res.status(200).json({ success: true, submission });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi lấy chi tiết bài nộp.' });
     }
 });
 

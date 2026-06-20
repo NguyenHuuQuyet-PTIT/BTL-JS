@@ -205,6 +205,17 @@
                             <label>Nội dung thông báo</label>
                             <textarea name="text" rows="5" required placeholder="Nhập nội dung thông báo..."></textarea>
                         </div>
+                        <div class="grid-container mb-15" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                            <div class="input-group mb-0">
+                                <label class="text-sm">Đường dẫn liên kết đính kèm (URL)</label>
+                                <input type="url" name="link" id="tcNotifLink" placeholder="https://drive.google.com/...">
+                            </div>
+                            <div class="input-group mb-0">
+                                <label class="text-sm">Hoặc chọn file đính kèm từ thiết bị</label>
+                                <input type="file" id="tcNotifFile" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; background: #fff;">
+                                <p class="text-sm text-muted mt-5" id="tcNotifFileStatus">Chưa có file nào được chọn</p>
+                            </div>
+                        </div>
                         <button type="submit" class="btn-primary" style="width: auto;">Gửi Thông báo</button>
                     </form>
                     

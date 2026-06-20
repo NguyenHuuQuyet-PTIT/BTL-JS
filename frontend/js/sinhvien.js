@@ -623,6 +623,46 @@ if (formNopBai) {
                     }
                     ghiCSDL('Submissions', listSubs);
                     
+                    // Tự động tạo và gửi thông báo nộp bài cho giảng viên phụ trách lớp
+                    try {
+                        let actualSubmission = data.submission || newSubmission;
+                        let materials = layCSDL('Materials') || [];
+                        let mat = materials.find(m => m.id === idTaiLieu);
+                        let targetTeacherId = 'tat-ca-giang-vien';
+                        let className = '';
+                        let tieuDeBaiTap = mat ? mat.title : 'Bài tập';
+                        if (mat) {
+                            let classes = layCSDL('Classes') || [];
+                            let lop = classes.find(c => c.id === mat.classId);
+                            if (lop) {
+                                targetTeacherId = lop.teacherId;
+                                className = layTenLopHienThi(lop.id);
+                                let subjects = layCSDL('Subjects') || [];
+                                let sub = subjects.find(s => s.id === lop.subjectId);
+                                if (sub) {
+                                    className += ` (${sub.name})`;
+                                }
+                            }
+                        }
+
+                        let newNotif = {
+                            id: 'NOTIF_SUB_' + Date.now(),
+                            senderName: user.name,
+                            target: targetTeacherId,
+                            text: `📤 Sinh viên nộp bài: ${user.name} (${user.id})\n🏫 Lớp học: ${className}\n📝 Bài tập: ${tieuDeBaiTap}\n📎 Tệp nộp bài: ${nameValue || 'Đường dẫn liên kết'}\n📅 Ngày nộp: ${actualSubmission.date}\n👇 Nhấp vào thông báo này để xem bài làm chi tiết.`,
+                            date: actualSubmission.date,
+                            submissionId: actualSubmission.id
+                        };
+
+                        await fetch(`${API_BASE}/api/thong-bao`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(newNotif)
+                        });
+                    } catch (notifErr) {
+                        console.warn("Lỗi gửi thông báo nộp bài cho giảng viên:", notifErr);
+                    }
+                    
                     alert("Nộp bài tập trực tuyến thành công!");
                     dongHopThoai('submitAssignmentModal');
                     formNopBai.reset();

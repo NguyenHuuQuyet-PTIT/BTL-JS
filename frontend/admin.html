@@ -268,6 +268,17 @@
                                 <label>Nội dung thông báo</label>
                                 <textarea name="text" rows="5" placeholder="Nhập nội dung thông báo tại đây..." required style="width: 100%; padding: 10px; border-radius: var(--border-radius); border: 1px solid var(--border-color); font-family: inherit; font-size: 14px;"></textarea>
                             </div>
+                            <div class="grid-container mb-15" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                                <div class="input-group mb-0">
+                                    <label class="text-sm">Đường dẫn liên kết đính kèm (URL)</label>
+                                    <input type="url" name="link" id="admNotifLink" placeholder="https://drive.google.com/..." style="width: 100%; padding: 10px; border-radius: var(--border-radius); border: 1px solid var(--border-color);">
+                                </div>
+                                <div class="input-group mb-0">
+                                    <label class="text-sm">Tải lên file đính kèm từ thiết bị</label>
+                                    <input type="file" id="admNotifFile" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; background: #fff;">
+                                    <p class="text-sm text-muted mt-5" id="admNotifFileStatus">Chưa có file nào được chọn</p>
+                                </div>
+                            </div>
                             <button type="submit" class="btn-primary mt-10" style="width: auto;">Gửi thông báo</button>
                         </form>
                     </div>

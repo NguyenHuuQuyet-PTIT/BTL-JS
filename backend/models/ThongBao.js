@@ -30,6 +30,18 @@ const ThongBaoSchema = new mongoose.Schema({
     materialType: {
         type: String,       // Loại tài liệu liên kết: 'assignment' | 'lecture' | 'other'
         default: ''         // Mặc định rỗng
+    },
+    submissionId: {
+        type: String,       // ID bài nộp của sinh viên liên kết (nếu có)
+        default: ''         // Mặc định rỗng
+    },
+    fileName: {
+        type: String,       // Tên file đính kèm trực tiếp trong thông báo
+        default: ''
+    },
+    link: {
+        type: String,       // Link URL hoặc dữ liệu tệp đính kèm dạng Base64
+        default: ''
     }
 }, {
     timestamps: true        // Tự động lưu vết thời gian ghi nhận bản ghi (createdAt, updatedAt)

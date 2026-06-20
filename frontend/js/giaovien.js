@@ -301,7 +301,7 @@ function hienThiThongBaoGiangVien(giangVien) {
 function hienThiHopThuDenGiangVien(giangVien) {
     if (!giangVien) giangVien = layCSDL('currentUser');
     let thongBao = layCSDL('Notifications');
-    let tbGiangVien = thongBao.filter(n => n.target === 'tat-ca-giang-vien');
+    let tbGiangVien = thongBao.filter(n => n.target === 'tat-ca-giang-vien' || n.target === giangVien.id);
     
     // Sắp xếp các thông báo theo ID số (timestamp) giảm dần bằng hàm dùng chung
     tbGiangVien = sapXepThongBaoMoiNhat(tbGiangVien);
@@ -310,6 +310,7 @@ function hienThiHopThuDenGiangVien(giangVien) {
 }
 
 // Hàm hiển thị danh sách các thông báo do giảng viên hiện tại tự soạn thảo và gửi đi
+// Khi click vào hàng => mở modal moQuanLyThongBao => file đính kèm tự render inline
 function hienThiLichSuGuiGiangVien(giangVien) {
     if (!giangVien) giangVien = layCSDL('currentUser');
     // Lọc các thông báo có tên người gửi khớp với giảng viên hiện tại
@@ -321,71 +322,123 @@ function hienThiLichSuGuiGiangVien(giangVien) {
     // Ánh xạ thành HTML các hàng bảng lịch sử gửi thông báo
     let html = thongBao.map(n => {
         let tenLopNhan = layTenLopHienThi(n.target);
-        let xemTruoc = n.text.length > 50 ? n.text.substring(0, 50) + '...' : n.text;
+        // Rút gọn nội dung xem trước, bỏ emoji để gọn gàng
+        let xemTruocRaw = n.text.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+        let xemTruoc = xemTruocRaw.length > 60 ? xemTruocRaw.substring(0, 60) + '...' : xemTruocRaw;
+        
+        // Hiển thị badge nếu thông báo có file/link đính kèm
+        let dinhKemBadge = '';
+        let coFile = n.fileName && n.link;
+        let coLink = !n.fileName && n.link;
+        if (n.materialId) {
+            // Nếu liên kết tài liệu, luôn coi là có file/link (lấy từ Materials)
+            let mats = layCSDL('Materials') || [];
+            let mat = mats.find(m => m.id === n.materialId);
+            if (mat && mat.fileName) coFile = true;
+            else if (mat && mat.link) coLink = true;
+        }
+        if (coFile) {
+            dinhKemBadge = '<span style="background:#e0e7ff;color:#4f46e5;font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;margin-left:6px;">📎 File</span>';
+        } else if (coLink) {
+            dinhKemBadge = '<span style="background:#f0fdf4;color:#059669;font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;margin-left:6px;">🔗 Link</span>';
+        }
         
         return `
-            <tr class="cursor-pointer" onclick="moQuanLyThongBao('${n.id}', 'giang-vien')">
+            <tr class="cursor-pointer" onclick="moQuanLyThongBao('${n.id}', 'giang-vien')" 
+                title="Nhấp để xem chi tiết và file đính kèm"
+                style="transition: background 0.15s;"
+                onmouseenter="this.style.background='#f5f3ff'" 
+                onmouseleave="this.style.background=''">
                 <td>${n.date}</td>
-                <td><strong class="text-primary">Lớp ${tenLopNhan}</strong></td>
-                <td>${xemTruoc}</td>
+                <td><strong class="text-primary">Lớp ${tenLopNhan}</strong>${dinhKemBadge}</td>
+                <td style="color: #555; font-size: 13px;">${xemTruoc}</td>
             </tr>
         `;
     }).join('');
     
     let container = document.getElementById('teacherSentNotifs');
     if (container) {
-        container.innerHTML = html || '<tr><td colspan="3">Giảng viên chưa gửi thông báo nào cho lớp học.</td></tr>';
+        container.innerHTML = html || '<tr><td colspan="3" style="text-align:center; padding:20px; color:#888;">Giảng viên chưa gửi thông báo nào cho lớp học.</td></tr>';
     }
 }
 
 // Đăng ký sự kiện nộp form để giảng viên gửi một thông báo mới tới lớp phụ trách
 let formGuiTB = document.getElementById('teacherNotifForm');
 if (formGuiTB) {
+    let fileInp = document.getElementById('tcNotifFile');
+    let statusText = document.getElementById('tcNotifFileStatus');
+    if (fileInp && statusText) {
+        fileInp.addEventListener('change', () => {
+            if (fileInp.files.length > 0) {
+                statusText.textContent = `Đã chọn file: ${fileInp.files[0].name}`;
+            } else {
+                statusText.textContent = 'Chưa có file nào được chọn';
+            }
+        });
+    }
+
     formGuiTB.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         let user = layCSDL('currentUser');
         let targetLop = formGuiTB.elements['target'].value;
         let noiDung = formGuiTB.elements['text'].value;
+        let fileObj = fileInp ? fileInp.files[0] : null;
+        let linkVal = formGuiTB.elements['link'].value.trim();
         
-        // Tạo đối tượng thông báo mới
-        let newNotif = {
-            id: 'NOTIF_' + Date.now(),
-            senderName: user.name,
-            target: targetLop,
-            text: noiDung,
-            date: new Date().toLocaleDateString('en-CA')
-        };
-        
-        try {
-            // Gửi thông báo trực tuyến lên MongoDB Atlas qua API
-            let response = await fetch(`${API_BASE}/api/thong-bao`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newNotif)
-            });
-            let data = await response.json();
+        const guiThongBao = async (finalLink, finalFileName) => {
+            let newNotif = {
+                id: 'NOTIF_' + Date.now(),
+                senderName: user.name,
+                target: targetLop,
+                text: noiDung,
+                date: new Date().toLocaleDateString('en-CA'),
+                fileName: finalFileName || '',
+                link: finalLink || ''
+            };
             
-            if (response.ok && data.success) {
+            try {
+                // Gửi thông báo trực tuyến lên MongoDB Atlas qua API
+                let response = await fetch(`${API_BASE}/api/thong-bao`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newNotif)
+                });
+                let data = await response.json();
+                
+                if (response.ok && data.success) {
+                    let notifs = layCSDL('Notifications');
+                    notifs.unshift(newNotif);
+                    ghiCSDL('Notifications', notifs);
+                    
+                    alert("Gửi thông báo lớp thành công!");
+                    formGuiTB.reset();
+                    if (statusText) statusText.textContent = 'Chưa có file nào được chọn';
+                    hienThiLichSuGuiGiangVien(user);
+                } else {
+                    alert(data.message || "Gửi thông báo thất bại!");
+                }
+            } catch (error) {
+                // Lưu dự phòng ngoại tuyến
                 let notifs = layCSDL('Notifications');
                 notifs.unshift(newNotif);
                 ghiCSDL('Notifications', notifs);
                 
                 alert("Gửi thông báo lớp thành công!");
                 formGuiTB.reset();
+                if (statusText) statusText.textContent = 'Chưa có file nào được chọn';
                 hienThiLichSuGuiGiangVien(user);
-            } else {
-                alert(data.message || "Gửi thông báo thất bại!");
             }
-        } catch (error) {
-            // Lưu dự phòng ngoại tuyến
-            let notifs = layCSDL('Notifications');
-            notifs.unshift(newNotif);
-            ghiCSDL('Notifications', notifs);
-            
-            alert("Gửi thông báo lớp thành công!");
-            formGuiTB.reset();
-            hienThiLichSuGuiGiangVien(user);
+        };
+
+        if (fileObj) {
+            let reader = new FileReader();
+            reader.onload = function(evt) {
+                guiThongBao(evt.target.result, fileObj.name);
+            };
+            reader.readAsDataURL(fileObj);
+        } else {
+            guiThongBao(linkVal, '');
         }
     });
 }
@@ -732,7 +785,9 @@ async function tuDongTaoThongBaoBaiTap(taiLieu, classId, giangVien) {
         text: noiDung,                          // Nội dung mô tả tài liệu được giao
         date: taiLieu.date,                      // Ngày giao bài tập
         materialId: taiLieu.id,                  // Mã bài tập liên kết để sinh viên click xem chi tiết
-        materialType: taiLieu.type              // Loại tài liệu
+        materialType: taiLieu.type,              // Loại tài liệu
+        fileName: taiLieu.fileName || '',
+        link: taiLieu.link || ''
     };
 
     try {

@@ -190,6 +190,18 @@ function ghiCSDL(khoa, duLieu) {
         if (e.name === 'QuotaExceededError' || e.code === 22) {
             console.warn("LocalStorage bị đầy. Đang tự động dọn dẹp các tệp tin base64 cũ...");
             
+            // Dọn dẹp cả bản sao dữ liệu mới chuẩn bị lưu (để thu nhỏ kích thước của chính nó)
+            if (Array.isArray(duLieu)) {
+                duLieu.forEach(item => {
+                    if (item.link && item.link.startsWith('data:')) {
+                        item.link = ''; 
+                        if (item.fileName && !item.fileName.includes('đầy bộ nhớ')) {
+                            item.fileName = item.fileName + ' (Tệp đã bị xóa khỏi cache do đầy bộ nhớ)';
+                        }
+                    }
+                });
+            }
+
             // Xóa dữ liệu base64 trong danh mục tài liệu để giải phóng bộ nhớ
             let materials = layCSDL('Materials');
             if (materials && materials.length > 0) {
@@ -523,7 +535,18 @@ function dongHopThoai(idModal) {
     // Tìm phần tử HTML của hộp thoại modal
     let el = document.getElementById(idModal);
     // Chuyển thuộc tính hiển thị sang none để ẩn đi
-    if (el) el.style.display = 'none'; 
+    if (el) {
+        el.style.display = 'none'; 
+        // Dừng các media đang phát (video, audio) và dừng tải iframe
+        el.querySelectorAll('video, audio').forEach(media => media.pause());
+        el.querySelectorAll('iframe').forEach(iframe => iframe.src = '');
+        
+        // Dọn dẹp tệp xem thử khi đóng modal xem thông báo
+        if (idModal === 'readNotifModal') {
+            let fileSection = document.getElementById('readNotifFileSection');
+            if (fileSection) fileSection.innerHTML = '';
+        }
+    }
 }
 
 // --------------------------------------------------------------------------
@@ -535,9 +558,19 @@ function khoiTaoGiaoDienChung() {
     // Đăng ký sự kiện click cho nút đóng modal (dấu nhân hoặc nút hủy)
     document.querySelectorAll('.close-modal').forEach(nut => {
         nut.addEventListener('click', function() { 
-            // Ẩn hộp thoại modal chứa nút đó
-            this.closest('.modal').style.display = 'none'; 
+            // Ẩn hộp thoại modal chứa nút đó và thực hiện dọn dẹp
+            let modal = this.closest('.modal');
+            if (modal) {
+                dongHopThoai(modal.id);
+            }
         });
+    });
+
+    // Tự động đóng modal khi nhấp chuột ra ngoài vùng nội dung trắng (vùng nền mờ)
+    window.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            dongHopThoai(e.target.id);
+        }
     });
 
     // Xử lý chuyển đổi qua lại giữa các tab chính trên thanh menu sidebar
@@ -820,6 +853,37 @@ async function moHopThoaiDocThongBao(idThongBao) {
     }
 
     // -----------------------------------------------------------------------
+    // Kiểm tra nếu thông báo này là thông báo nộp bài của sinh viên (có submissionId)
+    // Nếu đúng: mở modal xem chi tiết bài nộp thay vì modal thông báo thông thường
+    // -----------------------------------------------------------------------
+    if (tb.submissionId) {
+        // Tìm thông tin bài nộp trong CSDL Submissions
+        let submissions = layCSDL('Submissions') || [];
+        let submission = submissions.find(s => s.id === tb.submissionId);
+
+        if (!submission) {
+            // Nếu chưa có trong cache cục bộ, thực hiện fetch khẩn cấp từ máy chủ
+            try {
+                let response = await fetch(`${API_BASE}/api/nop-bai`);
+                let data = await response.json();
+                if (data.success) {
+                    ghiCSDL('Submissions', data.submissions);
+                    submissions = data.submissions;
+                    submission = submissions.find(s => s.id === tb.submissionId);
+                }
+            } catch (err) {
+                console.warn("Lỗi tự động fetch bài nộp mới khi bấm thông báo:", err);
+            }
+        }
+
+        if (submission) {
+            // Mở modal xem chi tiết bài nộp của sinh viên
+            moModalChiTietBaiNop(submission, nguoiDung);
+            return; // Dừng ở đây, không mở modal thông báo thông thường
+        }
+    }
+
+    // -----------------------------------------------------------------------
     // Kiểm tra nếu thông báo này là thông báo đăng tài liệu/bài tập (có materialId)
     // Nếu đúng: mở modal xem chi tiết thay vì modal thông báo thông thường
     // -----------------------------------------------------------------------
@@ -855,6 +919,9 @@ async function moHopThoaiDocThongBao(idThongBao) {
     document.getElementById('readNotifDate').textContent = tb.date;
     document.getElementById('readNotifContent').innerHTML = dinhDangThongBao(tb.text);
     
+    // Gọi hiển thị file đính kèm inline (nếu có)
+    hienThiDinhKemThongBao(tb);
+
     // Thiết lập hành động đặc thù (nếu có ví dụ sửa/xóa đối với giảng viên gửi thông báo)
     let vungHanhDong = document.getElementById('readNotifActions');
     if (vungHanhDong) vungHanhDong.innerHTML = '';
@@ -864,13 +931,26 @@ async function moHopThoaiDocThongBao(idThongBao) {
 }
 
 // Hàm mở modal xem chi tiết bài tập (hiển thị đầy đủ nội dung + file đính kèm để xem trực tiếp)
-function moModalChiTietBaiTap(baiTap, nguoiDung) {
+async function moModalChiTietBaiTap(baiTap, nguoiDung) {
     // Lấy các phần tử modal xem bài tập
     let modal = document.getElementById('assignmentDetailModal');
     if (!modal) {
         // Nếu modal chưa tồn tại trên trang, tạo mới và chèn vào body
         taoModalChiTietBaiTap();
         modal = document.getElementById('assignmentDetailModal');
+    }
+
+    // Đọc thông tin tài liệu đầy đủ từ máy chủ nếu cache cục bộ bị dọn dẹp (để lấy link base64 nặng)
+    if (!baiTap.link || baiTap.link.includes('cache do đầy bộ nhớ')) {
+        try {
+            let res = await fetch(`${API_BASE}/api/tai-lieu/${baiTap.id}`);
+            let data = await res.json();
+            if (res.ok && data.success) {
+                baiTap = data.material;
+            }
+        } catch (err) {
+            console.warn("Lỗi tải chi tiết tài liệu trực tiếp từ server:", err);
+        }
     }
 
     // Thiết lập icon, badge, nhãn mô tả động dựa trên loại tài liệu gv giao
@@ -1065,6 +1145,147 @@ function taoModalChiTietBaiTap() {
     // Đăng ký sự kiện click ngoài để đóng modal
     modal.addEventListener('click', function(e) {
         if (e.target === modal) dongHopThoai('assignmentDetailModal');
+    });
+}
+
+// Hàm mở modal xem chi tiết bài nộp của sinh viên (hiển thị đầy đủ thông tin + xem tệp inline trực quan)
+async function moModalChiTietBaiNop(submission, nguoiDung) {
+    let modal = document.getElementById('submissionDetailModal');
+    if (!modal) {
+        // Tạo modal động nếu chưa tồn tại
+        taoModalChiTietBaiNop();
+        modal = document.getElementById('submissionDetailModal');
+    }
+
+    // Đọc thông tin chi tiết bài nộp đầy đủ từ server nếu bị dọn dẹp khỏi cache cục bộ (để lấy link base64)
+    if (!submission.link || submission.link.includes('cache do đầy bộ nhớ')) {
+        try {
+            let res = await fetch(`${API_BASE}/api/nop-bai/${submission.id}`);
+            let data = await res.json();
+            if (res.ok && data.success) {
+                submission = data.submission;
+            }
+        } catch (err) {
+            console.warn("Lỗi tải chi tiết bài nộp trực tiếp từ server:", err);
+        }
+    }
+
+    // Điền thông tin sinh viên và bài nộp vào modal
+    let elTitle = document.getElementById('sdm-student-title');
+    if (elTitle) elTitle.textContent = `👁️ Bài nộp từ: ${submission.studentName} (${submission.studentId})`;
+
+    // Lấy thông tin bài tập liên quan
+    let materials = layCSDL('Materials') || [];
+    let baiTap = materials.find(m => m.id === submission.materialId);
+    let tenBaiTap = baiTap ? baiTap.title : 'Bài tập';
+    let tenLop = '';
+    if (baiTap) {
+        let classes = layCSDL('Classes') || [];
+        let lop = classes.find(c => c.id === baiTap.classId);
+        if (lop) {
+            tenLop = layTenLopHienThi(lop.id);
+        }
+    }
+
+    let elInfo = document.getElementById('sdm-info');
+    if (elInfo) {
+        elInfo.innerHTML = `
+            <strong>📚 Lớp học:</strong> Lớp ${tenLop || 'Không rõ'}<br>
+            <strong>📝 Bài tập:</strong> ${tenBaiTap}<br>
+            <strong>📅 Ngày nộp:</strong> ${submission.date}
+        `;
+    }
+
+    // Hiển thị phần tệp đính kèm và xem thử inline
+    let elFileSection = document.getElementById('sdm-file-section');
+    if (elFileSection) {
+        if (submission.fileName && submission.link) {
+            let ext = submission.fileName.split('.').pop().toLowerCase();
+            let iconFile = '📄';
+            if (['png','jpg','jpeg','gif','webp','bmp'].includes(ext)) iconFile = '🖼️';
+            else if (ext === 'pdf') iconFile = '📕';
+            else if (['doc','docx'].includes(ext)) iconFile = '📝';
+            else if (['xls','xlsx','ppt','pptx'].includes(ext)) iconFile = '📊';
+            else if (['zip','rar'].includes(ext)) iconFile = '🗜️';
+            
+            let safeLink = submission.link.replace(/'/g, "\\'");
+            let safeName = submission.fileName.replace(/'/g, "\\'");
+            let safeNameEscaped = escapeHTML(submission.fileName);
+
+            elFileSection.innerHTML = `
+                <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #86efac; border-radius: 12px; padding: 16px; margin-top: 16px;">
+                    <div class="flex-row align-center justify-between" style="border-bottom: 1px dashed #86efac; padding-bottom: 10px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+                        <div class="flex-row align-center" style="gap: 10px;">
+                            <span style="font-size: 28px;">${iconFile}</span>
+                            <div>
+                                <p class="font-bold text-primary" style="font-size: 14px; margin: 0;">📎 File bài làm của sinh viên:</p>
+                                <p class="font-bold" style="word-break: break-all; margin: 0; font-size: 13px;">${safeNameEscaped}</p>
+                            </div>
+                        </div>
+                        <button onclick="taiFileDinhKem('${safeLink}', '${safeName}')" 
+                            style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 700; cursor: pointer; font-size: 12px; width: auto;">
+                            ⬇️ Tải xuống bài làm
+                        </button>
+                    </div>
+                    <!-- Phân vùng tự động hiển thị nội dung tệp tin inline -->
+                    <div id="inline-submission-file-preview" style="min-height: 100px; background: white; border-radius: 8px; padding: 10px; border: 1px solid #d1fae5;"></div>
+                </div>
+            `;
+            elFileSection.style.display = 'block';
+
+            setTimeout(() => {
+                let previewContainer = document.getElementById('inline-submission-file-preview');
+                if (previewContainer) {
+                    hienThiXemFileInline(submission.link, submission.fileName, previewContainer);
+                }
+            }, 50);
+        } else if (submission.link) {
+            // Nếu chỉ có link liên kết
+            elFileSection.innerHTML = `
+                <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 16px; margin-top: 16px;">
+                    <p class="font-bold text-primary mb-10">🔗 Đường dẫn bài làm (Link):</p>
+                    <a href="${escapeHTML(submission.link)}" target="_blank" class="text-primary font-bold" style="text-decoration: underline; word-break: break-all;">${escapeHTML(submission.link)}</a>
+                </div>
+            `;
+            elFileSection.style.display = 'block';
+        } else {
+            elFileSection.style.display = 'none';
+        }
+    }
+
+    // Hiển thị modal ở chế độ flexbox để căn giữa hoàn hảo
+    modal.style.display = 'flex';
+}
+
+// Hàm tạo động modal xem chi tiết bài nộp nếu chưa tồn tại trong DOM
+function taoModalChiTietBaiNop() {
+    let modal = document.createElement('div');
+    modal.id = 'submissionDetailModal';
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; padding: 32px;">
+            <span class="close-modal" onclick="dongHopThoai('submissionDetailModal')">&times;</span>
+            
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                <span style="font-size: 32px;">📥</span>
+                <div>
+                    <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; font-size: 10px; font-weight: 800; border-radius: 6px; padding: 2px 10px; letter-spacing: 1px; display: inline-block; margin-bottom: 6px;">BÀI NỘP HỌC VIÊN</div>
+                    <h2 id="sdm-student-title" class="text-primary" style="margin: 0; font-size: 20px; line-height: 1.4;"></h2>
+                </div>
+            </div>
+
+            <!-- Thông tin chi tiết bài nộp -->
+            <div id="sdm-info" style="background: #f8fafc; border-radius: 12px; padding: 18px; border-left: 4px solid #10b981; line-height: 1.8; margin-bottom: 8px; text-align: left; font-size: 14px;">
+            </div>
+
+            <!-- File đính kèm & xem inline -->
+            <div id="sdm-file-section"></div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) dongHopThoai('submissionDetailModal');
     });
 }
 
@@ -1539,15 +1760,44 @@ document.addEventListener('DOMContentLoaded', () => {
 // CÁC HÀM QUẢN LÝ THÔNG BÁO DÙNG CHUNG (CONSOLIDATED NOTIFICATION FUNCTIONS - DRY)
 // ==========================================================================
 
-// Hàm mở xem và quản lý thông báo chi tiết
-function moQuanLyThongBao(idThongBao, vaiTro) {
-    let thongBao = layCSDL('Notifications');
+// Hàm mở xem và quản lý thông báo chi tiết (dùng chung GV + Admin)
+// Tự động render file đính kèm inline khi mở modal
+async function moQuanLyThongBao(idThongBao, vaiTro) {
+    let thongBao = layCSDL('Notifications') || [];
     let tb = thongBao.find(x => x.id === idThongBao);
     if (!tb) return;
+
+    let currentUser = layCSDL('currentUser');
+    if (!vaiTro && currentUser) vaiTro = currentUser.role;
 
     document.getElementById('readNotifTitle').textContent = tb.senderName;
     document.getElementById('readNotifDate').textContent = tb.date;
     document.getElementById('readNotifContent').innerHTML = dinhDangThongBao(tb.text);
+
+    // Nếu thông báo có materialId nhưng file/link chưa có trong cache cục bộ, tải từ server
+    if (tb.materialId && (!tb.link || tb.link === '')) {
+        try {
+            let mats = layCSDL('Materials') || [];
+            let mat = mats.find(m => m.id === tb.materialId);
+            if (!mat || !mat.link) {
+                // Fetch tài liệu từ server nếu cache trống
+                let res = await fetch(`${API_BASE}/api/tai-lieu/${tb.materialId}`);
+                let data = await res.json();
+                if (res.ok && data.success) {
+                    mat = data.material;
+                    let allMats = layCSDL('Materials') || [];
+                    let vi = allMats.findIndex(m => m.id === tb.materialId);
+                    if (vi > -1) allMats[vi] = mat; else allMats.unshift(mat);
+                    ghiCSDL('Materials', allMats);
+                }
+            }
+        } catch (err) {
+            console.warn('Lỗi tải file đính kèm tài liệu khi mở lịch sử thông báo:', err);
+        }
+    }
+
+    // Gọi hàm hiển thị file đính kèm inline (tự động mở file ngay khi modal hiện)
+    hienThiDinhKemThongBao(tb);
 
     let vungHanhDong = document.getElementById('readNotifActions');
     if (vungHanhDong) {
@@ -1559,26 +1809,187 @@ function moQuanLyThongBao(idThongBao, vaiTro) {
     moHopThoai('readNotifModal');
 }
 
-// Hàm mở chế độ chỉnh sửa thông báo
+// Hàm mở chế độ chỉnh sửa thông báo (cho phép sửa text VÀ file đính kèm)
+// Hiển thị rõ ràng file hiện tại với preview nhỏ + cho phép chọn file mới hoặc nhập link
 function suaThongBao(idThongBao) {
-    let thongBao = layCSDL('Notifications');
+    let thongBao = layCSDL('Notifications') || [];
     let tb = thongBao.find(x => x.id === idThongBao);
     if (!tb) return;
 
+    // Xóa vùng xem thử file inline trong khi đang chỉnh sửa
+    let fileSection = document.getElementById('readNotifFileSection');
+    if (fileSection) fileSection.innerHTML = '';
+
     let contentDiv = document.getElementById('readNotifContent');
+    
+    // Lấy link và fileName hiện tại (có thể từ Materials nếu có materialId)
+    let originalLink = tb.link || '';
+    let originalFileName = tb.fileName || '';
+    if (tb.materialId) {
+        let materials = layCSDL('Materials') || [];
+        let mat = materials.find(m => m.id === tb.materialId);
+        if (mat) {
+            originalLink = mat.link || '';
+            originalFileName = mat.fileName || '';
+        }
+    }
+
+    // Tạo preview nhỏ của file hiện tại để GV biết đang sửa file gì
+    let currentFilePreviewHtml = '';
+    if (originalFileName && originalLink) {
+        let ext = originalFileName.split('.').pop().toLowerCase();
+        let iconF = '📄';
+        if (['png','jpg','jpeg','gif','webp','bmp'].includes(ext)) iconF = '🖼️';
+        else if (ext === 'pdf') iconF = '📕';
+        else if (['doc','docx'].includes(ext)) iconF = '📝';
+        currentFilePreviewHtml = `
+            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-top:10px;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:22px;">${iconF}</span>
+                <div style="flex:1;min-width:0;">
+                    <p style="margin:0;font-size:12px;color:#6366f1;font-weight:700;">File đang đính kèm:</p>
+                    <p style="margin:0;font-size:13px;font-weight:600;word-break:break-all;">${escapeHTML(originalFileName)}</p>
+                </div>
+                <span style="font-size:11px;color:#94a3b8;white-space:nowrap;">Bạn có thể thay thế bên dưới</span>
+            </div>
+        `;
+    } else if (originalLink) {
+        currentFilePreviewHtml = `
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-top:10px;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:20px;">🔗</span>
+                <div style="flex:1;min-width:0;">
+                    <p style="margin:0;font-size:12px;color:#059669;font-weight:700;">Link đang đính kèm:</p>
+                    <p style="margin:0;font-size:13px;font-weight:600;word-break:break-all;">${escapeHTML(originalLink)}</p>
+                </div>
+            </div>
+        `;
+    }
+
     contentDiv.innerHTML = `
-        <textarea id="editNotifTextarea" rows="6" class="input-group" style="width:100%; border:1px solid var(--border-color); border-radius:6px; padding:10px; font-family:inherit;">${tb.text}</textarea>
+        <div class="input-group">
+            <label class="font-bold text-primary">Nội dung thông báo</label>
+            <textarea id="editNotifTextarea" rows="6" class="input-group" style="width:100%; border:1px solid var(--border-color); border-radius:6px; padding:10px; font-family:inherit; font-size: 14px;">${tb.text}</textarea>
+        </div>
+        <div style="margin-top:16px;">
+            <p class="font-bold text-primary mb-10" style="font-size:14px;">📎 File / Liên kết đính kèm</p>
+            ${currentFilePreviewHtml}
+            <div class="grid-container" style="grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                <div class="input-group mb-0">
+                    <label class="text-sm font-bold">Thay bằng link URL mới</label>
+                    <input type="url" id="editNotifLink" value="${escapeHTML(originalLink)}" placeholder="https://drive.google.com/..." 
+                        style="width:100%; padding:10px; border:1px solid var(--border-color); border-radius:6px; font-size: 13px;">
+                </div>
+                <div class="input-group mb-0">
+                    <label class="text-sm font-bold">Hoặc chọn file mới từ thiết bị</label>
+                    <input type="file" id="editNotifFile" 
+                        style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; background: #fff; font-size: 12px;">
+                    <p class="text-sm text-muted mt-5" id="editNotifFileStatus" style="font-size: 12px; word-break: break-all;">
+                        ${originalFileName ? '📎 File hiện tại: ' + escapeHTML(originalFileName) : 'Chưa có file nào được chọn'}
+                    </p>
+                </div>
+            </div>
+        </div>
     `;
+
+    // Đăng ký sự kiện thay đổi file để cập nhật status text
+    let editFileInp = document.getElementById('editNotifFile');
+    let editStatusText = document.getElementById('editNotifFileStatus');
+    if (editFileInp && editStatusText) {
+        editFileInp.addEventListener('change', () => {
+            if (editFileInp.files.length > 0) {
+                editStatusText.textContent = `✅ Đã chọn: ${editFileInp.files[0].name}`;
+                editStatusText.style.color = '#059669';
+            } else {
+                editStatusText.textContent = originalFileName ? `📎 File hiện tại: ${originalFileName}` : 'Chưa có file nào được chọn';
+                editStatusText.style.color = '';
+            }
+        });
+    }
 
     let actions = document.getElementById('readNotifActions');
     if (actions) {
         actions.innerHTML = `
-            <button class="btn-primary" style="width: auto;" onclick="luuThongBao('${tb.id}')">Cập nhật</button>
+            <button class="btn-primary" style="width: auto;" onclick="luuThongBao('${tb.id}')">💾 Lưu thay đổi</button>
+            <button class="action-btn" style="width: auto;" onclick="moQuanLyThongBao('${tb.id}')">↩ Hủy bỏ</button>
         `;
     }
 }
 
-// Hàm lưu lại nội dung thông báo sau khi chỉnh sửa
+// Hàm hiển thị tệp đính kèm inline cho thông báo chi tiết (dùng chung)
+function hienThiDinhKemThongBao(tb) {
+    let fileSection = document.getElementById('readNotifFileSection');
+    if (!fileSection) {
+        fileSection = document.createElement('div');
+        fileSection.id = 'readNotifFileSection';
+        let contentEl = document.getElementById('readNotifContent');
+        if (contentEl) contentEl.after(fileSection);
+    }
+    fileSection.innerHTML = '';
+    fileSection.style.display = 'none';
+
+    let linkData = tb.link || '';
+    let fileDataName = tb.fileName || '';
+    
+    // Nếu thông báo liên kết với tài liệu
+    if (tb.materialId) {
+        let materials = layCSDL('Materials') || [];
+        let mat = materials.find(m => m.id === tb.materialId);
+        if (mat) {
+            linkData = mat.link || '';
+            fileDataName = mat.fileName || '';
+        }
+    }
+
+    if (linkData && fileDataName) {
+        let ext = fileDataName.split('.').pop().toLowerCase();
+        let iconFile = '📄';
+        if (['png','jpg','jpeg','gif','webp','bmp'].includes(ext)) iconFile = '🖼️';
+        else if (ext === 'pdf') iconFile = '📕';
+        else if (['doc','docx'].includes(ext)) iconFile = '📝';
+        else if (['xls','xlsx','ppt','pptx'].includes(ext)) iconFile = '📊';
+        else if (['zip','rar'].includes(ext)) iconFile = '🗜️';
+
+        let safeLink = linkData.replace(/'/g, "\\'");
+        let safeName = fileDataName.replace(/'/g, "\\'");
+        let safeNameEscaped = escapeHTML(fileDataName);
+
+        fileSection.innerHTML = `
+            <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #86efac; border-radius: 12px; padding: 16px; margin-top: 16px; text-align: left;">
+                <div class="flex-row align-center justify-between" style="border-bottom: 1px dashed #86efac; padding-bottom: 10px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+                    <div class="flex-row align-center" style="gap: 10px;">
+                        <span style="font-size: 28px;">${iconFile}</span>
+                        <div>
+                            <p class="font-bold text-primary" style="font-size: 14px; margin: 0;">📎 File đính kèm thông báo:</p>
+                            <p class="font-bold" style="word-break: break-all; margin: 0; font-size: 13px;">${safeNameEscaped}</p>
+                        </div>
+                    </div>
+                    <button onclick="taiFileDinhKem('${safeLink}', '${safeName}')" 
+                        style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 700; cursor: pointer; font-size: 12px; width: auto;">
+                        ⬇️ Tải xuống bản gốc
+                    </button>
+                </div>
+                <div id="inline-read-notif-preview" style="min-height: 100px; background: white; border-radius: 8px; padding: 10px; border: 1px solid #d1fae5;"></div>
+            </div>
+        `;
+        fileSection.style.display = 'block';
+        
+        setTimeout(() => {
+            let previewContainer = document.getElementById('inline-read-notif-preview');
+            if (previewContainer) {
+                hienThiXemFileInline(linkData, fileDataName, previewContainer);
+            }
+        }, 50);
+    } else if (linkData) {
+        fileSection.innerHTML = `
+            <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 16px; margin-top: 16px; text-align: left;">
+                <p class="font-bold text-primary mb-10">🔗 Liên kết đính kèm:</p>
+                <a href="${escapeHTML(linkData)}" target="_blank" class="text-primary font-bold" style="text-decoration: underline; word-break: break-all;">${escapeHTML(linkData)}</a>
+            </div>
+        `;
+        fileSection.style.display = 'block';
+    }
+}
+
+// Hàm lưu lại nội dung thông báo và tệp đính kèm sau khi chỉnh sửa
 async function luuThongBao(idThongBao) {
     let textarea = document.getElementById('editNotifTextarea');
     if (!textarea) return;
@@ -1588,51 +1999,105 @@ async function luuThongBao(idThongBao) {
         return;
     }
 
-    let currentUser = layCSDL('currentUser');
-    let role = currentUser ? currentUser.role : '';
+    let linkInp = document.getElementById('editNotifLink');
+    let fileInp = document.getElementById('editNotifFile');
+    let fileObj = fileInp ? fileInp.files[0] : null;
+    let linkVal = linkInp ? linkInp.value.trim() : '';
 
-    try {
-        let response = await fetch(`${API_BASE}/api/thong-bao/${idThongBao}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: vanBanMoi })
-        });
-        let data = await response.json();
+    let thongBao = layCSDL('Notifications') || [];
+    let tb = thongBao.find(x => x.id === idThongBao);
+    if (!tb) return;
 
-        if (response.ok && data.success) {
-            let thongBao = layCSDL('Notifications');
-            let tb = thongBao.find(x => x.id === idThongBao);
-            if (tb) {
-                tb.text = vanBanMoi;
-                ghiCSDL('Notifications', thongBao);
-            }
-            alert("Cập nhật thông báo thành công!");
-        } else {
-            alert(data.message || "Cập nhật thông báo thất bại!");
+    let originalLink = tb.link || '';
+    let originalFileName = tb.fileName || '';
+    if (tb.materialId) {
+        let materials = layCSDL('Materials') || [];
+        let mat = materials.find(m => m.id === tb.materialId);
+        if (mat) {
+            originalLink = mat.link || '';
+            originalFileName = mat.fileName || '';
         }
-    } catch (error) {
-        let thongBao = layCSDL('Notifications');
-        let tb = thongBao.find(x => x.id === idThongBao);
-        if (tb) {
+    }
+
+    let finalLink = fileObj ? '' : (linkVal || originalLink);
+    let finalFileName = fileObj ? fileObj.name : (linkVal ? (linkVal === originalLink ? originalFileName : '') : '');
+
+    const thucHienLuu = async (linkData, fileDataName) => {
+        let currentUser = layCSDL('currentUser');
+        let role = currentUser ? currentUser.role : '';
+
+        // 1. Cập nhật thông báo lên backend MongoDB
+        try {
+            let payload = {
+                text: vanBanMoi,
+                fileName: fileDataName,
+                link: linkData
+            };
+            let response = await fetch(`${API_BASE}/api/thong-bao/${idThongBao}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            let data = await response.json();
+
+            if (response.ok && data.success) {
+                tb.text = vanBanMoi;
+                tb.fileName = fileDataName;
+                tb.link = linkData;
+                ghiCSDL('Notifications', thongBao);
+            } else {
+                alert(data.message || "Cập nhật thông báo thất bại!");
+                return;
+            }
+        } catch (error) {
+            console.warn("Lỗi cập nhật thông báo trực tuyến, chuyển lưu offline:", error);
             tb.text = vanBanMoi;
+            tb.fileName = fileDataName;
+            tb.link = linkData;
             ghiCSDL('Notifications', thongBao);
         }
-        alert("Cập nhật thông báo thành công! (Lưu ngoại tuyến)");
-    }
 
-    document.getElementById('readNotifContent').innerHTML = dinhDangThongBao(vanBanMoi);
-    let actions = document.getElementById('readNotifActions');
-    if (actions) {
-        actions.innerHTML = `
-            <button class="action-btn" onclick="suaThongBao('${idThongBao}')">Chỉnh sửa</button>
-            <button class="btn-danger" onclick="xoaThongBao('${idThongBao}', '${role}')">Xóa thông báo</button>
-        `;
-    }
+        // 2. Nếu thông báo có liên kết materialId, cập nhật cả tài liệu Material đó!
+        if (tb.materialId) {
+            try {
+                let matPayload = {
+                    title: vanBanMoi.split('\n')[0].replace(/^[📋📄📎] \[[^\]]+\] /, ''), // Dòng đầu làm tiêu đề
+                    description: vanBanMoi,
+                    fileName: fileDataName,
+                    link: linkData
+                };
+                
+                let res = await fetch(`${API_BASE}/api/tai-lieu/${tb.materialId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(matPayload)
+                });
+                let matData = await res.json();
+                if (res.ok && matData.success) {
+                    let materials = layCSDL('Materials') || [];
+                    let vt = materials.findIndex(m => m.id === tb.materialId);
+                    if (vt > -1) {
+                        materials[vt] = { ...materials[vt], ...matPayload };
+                        ghiCSDL('Materials', materials);
+                    }
+                }
+            } catch (matErr) {
+                console.warn("Lỗi cập nhật tài liệu liên kết:", matErr);
+            }
+        }
 
-    if (role === 'admin' && typeof hienThiDanhSachThongBaoAdmin === 'function') {
-        hienThiDanhSachThongBaoAdmin();
-    } else if (role === 'giang-vien' && typeof hienThiLichSuGuiGiangVien === 'function') {
-        hienThiLichSuGuiGiangVien();
+        alert("Cập nhật thông báo thành công!");
+        moQuanLyThongBao(idThongBao, role);
+    };
+
+    if (fileObj) {
+        let reader = new FileReader();
+        reader.onload = function(evt) {
+            thucHienLuu(evt.target.result, fileObj.name);
+        };
+        reader.readAsDataURL(fileObj);
+    } else {
+        thucHienLuu(finalLink, finalFileName);
     }
 }
 

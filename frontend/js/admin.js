@@ -796,6 +796,7 @@ function khoiTaoLangNgheSuKienDieuPhoi() {
 // ==========================================================================
 
 // Hàm hiển thị danh sách các thông báo do Admin đã gửi
+// Khi click vào hàng => mở modal moQuanLyThongBao => file đính kèm tự render inline
 function hienThiDanhSachThongBaoAdmin() {
     let notifications = layCSDL('Notifications');
     
@@ -807,75 +808,112 @@ function hienThiDanhSachThongBaoAdmin() {
 
     let html = adminNotifs.map(n => {
         let targetText = n.target === 'tat-ca-sinh-vien' ? 'Sinh viên' : 'Giảng viên';
-        let previewText = n.text.length > 60 ? n.text.substring(0, 60) + '...' : n.text;
-        return `
-            <tr class="cursor-pointer" onclick="moQuanLyThongBao('${n.id}', 'admin')">
-                <td>${n.date}</td>
-                <td><span class="text-primary font-bold">${targetText}</span></td>
-                <td>${previewText}</td>
-                <td>
-                    <button class="action-btn" style="padding: 4px 8px; font-size:12px; width:auto; margin-right: 5px;" onclick="event.stopPropagation(); moQuanLyThongBao('${n.id}', 'admin')">Sửa</button>
-                    <button class="btn-danger" style="padding: 4px 8px; font-size:12px; width:auto;" onclick="event.stopPropagation(); xoaThongBao('${n.id}', 'admin')">Xóa</button>
-                </td>
-            </tr>
-        `;
+        // Rút gọn nội dung xem trước, bỏ emoji để gọn gàng
+        let previewRaw = n.text.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+        let previewText = previewRaw.length > 65 ? previewRaw.substring(0, 65) + '...' : previewRaw;
+        
+        // Hiển thị badge nếu thông báo có file/link đính kèm
+        let dinhKemBadge = '';
+        if (n.fileName && n.link) {
+            dinhKemBadge = '<span style="background:#e0e7ff;color:#4f46e5;font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;margin-left:6px;">📎 File</span>';
+        } else if (!n.fileName && n.link) {
+            dinhKemBadge = '<span style="background:#f0fdf4;color:#059669;font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;margin-left:6px;">🔗 Link</span>';
+        }
+
+        return '<tr class="cursor-pointer" onclick="moQuanLyThongBao(\'' + n.id + '\', \'admin\')" title="Nhấp để xem chi tiết và mở file đính kèm" style="transition: background 0.15s;" onmouseenter="this.style.background=\'#faf5ff\'" onmouseleave="this.style.background=\'\'">'
+            + '<td>' + n.date + '</td>'
+            + '<td><span class="text-primary font-bold">' + targetText + '</span>' + dinhKemBadge + '</td>'
+            + '<td style="color: #555; font-size: 13px;">' + previewText + '</td>'
+            + '<td>'
+            + '<button class="action-btn" style="padding: 4px 8px; font-size:12px; width:auto; margin-right: 5px;" onclick="event.stopPropagation(); moQuanLyThongBao(\'' + n.id + '\', \'admin\')">\u270f\ufe0f Sửa</button>'
+            + '<button class="btn-danger" style="padding: 4px 8px; font-size:12px; width:auto;" onclick="event.stopPropagation(); xoaThongBao(\'' + n.id + '\', \'admin\')">\ud83d\uddd1\ufe0f Xóa</button>'
+            + '</td></tr>';
     }).join('');
 
     let container = document.getElementById('admSentNotifList');
     if (container) {
-        container.innerHTML = html || '<tr><td colspan="4">Chưa gửi thông báo nào.</td></tr>';
+        container.innerHTML = html || '<tr><td colspan="4" style="text-align:center;padding:20px;color:#888;">Hệ thống chưa gửi thông báo nào.</td></tr>';
     }
 }
-
 
 
 // Đăng ký sự kiện nộp biểu mẫu gửi thông báo mới của Admin
 function khoiTaoLangNgheThongBaoAdmin() {
     let form = document.getElementById('adminCreateNotifForm');
     if (form) {
+        let fileInp = document.getElementById('admNotifFile');
+        let statusText = document.getElementById('admNotifFileStatus');
+        if (fileInp && statusText) {
+            fileInp.addEventListener('change', () => {
+                if (fileInp.files.length > 0) {
+                    statusText.textContent = `Đã chọn file: ${fileInp.files[0].name}`;
+                } else {
+                    statusText.textContent = 'Chưa có file nào được chọn';
+                }
+            });
+        }
+
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
             let targetVal = form.elements['target'].value;
             let textVal = form.elements['text'].value.trim();
+            let fileObj = fileInp ? fileInp.files[0] : null;
+            let linkVal = form.elements['link'].value.trim();
 
-            let newNotif = {
-                id: 'NOTIF_' + Date.now(),
-                senderName: 'Hệ thống Đào tạo',
-                target: targetVal,
-                text: textVal,
-                date: new Date().toLocaleDateString('en-CA')
-            };
+            const guiThongBao = async (finalLink, finalFileName) => {
+                let newNotif = {
+                    id: 'NOTIF_' + Date.now(),
+                    senderName: 'Hệ thống Đào tạo',
+                    target: targetVal,
+                    text: textVal,
+                    date: new Date().toLocaleDateString('en-CA'),
+                    fileName: finalFileName || '',
+                    link: finalLink || ''
+                };
 
-            try {
-                // Gọi API gửi thông báo lưu lên MongoDB Atlas
-                let response = await fetch(`${API_BASE}/api/thong-bao`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newNotif)
-                });
-                let data = await response.json();
+                try {
+                    // Gọi API gửi thông báo lưu lên MongoDB Atlas
+                    let response = await fetch(`${API_BASE}/api/thong-bao`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newNotif)
+                    });
+                    let data = await response.json();
 
-                if (response.ok && data.success) {
+                    if (response.ok && data.success) {
+                        let notifs = layCSDL('Notifications');
+                        notifs.unshift(newNotif); // Thêm lên đầu danh sách
+                        ghiCSDL('Notifications', notifs);
+
+                        alert("Gửi thông báo thành công!");
+                        form.reset();
+                        if (statusText) statusText.textContent = 'Chưa có file nào được chọn';
+                        hienThiDanhSachThongBaoAdmin();
+                    } else {
+                        alert(data.message || "Gửi thông báo thất bại!");
+                    }
+                } catch (error) {
+                    // Hỗ trợ gửi ngoại tuyến
                     let notifs = layCSDL('Notifications');
                     notifs.unshift(newNotif); // Thêm lên đầu danh sách
                     ghiCSDL('Notifications', notifs);
 
                     alert("Gửi thông báo thành công!");
                     form.reset();
+                    if (statusText) statusText.textContent = 'Chưa có file nào được chọn';
                     hienThiDanhSachThongBaoAdmin();
-                } else {
-                    alert(data.message || "Gửi thông báo thất bại!");
                 }
-            } catch (error) {
-                // Hỗ trợ gửi ngoại tuyến
-                let notifs = layCSDL('Notifications');
-                notifs.unshift(newNotif); // Thêm lên đầu danh sách
-                ghiCSDL('Notifications', notifs);
+            };
 
-                alert("Gửi thông báo thành công!");
-                form.reset();
-                hienThiDanhSachThongBaoAdmin();
+            if (fileObj) {
+                let reader = new FileReader();
+                reader.onload = function(evt) {
+                    guiThongBao(evt.target.result, fileObj.name);
+                };
+                reader.readAsDataURL(fileObj);
+            } else {
+                guiThongBao(linkVal, '');
             }
         });
     }
@@ -895,3 +933,4 @@ function khoiTaoGiaoDienAdmin(adminUser) {
     // Gọi nạp danh sách tài khoản sinh viên/giảng viên lên bảng quản lý
     hienThiDanhSachTaiKhoan();
 }
+
