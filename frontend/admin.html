@@ -251,40 +251,43 @@
                     <h1>Gửi thông báo hệ thống</h1>
                 </header>
 
-                <!-- Form soạn thông báo mới -->
-                <div class="border-box mb-20" style="width: 100%;">
-                    <h3 class="mb-20 font-bold text-primary">Soạn thông báo mới</h3>
-                    <form id="adminCreateNotifForm" style="max-width: 600px;">
-                        <div class="input-group">
-                            <label>Đối tượng nhận</label>
-                            <select name="target" required style="width: 100%; padding: 10px; border-radius: var(--border-radius); border: 1px solid var(--border-color);">
-                                <option value="tat-ca-sinh-vien">Tất cả sinh viên</option>
-                                <option value="tat-ca-giang-vien">Tất cả giảng viên</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>Nội dung thông báo</label>
-                            <textarea name="text" rows="4" placeholder="Nhập nội dung thông báo tại đây..." required style="width: 100%; padding: 10px; border-radius: var(--border-radius); border: 1px solid var(--border-color); font-family: inherit; font-size: 14px;"></textarea>
-                        </div>
-                        <button type="submit" class="btn-primary mt-10" style="width: auto;">Gửi thông báo</button>
-                    </form>
-                </div>
+                <!-- Container ngang không khóa cứng, cho phép tự co giãn theo từng khung hình -->
+                <div class="flex-row flex-wrap" style="align-items: flex-start; gap: 20px; width: 100%;">
+                    <!-- Form soạn thông báo mới -->
+                    <div class="border-box" style="flex: 1; min-width: 320px; margin-bottom: 0;">
+                        <h3 class="mb-20 font-bold text-primary">Soạn thông báo mới</h3>
+                        <form id="adminCreateNotifForm" style="width: 100%;">
+                            <div class="input-group">
+                                <label>Đối tượng nhận</label>
+                                <select name="target" required style="width: 100%; padding: 10px; border-radius: var(--border-radius); border: 1px solid var(--border-color);">
+                                    <option value="tat-ca-sinh-vien">Tất cả sinh viên</option>
+                                    <option value="tat-ca-giang-vien">Tất cả giảng viên</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Nội dung thông báo</label>
+                                <textarea name="text" rows="5" placeholder="Nhập nội dung thông báo tại đây..." required style="width: 100%; padding: 10px; border-radius: var(--border-radius); border: 1px solid var(--border-color); font-family: inherit; font-size: 14px;"></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary mt-10" style="width: auto;">Gửi thông báo</button>
+                        </form>
+                    </div>
 
-                <!-- Bảng lịch sử thông báo bên dưới -->
-                <div class="border-box" style="width: 100%;">
-                    <h3 class="mb-20 font-bold text-primary">Lịch sử thông báo đã gửi</h3>
-                    <div style="overflow-x: auto; width: 100%;">
-                        <table class="data-table" style="width: 100%;">
-                            <thead>
-                                <tr>
-                                    <th>Ngày gửi</th>
-                                    <th>Đối tượng</th>
-                                    <th>Nội dung</th>
-                                    <th>Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody id="admSentNotifList" style="word-break: break-word; white-space: normal;"></tbody>
-                        </table>
+                    <!-- Bảng lịch sử thông báo đã gửi bên cạnh -->
+                    <div class="border-box" style="flex: 1.5; min-width: 450px; margin-bottom: 0;">
+                        <h3 class="mb-20 font-bold text-primary">Lịch sử thông báo đã gửi</h3>
+                        <div style="overflow-x: auto; width: 100%;">
+                            <table class="data-table" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Ngày gửi</th>
+                                        <th>Đối tượng</th>
+                                        <th>Nội dung</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admSentNotifList" style="word-break: break-word; white-space: normal;"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>

@@ -34,3 +34,28 @@ Hệ thống **Edu Report LMS** hỗ trợ quản lý đào tạo trực tuyến
 ### C. Cơ chế lưu trữ lai (Dual-Store Architecture)
 - Dữ liệu tài khoản, thông báo hệ thống và bài nộp được lưu trữ tập trung trên MongoDB Cloud Atlas.
 - Các dữ liệu học tập cá nhân như thời khóa biểu lớp, điểm số và thông tin điểm danh được lưu local để tăng tốc độ phản hồi và hoạt động offline.
+
+---
+
+## 4. Các hàm chức năng cốt lõi và hay dùng nhất (Dành cho thuyết trình và báo cáo)
+Dưới đây là danh sách các hàm quan trọng nhất của hệ thống, được chú thích dễ hiểu để phục vụ báo cáo và thuyết trình:
+
+### 1. Hàm hiển thị file đính kèm trực quan (`hienThiXemFileInline` - nằm trong `app.js`)
+* **Vai trò:** Tự động nhận dạng loại file (Word `.docx`, `.pdf`, hình ảnh, video, âm thanh, text thuần) và dựng bản xem trước trực tiếp trên web.
+* **Cách hoạt động:** Dựng file Word thành HTML thông qua thư viện `mammoth.js`, nhúng PDF qua Blob URL trong thẻ `<iframe>`, và dựng các trình phát đa phương tiện HTML5 cho video/audio.
+
+### 2. Bộ đôi đọc ghi dữ liệu cục bộ an toàn (`layCSDL` & `ghiCSDL` - nằm trong `app.js`)
+* **Vai trò:** Làm nhiệm vụ đọc/ghi dữ liệu tạm thời vào bộ nhớ trình duyệt `LocalStorage`.
+* **Đặc điểm nổi bật:** Tự động bắt lỗi tràn bộ nhớ (giới hạn 5MB của trình duyệt). Nếu phát hiện bộ nhớ đầy, hàm sẽ tự động xóa bớt các file đính kèm cũ để ứng dụng luôn chạy ổn định.
+
+### 3. Hàm đồng bộ dữ liệu tự động (`dongBoDuLieuTuDong` - nằm trong `app.js`)
+* **Vai trò:** Chạy ngầm liên tục (mỗi 15 giây) để đồng bộ dữ liệu giữa máy khách và cơ sở dữ liệu MongoDB Atlas trực tuyến.
+* **Cách hoạt động:** Thực hiện các cuộc gọi `fetch` đến các API endpoint để kéo về các thông tin mới nhất về tài khoản, thông báo, lớp học phần, bài tập và bài nộp của sinh viên.
+
+### 4. Hàm đăng ký lớp học phần (`dangKyLopHoc` - nằm trong `sinhvien.js`)
+* **Vai trò:** Xử lý thao tác sinh viên bấm đăng ký học phần tín chỉ.
+* **Cách hoạt động:** Ghi danh ID sinh viên vào lớp học tương ứng, khởi tạo bảng điểm trống (chuyên cần, giữa kỳ, cuối kỳ) cho sinh viên đó và gọi API đồng bộ lên server trực tuyến.
+
+### 5. Hàm đọc thông báo và chuyển hướng (`moHopThoaiDocThongBao` - nằm trong `app.js`)
+* **Vai trò:** Xử lý sự kiện khi sinh viên hoặc giáo viên click mở xem một thông báo trong hòm thư.
+* **Cách hoạt động:** Đánh dấu thông báo đã đọc, cập nhật huy hiệu đỏ, đồng bộ lên server MongoDB, và nếu thông báo có liên kết đến bài tập/tài liệu thì tự động mở khung nộp bài làm của bài tập đó lên cho sinh viên.

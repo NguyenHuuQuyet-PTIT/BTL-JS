@@ -16,6 +16,7 @@ const NguoiDungModel = require('./models/NguoiDung');
 const ThongBaoModel = require('./models/ThongBao'); // Thêm model thông báo
 const TaiLieuModel = require('./models/TaiLieu'); // Thêm model tài liệu & bài tập
 const NopBaiModel = require('./models/NopBai'); // Thêm model nộp bài tập
+const LopHocModel = require('./models/LopHoc'); // Thêm model lớp học
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -98,6 +99,129 @@ async function taoDuLieuMau() {
             ];
             await TaiLieuModel.insertMany(taiLieuMau);
             console.log('Đã khởi tạo tài liệu mẫu vào MongoDB Atlas.');
+        }
+
+        // 4. Tạo lớp học mẫu nếu bảng trống
+        const soLopHoc = await LopHocModel.countDocuments();
+        if (soLopHoc === 0) {
+            const lopHocMau = [
+                { 
+                    id: 'WEB_CLASS_2026', 
+                    subjectId: 'SUB01', 
+                    teacherId: 'GV001', 
+                    room: 'Phòng A101 - Lab 1', 
+                    dayOfWeek: 'Thứ 2', 
+                    startDate: '2026-06-01', 
+                    endDate: '2026-07-31', 
+                    startPeriod: 1, 
+                    endPeriod: 3, 
+                    enrolledStudents: ['SV202501'], 
+                    sessions: [ 
+                        { id: 'S1', date: '2026-06-01', startPeriod: 1, endPeriod: 3, attendance: {'SV202501': 'present'} },
+                        { id: 'S2', date: '2026-06-08', startPeriod: 1, endPeriod: 3, attendance: {'SV202501': 'late'} }
+                    ], 
+                    grades: { 
+                        'SV202501': { cc: 10, gk: 8.5, ck: 9 } 
+                    } 
+                },
+                {
+                    id: 'CTDL_CLASS_2026', 
+                    subjectId: 'SUB02', 
+                    teacherId: 'GV001', 
+                    room: 'Phòng A102 - Lý thuyết', 
+                    dayOfWeek: 'Thứ 4', 
+                    startDate: '2026-06-03', 
+                    endDate: '2026-07-29', 
+                    startPeriod: 4, 
+                    endPeriod: 6, 
+                    enrolledStudents: ['SV202501'], 
+                    sessions: [ 
+                        { id: 'S3', date: '2026-06-03', startPeriod: 4, endPeriod: 6, attendance: {'SV202501': 'absent'} },
+                        { id: 'S4', date: '2026-06-10', startPeriod: 4, endPeriod: 6, attendance: {'SV202501': 'present'} }
+                    ], 
+                    grades: { 
+                        'SV202501': { cc: 10, gk: 9, ck: 8.5 } 
+                    }
+                },
+                {
+                    id: 'CSDL_CLASS_2026', 
+                    subjectId: 'SUB03', 
+                    teacherId: 'GV001', 
+                    room: 'Phòng B201 - Lab 2', 
+                    dayOfWeek: 'Thứ 3', 
+                    startDate: '2026-06-02', 
+                    endDate: '2026-07-28', 
+                    startPeriod: 7, 
+                    endPeriod: 9, 
+                    enrolledStudents: ['SV202501'], 
+                    sessions: [ 
+                        { id: 'S5', date: '2026-06-02', startPeriod: 7, endPeriod: 9, attendance: {'SV202501': 'present'} },
+                        { id: 'S5b', date: '2026-06-09', startPeriod: 7, endPeriod: 9, attendance: {'SV202501': 'late'} }
+                    ], 
+                    grades: { 
+                        'SV202501': { cc: 9, gk: 7, ck: 6.5 } 
+                    }
+                },
+                {
+                    id: 'OOP_CLASS_2026', 
+                    subjectId: 'SUB04', 
+                    teacherId: 'GV001', 
+                    room: 'Phòng A304 - Lý thuyết', 
+                    dayOfWeek: 'Thứ 5', 
+                    startDate: '2026-06-04', 
+                    endDate: '2026-07-30', 
+                    startPeriod: 1, 
+                    endPeriod: 3, 
+                    enrolledStudents: ['SV202501'], 
+                    sessions: [ 
+                        { id: 'S6', date: '2026-06-04', startPeriod: 1, endPeriod: 3, attendance: {'SV202501': 'present'} },
+                        { id: 'S6b', date: '2026-06-11', startPeriod: 1, endPeriod: 3, attendance: {'SV202501': 'present'} }
+                    ], 
+                    grades: { 
+                        'SV202501': { cc: 8, gk: 5.5, ck: 6 } 
+                    }
+                },
+                {
+                    id: 'AI_CLASS_2026', 
+                    subjectId: 'SUB05', 
+                    teacherId: 'GV001', 
+                    room: 'Phòng A101 - Lab 1', 
+                    dayOfWeek: 'Thứ 6', 
+                    startDate: '2026-06-05', 
+                    endDate: '2026-07-31', 
+                    startPeriod: 7, 
+                    endPeriod: 9, 
+                    enrolledStudents: ['SV202501'], 
+                    sessions: [ 
+                        { id: 'S7', date: '2026-06-05', startPeriod: 7, endPeriod: 9, attendance: {'SV202501': 'present'} },
+                        { id: 'S7b', date: '2026-06-12', startPeriod: 7, endPeriod: 9, attendance: {'SV202501': 'present'} }
+                    ], 
+                    grades: { 
+                        'SV202501': { cc: 10, gk: 9.5, ck: 9 } 
+                    }
+                },
+                {
+                    id: 'UIUX_CLASS_2026', 
+                    subjectId: 'SUB07', 
+                    teacherId: 'GV001', 
+                    room: 'Phòng C102 - Creative Room', 
+                    dayOfWeek: 'Thứ 4', 
+                    startDate: '2026-06-03', 
+                    endDate: '2026-07-29', 
+                    startPeriod: 1, 
+                    endPeriod: 3, 
+                    enrolledStudents: ['SV202501'], 
+                    sessions: [ 
+                        { id: 'S8', date: '2026-06-03', startPeriod: 1, endPeriod: 3, attendance: {'SV202501': 'absent'} },
+                        { id: 'S8b', date: '2026-06-10', startPeriod: 1, endPeriod: 3, attendance: {'SV202501': 'present'} }
+                    ], 
+                    grades: { 
+                        'SV202501': { cc: 6, gk: 4.5, ck: 4 } 
+                    }
+                }
+            ];
+            await LopHocModel.insertMany(lopHocMau);
+            console.log('Đã khởi tạo lớp học mẫu vào MongoDB Atlas.');
         }
     } catch (error) {
         console.error('Lỗi khởi tạo dữ liệu mẫu:', error);
@@ -440,6 +564,65 @@ app.post('/api/nop-bai', async (req, res) => {
     } catch (error) {
         // Phản hồi lỗi hệ thống
         res.status(500).json({ success: false, message: 'Lỗi lưu bài nộp lên máy chủ.' });
+    }
+});
+
+// ==========================================================================
+// CÁC ROUTE API DÀNH CHO QUẢN LÝ LỚP HỌC (CLASSES ENDPOINTS)
+// ==========================================================================
+
+// API lấy toàn bộ danh sách lớp học phần
+app.get('/api/lop-hoc', async (req, res) => {
+    try {
+        const classes = await LopHocModel.find({});
+        res.status(200).json({ success: true, classes });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi lấy danh sách lớp học.' });
+    }
+});
+
+// API tạo lớp học phần mới
+app.post('/api/lop-hoc', async (req, res) => {
+    try {
+        const classData = req.body;
+        if (!classData.id || !classData.subjectId || !classData.teacherId) {
+            return res.status(400).json({ success: false, message: 'Thiếu thông tin lớp học!' });
+        }
+        const newClass = new LopHocModel(classData);
+        await newClass.save();
+        res.status(201).json({ success: true, message: 'Khởi tạo lớp học thành công.', class: newClass });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi khởi tạo lớp học phần.' });
+    }
+});
+
+// API cập nhật thông tin lớp học phần (tiết học, sinh viên ghi danh, buổi học, điểm số, điểm danh)
+app.put('/api/lop-hoc/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const classData = req.body;
+        
+        const result = await LopHocModel.findOneAndUpdate({ id }, classData, { new: true });
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy lớp học!' });
+        }
+        res.status(200).json({ success: true, message: 'Cập nhật lớp học thành công.', class: result });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi cập nhật lớp học phần.' });
+    }
+});
+
+// API xóa lớp học phần theo ID
+app.delete('/api/lop-hoc/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await LopHocModel.findOneAndDelete({ id });
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy lớp học!' });
+        }
+        res.status(200).json({ success: true, message: 'Xóa lớp học thành công.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi xóa lớp học phần.' });
     }
 });
 

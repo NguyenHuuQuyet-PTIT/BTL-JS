@@ -476,9 +476,10 @@ function hienThiThongBaoSinhVien(sinhVien) {
     // Lấy danh sách lớp sinh viên đã đăng ký học
     let lopCuaToi = lopHocs.filter(c => c.enrolledStudents.includes(sinhVien.id));
     
-    // Điền danh mục lớp vào bộ lọc thông báo nếu chưa được nạp
+    // Cập nhật lại danh mục lớp học vào bộ lọc thông báo để tránh bị lệch giữa các tài khoản đăng nhập
     let locSelect = document.getElementById('stuNotifFilter');
-    if (locSelect && locSelect.options.length <= 2) {
+    if (locSelect) {
+        let giaTriCu = locSelect.value;
         let htmlOptions = `<option value="all">Tất cả thông báo</option>`;
         htmlOptions += `<option value="tat-ca-sinh-vien">Thông báo chung từ nhà trường</option>`;
         
@@ -486,6 +487,11 @@ function hienThiThongBaoSinhVien(sinhVien) {
             htmlOptions += `<option value="${c.id}">Lớp ${layTenLopHienThi(c.id)}</option>`;
         });
         locSelect.innerHTML = htmlOptions;
+        
+        // Khôi phục lại lựa chọn trước đó của sinh viên nếu vẫn còn trong danh sách lớp học mới
+        if ([...locSelect.options].some(opt => opt.value === giaTriCu)) {
+            locSelect.value = giaTriCu;
+        }
     }
     
     // Đọc bộ lọc hiện tại và lấy danh sách thông báo
@@ -513,57 +519,6 @@ function hienThiThongBaoSinhVien(sinhVien) {
 function locThongBaoSinhVien() {
     let user = layCSDL('currentUser');
     hienThiThongBaoSinhVien(user);
-}
-
-// Hàm đánh dấu toàn bộ thông báo của sinh viên đã đọc
-function danhDauDaDocTatCaThongBaoSinhVien() {
-    let user = layCSDL('currentUser');
-    let locSelect = document.getElementById('stuNotifFilter');
-    let giaTriLoc = locSelect ? locSelect.value : 'all';
-    
-    let thongBao = layCSDL('Notifications');
-    let dsMaLopCuaToi = layCSDL('Classes').filter(c => c.enrolledStudents.includes(user.id)).map(c => c.id);
-    
-    // Lọc danh sách thông báo sinh viên đang xem
-    let tbLoc = thongBao.filter(n => {
-        if (giaTriLoc === 'all') {
-            return n.target === 'tat-ca-sinh-vien' || dsMaLopCuaToi.includes(n.target);
-        } else {
-            return n.target === giaTriLoc;
-        }
-    });
-    
-    let coThayDoi = false;
-    if (!user.readNotifs) user.readNotifs = [];
-    
-    // Đẩy toàn bộ thông báo của bộ lọc vào danh sách đã đọc
-    tbLoc.forEach(n => {
-        if (!user.readNotifs.includes(n.id)) {
-            user.readNotifs.push(n.id);
-            coThayDoi = true;
-        }
-    });
-    
-    // Nếu có sự cập nhật, ghi lại CSDL offline và tải lại giao diện hộp thư
-    if (coThayDoi) {
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        let dsNguoiDung = layCSDL('Users');
-        let vt = dsNguoiDung.findIndex(u => u.id === user.id);
-        if (vt > -1) {
-            dsNguoiDung[vt].readNotifs = user.readNotifs;
-            ghiCSDL('Users', dsNguoiDung);
-        }
-
-        // Đồng bộ trạng thái lên database MongoDB Atlas để lưu giữ vĩnh viễn
-        fetch(`${API_BASE}/api/nguoi-dung/${user.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ readNotifs: user.readNotifs })
-        }).catch(err => console.warn("Lỗi đồng bộ trạng thái đọc lên server:", err));
-
-        capNhatHuyHieuThongBao(user);
-        hienThiThongBaoSinhVien(user);
-    }
 }
 
 // --------------------------------------------------------------------------

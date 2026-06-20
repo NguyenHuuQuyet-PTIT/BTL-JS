@@ -413,12 +413,21 @@ function suaThongTinLopDieuPhoi(idLop) {
     moHopThoai('admEditClassModal'); // Mở hộp thoại modal chỉnh sửa lớp học phần
 }
 
-// Hàm xóa lớp học phần điều phối
+// Hàm xóa lớp học phần điều phối offline & online
 function xoaLopDieuPhoi(idLop) {
-    hienThiConfirmTuyBien("Chắc chắn muốn xóa lớp học này cùng toàn bộ điểm và điểm danh?", () => {
+    hienThiConfirmTuyBien("Chắc chắn muốn xóa lớp học này cùng toàn bộ điểm và điểm danh?", async () => {
         let classes = layCSDL('Classes').filter(c => c.id !== idLop);
         ghiCSDL('Classes', classes);
         hienThiDanhSachLopDieuPhoi();
+
+        // Đồng bộ lệnh xóa lớp lên database trực tuyến MongoDB Atlas
+        try {
+            await fetch(`${API_BASE}/api/lop-hoc/${idLop}`, {
+                method: 'DELETE'
+            });
+        } catch (err) {
+            console.warn("Lỗi đồng bộ xóa lớp lên server:", err);
+        }
     });
 }
 
@@ -619,8 +628,7 @@ function khoiTaoLangNgheSuKienDieuPhoi() {
                 };
             });
             
-            // Đẩy đối tượng lớp học phần mới hoàn chỉnh vào CSDL lớp học phần
-            classes.push({
+            let newClass = {
                 id: newClassId, 
                 subjectId: subId, 
                 teacherId: teacherId, 
@@ -633,9 +641,19 @@ function khoiTaoLangNgheSuKienDieuPhoi() {
                 enrolledStudents: [], 
                 sessions: sessions, 
                 grades: {}
-            });
+            };
             
+            // Đẩy đối tượng lớp học phần mới hoàn chỉnh vào CSDL lớp học phần
+            classes.push(newClass);
             ghiCSDL('Classes', classes); // Ghi đè CSDL lớp học phần mới vào LocalStorage
+
+            // Đồng bộ lớp học phần mới lên server trực tuyến MongoDB Atlas
+            fetch(`${API_BASE}/api/lop-hoc`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newClass)
+            }).catch(err => console.warn("Lỗi đồng bộ tạo lớp mới lên server:", err));
+
             alert("Khởi tạo lớp học mới chuyên ngành CNTT thành công!"); 
             this.reset(); // Làm trống các ô nhập liệu trong form tạo lớp học
             hienThiDanhSachLopDieuPhoi(); // Tải lại danh sách lớp học phần
@@ -791,13 +809,13 @@ function hienThiDanhSachThongBaoAdmin() {
         let targetText = n.target === 'tat-ca-sinh-vien' ? 'Sinh viên' : 'Giảng viên';
         let previewText = n.text.length > 60 ? n.text.substring(0, 60) + '...' : n.text;
         return `
-            <tr class="cursor-pointer" onclick="moQuanLyThongBaoAdmin('${n.id}')">
+            <tr class="cursor-pointer" onclick="moQuanLyThongBao('${n.id}', 'admin')">
                 <td>${n.date}</td>
                 <td><span class="text-primary font-bold">${targetText}</span></td>
                 <td>${previewText}</td>
                 <td>
-                    <button class="action-btn" style="padding: 4px 8px; font-size:12px; width:auto; margin-right: 5px;" onclick="event.stopPropagation(); moQuanLyThongBaoAdmin('${n.id}')">Sửa</button>
-                    <button class="btn-danger" style="padding: 4px 8px; font-size:12px; width:auto;" onclick="event.stopPropagation(); xoaThongBaoAdmin('${n.id}')">Xóa</button>
+                    <button class="action-btn" style="padding: 4px 8px; font-size:12px; width:auto; margin-right: 5px;" onclick="event.stopPropagation(); moQuanLyThongBao('${n.id}', 'admin')">Sửa</button>
+                    <button class="btn-danger" style="padding: 4px 8px; font-size:12px; width:auto;" onclick="event.stopPropagation(); xoaThongBao('${n.id}', 'admin')">Xóa</button>
                 </td>
             </tr>
         `;
@@ -809,124 +827,7 @@ function hienThiDanhSachThongBaoAdmin() {
     }
 }
 
-// Hàm mở xem và quản lý chi tiết thông báo của Admin (Sửa/Xóa)
-function moQuanLyThongBaoAdmin(idThongBao) {
-    let thongBao = layCSDL('Notifications');
-    let tb = thongBao.find(x => x.id === idThongBao);
-    if (!tb) return;
 
-    document.getElementById('readNotifTitle').textContent = tb.senderName;
-    document.getElementById('readNotifDate').textContent = tb.date;
-    document.getElementById('readNotifContent').innerHTML = dinhDangThongBao(tb.text);
-
-    let vungHanhDong = document.getElementById('readNotifActions');
-    if (vungHanhDong) {
-        vungHanhDong.innerHTML = `
-            <button class="action-btn" onclick="suaThongBaoAdmin('${tb.id}')">Chỉnh sửa</button>
-            <button class="btn-danger" onclick="xoaThongBaoAdmin('${tb.id}')">Xóa thông báo</button>
-        `;
-    }
-    moHopThoai('readNotifModal');
-}
-
-// Hàm chuyển đổi nội dung thông báo của Admin thành khung soạn thảo textarea để sửa đổi
-function suaThongBaoAdmin(idThongBao) {
-    let thongBao = layCSDL('Notifications');
-    let tb = thongBao.find(x => x.id === idThongBao);
-    if (!tb) return;
-
-    let contentDiv = document.getElementById('readNotifContent');
-    contentDiv.innerHTML = `
-        <textarea id="editNotifTextareaAdmin" rows="6" class="input-group" style="width:100%; border:1px solid var(--border-color); border-radius:6px; padding:10px; font-family:inherit;">${tb.text}</textarea>
-    `;
-
-    let actions = document.getElementById('readNotifActions');
-    if (actions) {
-        actions.innerHTML = `
-            <button class="btn-primary" style="width: auto;" onclick="luuThongBaoAdmin('${tb.id}')">Cập nhật</button>
-        `;
-    }
-}
-
-// Hàm lưu lại nội dung thông báo Admin đã sửa đổi đồng bộ lên server API MongoDB Atlas
-async function luuThongBaoAdmin(idThongBao) {
-    let vanBanMoi = document.getElementById('editNotifTextareaAdmin').value.trim();
-    if (!vanBanMoi) {
-        alert("Nội dung thông báo không được bỏ trống!");
-        return;
-    }
-
-    try {
-        // Gửi yêu cầu PUT cập nhật thông báo lên API server
-        let response = await fetch(`${API_BASE}/api/thong-bao/${idThongBao}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: vanBanMoi })
-        });
-        let data = await response.json();
-
-        if (response.ok && data.success) {
-            let thongBao = layCSDL('Notifications');
-            let tb = thongBao.find(x => x.id === idThongBao);
-            if (tb) {
-                tb.text = vanBanMoi;
-                ghiCSDL('Notifications', thongBao);
-            }
-            alert("Cập nhật thông báo thành công!");
-        } else {
-            alert(data.message || "Cập nhật thông báo thất bại!");
-        }
-    } catch (error) {
-        // Lưu ngoại tuyến nếu kết nối server lỗi
-        let thongBao = layCSDL('Notifications');
-        let tb = thongBao.find(x => x.id === idThongBao);
-        if (tb) {
-            tb.text = vanBanMoi;
-            ghiCSDL('Notifications', thongBao);
-        }
-        alert("Cập nhật thông báo thành công! (Lưu ngoại tuyến)");
-    }
-
-    // Quay lại chế độ hiển thị nội dung thông thường
-    document.getElementById('readNotifContent').innerHTML = dinhDangThongBao(vanBanMoi);
-    let actions = document.getElementById('readNotifActions');
-    if (actions) {
-        actions.innerHTML = `
-            <button class="action-btn" onclick="suaThongBaoAdmin('${idThongBao}')">Chỉnh sửa</button>
-            <button class="btn-danger" onclick="xoaThongBaoAdmin('${idThongBao}')">Xóa thông báo</button>
-        `;
-    }
-    hienThiDanhSachThongBaoAdmin();
-}
-
-// Hàm gửi yêu cầu xóa thông báo lên MongoDB Atlas và cập nhật Local
-function xoaThongBaoAdmin(idThongBao) {
-    hienThiConfirmTuyBien("Bạn có chắc chắn muốn xóa thông báo này khỏi hệ thống?", async () => {
-        try {
-            let response = await fetch(`${API_BASE}/api/thong-bao/${idThongBao}`, {
-                method: 'DELETE'
-            });
-            let data = await response.json();
-
-            if (response.ok && data.success) {
-                let notifs = layCSDL('Notifications').filter(n => n.id !== idThongBao);
-                ghiCSDL('Notifications', notifs);
-                alert("Xóa thông báo thành công!");
-                dongHopThoai('readNotifModal');
-                hienThiDanhSachThongBaoAdmin();
-            } else {
-                alert(data.message || "Xóa thất bại!");
-            }
-        } catch (error) {
-            // Hỗ trợ xóa offline nếu mất kết nối
-            let notifs = layCSDL('Notifications').filter(n => n.id !== idThongBao);
-            ghiCSDL('Notifications', notifs);
-            alert("Xóa thông báo thành công!");
-            dongHopThoai('readNotifModal');
-            hienThiDanhSachThongBaoAdmin();
-        }
-    });
-}
 
 // Đăng ký sự kiện nộp biểu mẫu gửi thông báo mới của Admin
 function khoiTaoLangNgheThongBaoAdmin() {

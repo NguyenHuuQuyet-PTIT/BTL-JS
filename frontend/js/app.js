@@ -226,16 +226,22 @@ function ghiCSDL(khoa, duLieu) {
     }
 }
 
-// Hàm tìm và cập nhật thông tin lớp học cụ thể trong cơ sở dữ liệu offline
+// Hàm tìm và cập nhật thông tin lớp học cụ thể trong cơ sở dữ liệu offline & online
 function capNhatLopCSDL(maLop, hamCapNhat) {
-    // Lấy toàn bộ danh sách lớp học hiện tại từ LocalStorage
+    // Lấy danh sách lớp học từ LocalStorage
     let danhSachLop = layCSDL('Classes');
-    // Tìm đối tượng lớp học khớp với mã lớp yêu cầu
+    // Tìm lớp học cần cập nhật
     let lopCanTim = danhSachLop.find(l => l.id === maLop);
-    // Nếu lớp tồn tại, thực thi hàm callback để cập nhật và lưu lại
     if (lopCanTim) { 
         hamCapNhat(lopCanTim, danhSachLop); 
         ghiCSDL('Classes', danhSachLop); 
+        
+        // Đồng bộ dữ liệu lớp học trực tiếp lên MongoDB Atlas
+        fetch(`${API_BASE}/api/lop-hoc/${maLop}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(lopCanTim)
+        }).catch(err => console.warn("Lỗi đồng bộ lớp học lên server:", err));
     }
 }
 
@@ -1052,13 +1058,12 @@ function khoiTaoDuLieuMau() {
     
     // Gieo mầm danh sách lớp học và lịch học, điểm số cho sinh viên
     if (!localStorage.getItem('Classes')) {
-        let thoiGian = Date.now();
-        let maLopWeb = 'WEB_' + thoiGian;
-        let maLopCtdl = 'CTDL_' + (thoiGian + 100);
-        let maLopCsdl = 'CSDL_' + (thoiGian + 200);
-        let maLopOop = 'OOP_' + (thoiGian + 300);
-        let maLopAi = 'AI_' + (thoiGian + 400);
-        let maLopUiUx = 'UIUX_' + (thoiGian + 500);
+        let maLopWeb = 'WEB_CLASS_2026';
+        let maLopCtdl = 'CTDL_CLASS_2026';
+        let maLopCsdl = 'CSDL_CLASS_2026';
+        let maLopOop = 'OOP_CLASS_2026';
+        let maLopAi = 'AI_CLASS_2026';
+        let maLopUiUx = 'UIUX_CLASS_2026';
         
         ghiCSDL('Classes', [
             { 
@@ -1311,6 +1316,10 @@ function dongBoDuLieuTuDong() {
                 ghiCSDL('Users', data.users);
                 let freshUser = data.users.find(u => u.id === user.id);
                 if (freshUser) {
+                    // Trộn danh sách thông báo đã đọc cục bộ và server để tránh bị ghi đè mất trạng thái
+                    let mergedReadNotifs = Array.from(new Set([...(user.readNotifs || []), ...(freshUser.readNotifs || [])]));
+                    freshUser.readNotifs = mergedReadNotifs;
+
                     // Cập nhật lại currentUser cục bộ từ bản ghi mới nhất của server
                     localStorage.setItem('currentUser', JSON.stringify(freshUser));
                     user = freshUser;
@@ -1370,6 +1379,26 @@ function dongBoDuLieuTuDong() {
             }
         })
         .catch(err => console.warn("Lỗi đồng bộ danh sách bài nộp:", err));
+
+    // 5. Đồng bộ danh sách lớp học phần từ server MongoDB Atlas
+    fetch(`${API_BASE}/api/lop-hoc`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                ghiCSDL('Classes', data.classes);
+                if (duongDanTrang.includes('admin.html') && typeof hienThiDanhSachLopHocAdmin === 'function') {
+                    hienThiDanhSachLopHocAdmin();
+                } else if (duongDanTrang.includes('teacher-dashboard.html')) {
+                    if (typeof hienThiBaoCaoGiangVien === 'function') hienThiBaoCaoGiangVien(user);
+                    if (typeof hienThiDanhSachHocSinhDiemDanh === 'function') hienThiDanhSachHocSinhDiemDanh();
+                    if (typeof hienThiBangDiemLopHoc === 'function') hienThiBangDiemLopHoc();
+                } else if (duongDanTrang.includes('student-dashboard.html')) {
+                    if (typeof hienThiBaoCaoHocTapSinhVien === 'function') hienThiBaoCaoHocTapSinhVien(user);
+                    if (typeof hienThiTabDangKyTinChi === 'function') hienThiTabDangKyTinChi(user);
+                }
+            }
+        })
+        .catch(err => console.warn("Lỗi đồng bộ danh sách lớp học:", err));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1456,3 +1485,196 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof khoiTaoGiaoDienAdmin === 'function') khoiTaoGiaoDienAdmin(user);
     }
 });
+
+// ==========================================================================
+// CÁC HÀM QUẢN LÝ THÔNG BÁO DÙNG CHUNG (CONSOLIDATED NOTIFICATION FUNCTIONS - DRY)
+// ==========================================================================
+
+// Hàm mở xem và quản lý thông báo chi tiết
+function moQuanLyThongBao(idThongBao, vaiTro) {
+    let thongBao = layCSDL('Notifications');
+    let tb = thongBao.find(x => x.id === idThongBao);
+    if (!tb) return;
+
+    document.getElementById('readNotifTitle').textContent = tb.senderName;
+    document.getElementById('readNotifDate').textContent = tb.date;
+    document.getElementById('readNotifContent').innerHTML = dinhDangThongBao(tb.text);
+
+    let vungHanhDong = document.getElementById('readNotifActions');
+    if (vungHanhDong) {
+        vungHanhDong.innerHTML = `
+            <button class="action-btn" onclick="suaThongBao('${tb.id}')">Chỉnh sửa</button>
+            <button class="btn-danger" onclick="xoaThongBao('${tb.id}', '${vaiTro}')">Xóa thông báo</button>
+        `;
+    }
+    moHopThoai('readNotifModal');
+}
+
+// Hàm mở chế độ chỉnh sửa thông báo
+function suaThongBao(idThongBao) {
+    let thongBao = layCSDL('Notifications');
+    let tb = thongBao.find(x => x.id === idThongBao);
+    if (!tb) return;
+
+    let contentDiv = document.getElementById('readNotifContent');
+    contentDiv.innerHTML = `
+        <textarea id="editNotifTextarea" rows="6" class="input-group" style="width:100%; border:1px solid var(--border-color); border-radius:6px; padding:10px; font-family:inherit;">${tb.text}</textarea>
+    `;
+
+    let actions = document.getElementById('readNotifActions');
+    if (actions) {
+        actions.innerHTML = `
+            <button class="btn-primary" style="width: auto;" onclick="luuThongBao('${tb.id}')">Cập nhật</button>
+        `;
+    }
+}
+
+// Hàm lưu lại nội dung thông báo sau khi chỉnh sửa
+async function luuThongBao(idThongBao) {
+    let textarea = document.getElementById('editNotifTextarea');
+    if (!textarea) return;
+    let vanBanMoi = textarea.value.trim();
+    if (!vanBanMoi) {
+        alert("Nội dung thông báo không được bỏ trống!");
+        return;
+    }
+
+    let currentUser = layCSDL('currentUser');
+    let role = currentUser ? currentUser.role : '';
+
+    try {
+        let response = await fetch(`${API_BASE}/api/thong-bao/${idThongBao}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: vanBanMoi })
+        });
+        let data = await response.json();
+
+        if (response.ok && data.success) {
+            let thongBao = layCSDL('Notifications');
+            let tb = thongBao.find(x => x.id === idThongBao);
+            if (tb) {
+                tb.text = vanBanMoi;
+                ghiCSDL('Notifications', thongBao);
+            }
+            alert("Cập nhật thông báo thành công!");
+        } else {
+            alert(data.message || "Cập nhật thông báo thất bại!");
+        }
+    } catch (error) {
+        let thongBao = layCSDL('Notifications');
+        let tb = thongBao.find(x => x.id === idThongBao);
+        if (tb) {
+            tb.text = vanBanMoi;
+            ghiCSDL('Notifications', thongBao);
+        }
+        alert("Cập nhật thông báo thành công! (Lưu ngoại tuyến)");
+    }
+
+    document.getElementById('readNotifContent').innerHTML = dinhDangThongBao(vanBanMoi);
+    let actions = document.getElementById('readNotifActions');
+    if (actions) {
+        actions.innerHTML = `
+            <button class="action-btn" onclick="suaThongBao('${idThongBao}')">Chỉnh sửa</button>
+            <button class="btn-danger" onclick="xoaThongBao('${idThongBao}', '${role}')">Xóa thông báo</button>
+        `;
+    }
+
+    if (role === 'admin' && typeof hienThiDanhSachThongBaoAdmin === 'function') {
+        hienThiDanhSachThongBaoAdmin();
+    } else if (role === 'giang-vien' && typeof hienThiLichSuGuiGiangVien === 'function') {
+        hienThiLichSuGuiGiangVien();
+    }
+}
+
+// Hàm xóa thông báo khỏi hệ thống
+function xoaThongBao(idThongBao, vaiTro) {
+    hienThiConfirmTuyBien("Bạn có chắc chắn muốn xóa thông báo này?", async () => {
+        try {
+            let response = await fetch(`${API_BASE}/api/thong-bao/${idThongBao}`, { method: 'DELETE' });
+            let data = await response.json();
+            
+            if (response.ok && data.success) {
+                let thongBao = layCSDL('Notifications').filter(n => n.id !== idThongBao);
+                ghiCSDL('Notifications', thongBao);
+                alert("Xóa thông báo thành công!");
+                dongHopThoai('readNotifModal');
+                if (vaiTro === 'admin' && typeof hienThiDanhSachThongBaoAdmin === 'function') {
+                    hienThiDanhSachThongBaoAdmin();
+                } else if (vaiTro === 'giang-vien' && typeof hienThiLichSuGuiGiangVien === 'function') {
+                    hienThiLichSuGuiGiangVien();
+                }
+            } else {
+                alert(data.message || "Xóa thất bại!");
+            }
+        } catch (error) {
+            let thongBao = layCSDL('Notifications').filter(n => n.id !== idThongBao);
+            ghiCSDL('Notifications', thongBao);
+            alert("Xóa thông báo thành công!");
+            dongHopThoai('readNotifModal');
+            if (vaiTro === 'admin' && typeof hienThiDanhSachThongBaoAdmin === 'function') {
+                hienThiDanhSachThongBaoAdmin();
+            } else if (vaiTro === 'giang-vien' && typeof hienThiLichSuGuiGiangVien === 'function') {
+                hienThiLichSuGuiGiangVien();
+            }
+        }
+    });
+}
+
+// Hàm đánh dấu tất cả thông báo là đã đọc
+function danhDauDaDocTatCaThongBao(vaiTro) {
+    let user = layCSDL('currentUser');
+    if (!user) return;
+    let thongBao = layCSDL('Notifications');
+    let filteredNotifs = [];
+    
+    if (vaiTro === 'sinh-vien') {
+        let locSelect = document.getElementById('stuNotifFilter');
+        let giaTriLoc = locSelect ? locSelect.value : 'all';
+        let dsMaLopCuaToi = layCSDL('Classes').filter(c => c.enrolledStudents.includes(user.id)).map(c => c.id);
+        
+        filteredNotifs = thongBao.filter(n => {
+            if (giaTriLoc === 'all') {
+                return n.target === 'tat-ca-sinh-vien' || dsMaLopCuaToi.includes(n.target);
+            } else {
+                return n.target === giaTriLoc;
+            }
+        });
+    } else if (vaiTro === 'giang-vien') {
+        filteredNotifs = thongBao.filter(n => n.target === 'tat-ca-giang-vien');
+    }
+    
+    let coThayDoi = false;
+    if (!user.readNotifs) user.readNotifs = [];
+    
+    filteredNotifs.forEach(n => {
+        if (!user.readNotifs.includes(n.id)) {
+            user.readNotifs.push(n.id);
+            coThayDoi = true;
+        }
+    });
+    
+    if (coThayDoi) {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        let dsNguoiDung = layCSDL('Users');
+        let vt = dsNguoiDung.findIndex(u => u.id === user.id);
+        if (vt > -1) {
+            dsNguoiDung[vt].readNotifs = user.readNotifs;
+            ghiCSDL('Users', dsNguoiDung);
+        }
+
+        // Đồng bộ trạng thái đọc lên database MongoDB Atlas
+        fetch(`${API_BASE}/api/nguoi-dung/${user.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ readNotifs: user.readNotifs })
+        }).catch(err => console.warn("Lỗi đồng bộ trạng thái đọc lên server:", err));
+
+        capNhatHuyHieuThongBao(user);
+        if (vaiTro === 'sinh-vien' && typeof hienThiThongBaoSinhVien === 'function') {
+            hienThiThongBaoSinhVien(user);
+        } else if (vaiTro === 'giang-vien' && typeof hienThiHopThuDenGiangVien === 'function') {
+            hienThiHopThuDenGiangVien(user);
+        }
+    }
+}
