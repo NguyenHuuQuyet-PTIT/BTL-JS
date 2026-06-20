@@ -781,17 +781,8 @@ function khoiTaoLangNgheSuKienDieuPhoi() {
 function hienThiDanhSachThongBaoAdmin() {
     let notifications = layCSDL('Notifications');
     
-    // Sắp xếp các thông báo theo ID số (timestamp) giảm dần để luôn hiển thị mới nhất lên đầu
-    notifications.sort((a, b) => {
-        let getVal = x => {
-            let match = x.id.match(/\d+/);
-            return match ? parseInt(match[0]) : 0;
-        };
-        let valA = getVal(a);
-        let valB = getVal(b);
-        if (valA !== valB) return valB - valA;
-        return new Date(b.date) - new Date(a.date);
-    });
+    // Sắp xếp các thông báo theo ID số (timestamp) giảm dần bằng hàm dùng chung
+    notifications = sapXepThongBaoMoiNhat(notifications);
 
     // Lọc các thông báo do Hệ thống Đào tạo (Admin) gửi
     let adminNotifs = notifications.filter(n => n.senderName === 'Hệ thống Đào tạo');

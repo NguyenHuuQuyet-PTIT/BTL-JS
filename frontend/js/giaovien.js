@@ -303,24 +303,8 @@ function hienThiHopThuDenGiangVien(giangVien) {
     let thongBao = layCSDL('Notifications');
     let tbGiangVien = thongBao.filter(n => n.target === 'tat-ca-giang-vien');
     
-    // Sắp xếp các thông báo theo ID số (timestamp) giảm dần để luôn hiển thị mới nhất lên đầu
-    tbGiangVien.sort((a, b) => {
-        // Hàm phụ trích xuất phần chữ số (timestamp) nằm trong ID thông báo
-        let getVal = x => {
-            // Sử dụng Regex tìm chuỗi chữ số liên tiếp trong thuộc tính ID
-            let match = x.id.match(/\d+/);
-            // Chuyển chuỗi số tìm được thành số nguyên hoặc trả về 0 nếu không khớp
-            return match ? parseInt(match[0]) : 0;
-        };
-        // Lấy giá trị số của đối tượng thông báo a
-        let valA = getVal(a);
-        // Lấy giá trị số của đối tượng thông báo b
-        let valB = getVal(b);
-        // Nếu giá trị số khác nhau, thực hiện sắp xếp giảm dần (số lớn xếp trước)
-        if (valA !== valB) return valB - valA;
-        // Nếu trùng mã số hoặc không chứa số, thực hiện so sánh theo thời gian ngày đăng giảm dần
-        return new Date(b.date) - new Date(a.date);
-    });
+    // Sắp xếp các thông báo theo ID số (timestamp) giảm dần bằng hàm dùng chung
+    tbGiangVien = sapXepThongBaoMoiNhat(tbGiangVien);
     
     hienThiTheThongBaoChung('teacherInboxList', tbGiangVien, giangVien);
 }
@@ -331,17 +315,8 @@ function hienThiLichSuGuiGiangVien(giangVien) {
     // Lọc các thông báo có tên người gửi khớp với giảng viên hiện tại
     let thongBao = layCSDL('Notifications').filter(n => n.senderName === giangVien.name);
     
-    // Sắp xếp các thông báo theo ID số (timestamp) giảm dần để luôn hiển thị mới nhất lên đầu
-    thongBao.sort((a, b) => {
-        let getVal = x => {
-            let match = x.id.match(/\d+/);
-            return match ? parseInt(match[0]) : 0;
-        };
-        let valA = getVal(a);
-        let valB = getVal(b);
-        if (valA !== valB) return valB - valA;
-        return new Date(b.date) - new Date(a.date);
-    });
+    // Sắp xếp các thông báo theo ID số (timestamp) giảm dần bằng hàm dùng chung
+    thongBao = sapXepThongBaoMoiNhat(thongBao);
     
     // Ánh xạ thành HTML các hàng bảng lịch sử gửi thông báo
     let html = thongBao.map(n => {
@@ -437,6 +412,14 @@ function danhDauDaDocTatCaThongBaoGiangVien() {
             users[vt].readNotifs = user.readNotifs;
             ghiCSDL('Users', users);
         }
+
+        // Đồng bộ trạng thái lên database MongoDB Atlas để lưu giữ vĩnh viễn
+        fetch(`${API_BASE}/api/nguoi-dung/${user.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ readNotifs: user.readNotifs })
+        }).catch(err => console.warn("Lỗi đồng bộ trạng thái đọc lên server:", err));
+
         capNhatHuyHieuThongBao(user);
         hienThiHopThuDenGiangVien(user);
     }

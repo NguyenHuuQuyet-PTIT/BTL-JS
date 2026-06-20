@@ -205,7 +205,7 @@ app.get('/api/nguoi-dung', async (req, res) => {
 app.put('/api/nguoi-dung/:id', async (req, res) => {
     try {
         const { id } = req.params; // Lấy mã ID tài khoản từ tham số URL
-        const { name, email, password, role, dob, phone } = req.body; // Các thông tin cần chỉnh sửa
+        const { name, email, password, role, dob, phone, readNotifs } = req.body; // Các thông tin cần chỉnh sửa
 
         // Tìm người dùng hiện tại có mã ID khớp với tham số
         const nguoiDung = await NguoiDungModel.findOne({ id });
@@ -220,6 +220,7 @@ app.put('/api/nguoi-dung/:id', async (req, res) => {
         if (role !== undefined) nguoiDung.role = role;
         if (dob !== undefined) nguoiDung.dob = dob;
         if (phone !== undefined) nguoiDung.phone = phone.trim();
+        if (readNotifs !== undefined) nguoiDung.readNotifs = readNotifs; // Cập nhật mảng thông báo đã đọc
 
         // Lưu thông tin chỉnh sửa mới vào database MongoDB
         await nguoiDung.save();

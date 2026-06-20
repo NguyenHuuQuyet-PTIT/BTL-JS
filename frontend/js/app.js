@@ -115,44 +115,31 @@ function hienThiConfirmTuyBien(noiDung, hamDongY) {
     };
 }
 
-// --------------------------------------------------------------------------
-// HỆ THỐNG SỰ KIỆN CLICK TOÀN CỤC ĐỂ ĐÓNG HỘP THOẠI KHI CLICK RA NGOÀI
-// Tự động đóng bất kỳ modal hoặc hộp thoại tùy biến nào khi người dùng click vào vùng nền trống bên ngoài
-// --------------------------------------------------------------------------
+// Đóng modal/alert khi click ra ngoài (backdrop overlay)
 window.addEventListener('click', function(e) {
-    // 1. Kiểm tra nếu click trúng vào lớp nền của một modal thông thường (phần tử có class là "modal")
+    // Click vào vùng nền mờ của modal thông thường
     if (e.target.classList.contains('modal')) {
-        // Thực hiện ẩn hộp thoại bằng cách chuyển thuộc tính display sang 'none'
-        e.target.style.display = 'none';
+        e.target.style.display = 'none'; // Ẩn modal
         
-        // Tìm kiếm xem trong modal này có chứa thẻ iframe tải tài liệu hay không
+        // Reset src iframe để tránh chạy ngầm
         let iframe = e.target.querySelector('iframe');
-        // Nếu tìm thấy iframe, tiến hành xóa đường dẫn nguồn src để ngăn tải ngầm hoặc phát âm thanh tiếp diễn
         if (iframe) iframe.src = '';
         
-        // Tìm kiếm xem trong modal này có chứa thẻ phát video nào đang chạy hay không
+        // Dừng video/audio nếu có
         let video = e.target.querySelector('video');
-        // Nếu tìm thấy video, tiến hành tạm dừng phát để tránh âm thanh chạy ngầm khi modal đã đóng
         if (video) video.pause();
-        
-        // Tìm kiếm xem trong modal này có chứa thẻ phát nhạc/âm thanh nào đang chạy hay không
         let audio = e.target.querySelector('audio');
-        // Nếu tìm thấy audio, tiến hành tạm dừng phát để tránh âm thanh chạy ngầm khi modal đã đóng
         if (audio) audio.pause();
     }
     
-    // 2. Kiểm tra nếu click trúng vào lớp nền của custom alert/confirm (phần tử có class là "custom-alert-overlay")
+    // Click ra ngoài custom alert/confirm
     if (e.target.classList.contains('custom-alert-overlay')) {
-        // Thực hiện ẩn hộp thoại alert/confirm bằng cách gỡ bỏ class hiển thị 'show'
-        e.target.classList.remove('show');
+        e.target.classList.remove('show'); // Ẩn overlay
         
-        // Kiểm tra nếu đây là hộp thoại thông báo Alert và có gắn kèm hàm gọi lại callback
+        // Chạy callback nếu có
         if (e.target.id === 'customAlertOverlay' && typeof e.target.datasetCallback === 'function') {
-            // Lưu trữ tạm thời hàm callback đã được đăng ký trước đó
             let callback = e.target.datasetCallback;
-            // Tiến hành xóa thuộc tính callback trên phần tử DOM để tránh việc gọi lặp lại không mong muốn
-            e.target.datasetCallback = null;
-            // Thực thi hàm callback sau khoảng thời gian trễ 300ms tương thích với hoạt ảnh ẩn CSS
+            e.target.datasetCallback = null; // Xóa callback tránh chạy lại
             setTimeout(() => { callback(); }, 300);
         }
     }
@@ -168,10 +155,75 @@ function layCSDL(khoa) {
     return JSON.parse(localStorage.getItem(khoa)) || [];
 }
 
-// Hàm ghi mảng dữ liệu vào LocalStorage dưới dạng chuỗi JSON
+// Hàm chuyển đổi các ký tự đặc biệt sang thực thể HTML để phòng chống lỗ hổng bảo mật XSS
+function escapeHTML(chuoi) {
+    if (!chuoi) return '';
+    return chuoi.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// Hàm sắp xếp danh sách thông báo theo thứ tự mới nhất (dựa trên mã số ID hoặc thời gian ngày gửi)
+function sapXepThongBaoMoiNhat(danhSach) {
+    if (!Array.isArray(danhSach)) return [];
+    return danhSach.sort((a, b) => {
+        let getVal = x => {
+            let match = x.id ? x.id.match(/\d+/) : null;
+            return match ? parseInt(match[0]) : 0;
+        };
+        let valA = getVal(a);
+        let valB = getVal(b);
+        if (valA !== valB) return valB - valA;
+        return new Date(b.date) - new Date(a.date);
+    });
+}
+
+// Hàm ghi mảng dữ liệu vào LocalStorage dưới dạng chuỗi JSON, có xử lý khi bộ nhớ đầy
 function ghiCSDL(khoa, duLieu) {
-    // Chuyển đổi dữ liệu đối tượng sang chuỗi JSON để lưu trữ cục bộ
-    localStorage.setItem(khoa, JSON.stringify(duLieu));
+    try {
+        localStorage.setItem(khoa, JSON.stringify(duLieu));
+    } catch (e) {
+        // Khi xảy ra lỗi vượt quá dung lượng LocalStorage (tối đa 5MB)
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+            console.warn("LocalStorage bị đầy. Đang tự động dọn dẹp các tệp tin base64 cũ...");
+            
+            // Xóa dữ liệu base64 trong danh mục tài liệu để giải phóng bộ nhớ
+            let materials = layCSDL('Materials');
+            if (materials && materials.length > 0) {
+                materials.forEach(m => {
+                    if (m.link && m.link.startsWith('data:')) {
+                        m.link = ''; // Bỏ lưu tệp base64
+                        m.fileName = m.fileName + ' (Tệp đã bị xóa khỏi cache do đầy bộ nhớ)';
+                    }
+                });
+                localStorage.setItem('Materials', JSON.stringify(materials));
+            }
+
+            // Xóa dữ liệu base64 trong các bài nộp của học sinh để lấy lại dung lượng trống
+            let submissions = layCSDL('Submissions');
+            if (submissions && submissions.length > 0) {
+                submissions.forEach(s => {
+                    if (s.link && s.link.startsWith('data:')) {
+                        s.link = ''; // Bỏ lưu tệp base64
+                        s.fileName = s.fileName + ' (Tệp đã bị xóa khỏi cache do đầy bộ nhớ)';
+                    }
+                });
+                localStorage.setItem('Submissions', JSON.stringify(submissions));
+            }
+
+            // Thử thực hiện lưu lại dữ liệu mới sau khi đã dọn dẹp
+            try {
+                localStorage.setItem(khoa, JSON.stringify(duLieu));
+            } catch (retryError) {
+                console.error("Không thể dọn dẹp đủ dung lượng cho LocalStorage:", retryError);
+            }
+        } else {
+            throw e;
+        }
+    }
 }
 
 // Hàm tìm và cập nhật thông tin lớp học cụ thể trong cơ sở dữ liệu offline
@@ -338,10 +390,14 @@ function hienThiXemFileInline(base64Data, fileName, containerElement) {
             // Nhúng trình phát nhạc audio HTML5
             containerElement.innerHTML = `<audio src="${blobUrl}" controls style="width: 100%; max-width: 400px; display: block; margin: 10px auto;"></audio>`;
         } else if (ext === 'txt' || mimeType === 'text/plain') {
-            // Đọc tệp tin dạng văn bản thuần và hiển thị gọn trong khung cuộn pre
+            // Sử dụng textContent khi render file văn bản thuần để chống lỗi bảo mật XSS
             let reader = new FileReader();
             reader.onload = function(e) {
-                containerElement.innerHTML = `<pre style="width: 100%; max-height: 400px; overflow-y: auto; background: #f1f5f9; padding: 15px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; word-break: break-all; text-align: left; margin-top: 10px; line-height: 1.5;">${e.target.result}</pre>`;
+                containerElement.innerHTML = '';
+                let pre = document.createElement('pre');
+                pre.style.cssText = "width: 100%; max-height: 400px; overflow-y: auto; background: #f1f5f9; padding: 15px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; word-break: break-all; text-align: left; margin-top: 10px; line-height: 1.5;";
+                pre.textContent = e.target.result;
+                containerElement.appendChild(pre);
             };
             reader.readAsText(blob);
         } else if (['doc', 'docx'].includes(ext)) {
@@ -442,8 +498,8 @@ function xemFileTrucTiep(base64Data, fileName) {
 
 // Hàm thực hiện đăng xuất tài khoản khỏi hệ thống
 function xuLyDangXuat() {
-    // Xóa đối tượng người dùng hiện tại trong LocalStorage
-    localStorage.removeItem('currentUser'); 
+    // Xóa sạch toàn bộ dữ liệu LocalStorage của phiên làm việc cũ để tránh rò rỉ thông tin cá nhân/điểm số
+    localStorage.clear(); 
     // Chuyển hướng trình duyệt về lại trang đăng nhập index.html
     window.location.href = 'index.html'; 
 }
@@ -584,6 +640,20 @@ function khoiTaoHoSoCaNhan(nguoiDung) {
                 danhSachNguoiDung[viTri] = nguoiDung; 
                 ghiCSDL('Users', danhSachNguoiDung);
             }
+
+            // Đồng bộ thông tin hồ sơ đã cập nhật lên MongoDB Atlas
+            let duLieuGui = {
+                phone: nguoiDung.phone,
+                dob: nguoiDung.dob
+            };
+            if (matKhauMoi !== '') {
+                duLieuGui.password = matKhauMoi;
+            }
+            fetch(`${API_BASE}/api/nguoi-dung/${nguoiDung.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(duLieuGui)
+            }).catch(err => console.warn("Lỗi đồng bộ hồ sơ cá nhân lên máy chủ:", err));
             
             // Thông báo cập nhật thành công và hiển thị lại dữ liệu mới lên giao diện
             alert("Cập nhật thông tin cá nhân thành công!"); 
@@ -601,8 +671,11 @@ function khoiTaoHoSoCaNhan(nguoiDung) {
 
 // Hàm định dạng hiển thị thông báo, tự động tìm và chuyển đổi link web thành thẻ HTML a clickable
 function dinhDangThongBao(noiDung) {
+    // Sử dụng hàm escapeHTML dùng chung để tránh lỗ hổng bảo mật XSS
+    let vanBanAnToan = escapeHTML(noiDung);
+
     // Thay thế ký tự xuống dòng bằng thẻ breakline HTML
-    let vanBan = noiDung.replace(/\n/g, '<br>');
+    let vanBan = vanBanAnToan.replace(/\n/g, '<br>');
     // Regex tìm đường dẫn liên kết http/https trong nội dung
     let regexLink = /(https?:\/\/[^\s]+)/g;
     // Thay thế link text bằng thẻ a liên kết mở tab mới
@@ -679,13 +752,17 @@ function hienThiTheThongBaoChung(idVungChua, danhSachTB, nguoiDung) {
             }
         }
         
+        // Tránh XSS khi render thông báo
+        let safeSenderName = escapeHTML(n.senderName);
+        let safeXemTruoc = escapeHTML(xemTruoc);
+        
         return `
             <div class="border-box border-left-dark mb-10 cursor-pointer ${lopNen}" onclick="moHopThoaiDocThongBao('${n.id}')">
                 <div class="flex-row justify-between mb-10" style="flex-wrap: wrap; gap: 4px;">
-                    <span class="${lopChu} font-bold flex-row align-center" style="flex-wrap: wrap; gap: 4px;">${n.senderName} ${nhanhBaiTap} ${dotDo}</span>
+                    <span class="${lopChu} font-bold flex-row align-center" style="flex-wrap: wrap; gap: 4px;">${safeSenderName} ${nhanhBaiTap} ${dotDo}</span>
                     <span class="text-muted text-sm">${n.date}</span>
                 </div>
-                <p class="${checkDaDoc ? 'text-muted' : ''}" style="white-space: pre-line; line-height: 1.5;">${xemTruoc}</p>
+                <p class="${checkDaDoc ? 'text-muted' : ''}" style="white-space: pre-line; line-height: 1.5;">${safeXemTruoc}</p>
             </div>
         `;
     }).join('');
@@ -716,6 +793,13 @@ function moHopThoaiDocThongBao(idThongBao) {
                 dsNguoiDung[vt].readNotifs = nguoiDung.readNotifs;
                 ghiCSDL('Users', dsNguoiDung);
             }
+
+            // Đồng bộ trạng thái đã đọc lên database MongoDB Atlas để lưu trữ vĩnh viễn
+            fetch(`${API_BASE}/api/nguoi-dung/${nguoiDung.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ readNotifs: nguoiDung.readNotifs })
+            }).catch(err => console.warn("Lỗi đồng bộ trạng thái đọc thông báo lên server:", err));
             
             // Cập nhật ngay huy hiệu và tải lại giao diện hộp thư
             capNhatHuyHieuThongBao(nguoiDung);
@@ -806,6 +890,7 @@ function moModalChiTietBaiTap(baiTap, nguoiDung) {
             else if (['mp3','wav'].includes(ext)) iconFile = '🎵';
             let safeLink = baiTap.link.replace(/'/g, "\\'");
             let safeName = baiTap.fileName.replace(/'/g, "\\'");
+            let safeNameEscaped = escapeHTML(baiTap.fileName);
             elFile.innerHTML = `
                 <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #86efac; border-radius: 12px; padding: 16px; margin-top: 16px;">
                     <div class="flex-row align-center justify-between" style="border-bottom: 1px dashed #86efac; padding-bottom: 10px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
@@ -813,7 +898,7 @@ function moModalChiTietBaiTap(baiTap, nguoiDung) {
                             <span style="font-size: 28px;">${iconFile}</span>
                             <div>
                                 <p class="font-bold text-primary" style="font-size: 14px; margin: 0;">📎 File đính kèm từ giảng viên:</p>
-                                <p class="font-bold" style="word-break: break-all; margin: 0; font-size: 13px;">${baiTap.fileName}</p>
+                                <p class="font-bold" style="word-break: break-all; margin: 0; font-size: 13px;">${safeNameEscaped}</p>
                             </div>
                         </div>
                         <button onclick="taiFileDinhKem('${safeLink}', '${safeName}')" 
@@ -839,7 +924,7 @@ function moModalChiTietBaiTap(baiTap, nguoiDung) {
             elFile.innerHTML = `
                 <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 16px; margin-top: 16px;">
                     <p class="font-bold text-primary mb-10">🔗 Tài nguyên bài tập:</p>
-                    <a href="${baiTap.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline; word-break: break-all;">${baiTap.link}</a>
+                    <a href="${escapeHTML(baiTap.link)}" target="_blank" class="text-primary font-bold" style="text-decoration: underline; word-break: break-all;">${escapeHTML(baiTap.link)}</a>
                 </div>
             `;
             elFile.style.display = 'block';
@@ -855,13 +940,14 @@ function moModalChiTietBaiTap(baiTap, nguoiDung) {
             // Kiểm tra xem sinh viên đã nộp bài chưa
             let submissions = layCSDL('Submissions');
             let daNop = submissions.find(s => s.materialId === baiTap.id && s.studentId === nguoiDung.id);
+            let safeTitleAttr = escapeHTML(baiTap.title).replace(/'/g, "\\'");
 
             if (daNop) {
                 // Đã nộp: hiển thị trạng thái và nút nộp lại
                 elNopBai.innerHTML = `
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <span style="background: #10b981; color: white; border-radius: 8px; padding: 6px 14px; font-weight: 700; font-size: 13px;">✅ Đã nộp bài</span>
-                        <button onclick="dongHopThoai('assignmentDetailModal'); moModalNopBai('${baiTap.id}', '${baiTap.title.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" 
+                        <button onclick="dongHopThoai('assignmentDetailModal'); moModalNopBai('${baiTap.id}', '${safeTitleAttr}')" 
                             style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 700; cursor: pointer; font-size: 13px;">
                             🔄 Nộp lại
                         </button>
@@ -870,7 +956,7 @@ function moModalChiTietBaiTap(baiTap, nguoiDung) {
             } else {
                 // Chưa nộp: hiển thị nút nộp bài nổi bật
                 elNopBai.innerHTML = `
-                    <button onclick="dongHopThoai('assignmentDetailModal'); moModalNopBai('${baiTap.id}', '${baiTap.title.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" 
+                    <button onclick="dongHopThoai('assignmentDetailModal'); moModalNopBai('${baiTap.id}', '${safeTitleAttr}')" 
                         style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; border-radius: 12px; padding: 12px 28px; font-weight: 700; cursor: pointer; font-size: 15px; width: 100%; box-shadow: 0 4px 15px rgba(16,185,129,0.4);">
                         📤 Nộp bài ngay
                     </button>
@@ -1210,76 +1296,90 @@ function chuyenHuongTrangQuanLy(vaiTro) {
 // --------------------------------------------------------------------------
 // 6. ĐỊNH TUYẾN KHI TẢI TRANG (BOOTSTRAP PROCESS & ROUTING)
 // --------------------------------------------------------------------------
+// Hàm tự động đồng bộ dữ liệu hai chiều giữa MongoDB Atlas và LocalStorage
+function dongBoDuLieuTuDong() {
+    let user = layCSDL('currentUser');
+    if (!user) return;
+    
+    let duongDanTrang = window.location.pathname;
+
+    // 1. Đồng bộ danh sách người dùng và cập nhật thông tin currentUser mới nhất để tránh stale data
+    fetch(`${API_BASE}/api/nguoi-dung`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                ghiCSDL('Users', data.users);
+                let freshUser = data.users.find(u => u.id === user.id);
+                if (freshUser) {
+                    // Cập nhật lại currentUser cục bộ từ bản ghi mới nhất của server
+                    localStorage.setItem('currentUser', JSON.stringify(freshUser));
+                    user = freshUser;
+                }
+                if (duongDanTrang.includes('admin.html') && typeof hienThiDanhSachTaiKhoan === 'function') {
+                    hienThiDanhSachTaiKhoan();
+                } else if (duongDanTrang.includes('teacher-dashboard.html') && typeof hienThiBaoCaoGiangVien === 'function') {
+                    hienThiBaoCaoGiangVien(user);
+                } else if (duongDanTrang.includes('student-dashboard.html') && typeof hienThiBaoCaoHocTapSinhVien === 'function') {
+                    hienThiBaoCaoHocTapSinhVien(user);
+                }
+            }
+        })
+        .catch(err => console.warn("Lỗi đồng bộ danh sách tài khoản:", err));
+
+    // 2. Đồng bộ danh sách thông báo và cập nhật lại hòm thư của từng giao diện
+    fetch(`${API_BASE}/api/thong-bao`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                ghiCSDL('Notifications', data.notifications);
+                capNhatHuyHieuThongBao(user);
+                if (duongDanTrang.includes('admin.html') && typeof hienThiDanhSachThongBaoAdmin === 'function') {
+                    hienThiDanhSachThongBaoAdmin();
+                } else if (duongDanTrang.includes('teacher-dashboard.html')) {
+                    if (typeof hienThiHopThuDenGiangVien === 'function') hienThiHopThuDenGiangVien(user);
+                    if (typeof hienThiLichSuGuiGiangVien === 'function') hienThiLichSuGuiGiangVien(user);
+                } else if (duongDanTrang.includes('student-dashboard.html')) {
+                    if (typeof hienThiThongBaoSinhVien === 'function') hienThiThongBaoSinhVien(user);
+                }
+            }
+        })
+        .catch(err => console.warn("Lỗi đồng bộ danh sách thông báo:", err));
+
+    // 3. Đồng bộ danh sách tài liệu giảng dạy và bài tập lớp học
+    fetch(`${API_BASE}/api/tai-lieu`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                ghiCSDL('Materials', data.materials);
+                if (duongDanTrang.includes('teacher-dashboard.html')) {
+                    let classDetailTab = document.getElementById('class-detail-tab');
+                    if (classDetailTab && classDetailTab.style.display === 'block' && typeof hienThiTaiLieuGiangVien === 'function') {
+                        hienThiTaiLieuGiangVien();
+                    }
+                }
+            }
+        })
+        .catch(err => console.warn("Lỗi đồng bộ tài liệu giảng dạy:", err));
+
+    // 4. Đồng bộ danh sách bài nộp bài tập trực tuyến
+    fetch(`${API_BASE}/api/nop-bai`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                ghiCSDL('Submissions', data.submissions);
+            }
+        })
+        .catch(err => console.warn("Lỗi đồng bộ danh sách bài nộp:", err));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     let user = layCSDL('currentUser');
     let duongDanTrang = window.location.pathname;
 
-    // Tự động đồng bộ danh sách tài khoản từ MongoDB về LocalStorage để cả 3 phân quyền luôn khớp dữ liệu với nhau
+    // Chạy đồng bộ dữ liệu ngay lập tức và cài đặt vòng lặp tự động mỗi 15 giây
     if (user) {
-        // 1. Đồng bộ tài khoản người dùng
-        fetch(`${API_BASE}/api/nguoi-dung`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    ghiCSDL('Users', data.users);
-                    if (duongDanTrang.includes('admin.html') && typeof hienThiDanhSachTaiKhoan === 'function') {
-                        hienThiDanhSachTaiKhoan();
-                    } else if (duongDanTrang.includes('teacher-dashboard.html') && typeof hienThiBaoCaoGiangVien === 'function') {
-                        hienThiBaoCaoGiangVien(user);
-                    } else if (duongDanTrang.includes('student-dashboard.html') && typeof hienThiBaoCaoHocTapSinhVien === 'function') {
-                        hienThiBaoCaoHocTapSinhVien(user);
-                    }
-                }
-            })
-            .catch(err => console.warn("Chạy ngoại tuyến. Không thể đồng bộ tài khoản từ MongoDB Atlas."));
-
-        // 2. Đồng bộ danh sách thông báo hệ thống
-        fetch(`${API_BASE}/api/thong-bao`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    ghiCSDL('Notifications', data.notifications);
-                    // Cập nhật lại giao diện hòm thư của từng vai trò
-                    if (duongDanTrang.includes('admin.html') && typeof hienThiDanhSachThongBaoAdmin === 'function') {
-                        hienThiDanhSachThongBaoAdmin();
-                    } else if (duongDanTrang.includes('teacher-dashboard.html')) {
-                        if (typeof hienThiHopThuDenGiangVien === 'function') hienThiHopThuDenGiangVien(user);
-                        if (typeof hienThiLichSuGuiGiangVien === 'function') hienThiLichSuGuiGiangVien(user);
-                    } else if (duongDanTrang.includes('student-dashboard.html')) {
-                        if (typeof hienThiThongBaoSinhVien === 'function') hienThiThongBaoSinhVien(user);
-                    }
-                }
-            })
-            .catch(err => console.warn("Chạy ngoại tuyến. Không thể đồng bộ thông báo từ MongoDB Atlas."));
-
-        // 3. Đồng bộ danh sách tài liệu giảng dạy và bài tập lớp học
-        fetch(`${API_BASE}/api/tai-lieu`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Lưu tài liệu vào LocalStorage để đồng bộ hiển thị
-                    ghiCSDL('Materials', data.materials);
-                    // Nếu đang ở trang giảng viên và tab chi tiết lớp học đang hoạt động, làm mới lại danh sách tài liệu
-                    if (duongDanTrang.includes('teacher-dashboard.html')) {
-                        let classDetailTab = document.getElementById('class-detail-tab');
-                        if (classDetailTab && classDetailTab.style.display === 'block' && typeof hienThiTaiLieuGiangVien === 'function') {
-                            hienThiTaiLieuGiangVien();
-                        }
-                    }
-                }
-            })
-            .catch(err => console.warn("Chạy ngoại tuyến. Không thể đồng bộ tài liệu từ MongoDB Atlas."));
-
-        // 4. Đồng bộ danh sách bài tập sinh viên nộp trực tuyến
-        fetch(`${API_BASE}/api/nop-bai`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    // Lưu danh sách bài tập đã nộp vào Local CSDL
-                    ghiCSDL('Submissions', data.submissions);
-                }
-            })
-            .catch(err => console.warn("Chạy ngoại tuyến. Không thể đồng bộ danh sách bài nộp từ MongoDB Atlas."));
+        dongBoDuLieuTuDong();
+        setInterval(dongBoDuLieuTuDong, 15000);
     }
 
     // Định tuyến tại trang chủ đăng nhập index.html
