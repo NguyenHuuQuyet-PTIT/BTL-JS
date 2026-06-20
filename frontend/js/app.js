@@ -514,8 +514,8 @@ function xuLyDangXuat() {
 function moHopThoai(idModal) { 
     // Tìm phần tử HTML của hộp thoại modal
     let el = document.getElementById(idModal);
-    // Chuyển thuộc tính hiển thị sang block để hiện lên màn hình
-    if (el) el.style.display = 'block'; 
+    // Chuyển thuộc tính hiển thị sang flex để kích hoạt flexbox centering
+    if (el) el.style.display = 'flex'; 
 }
 
 // Hàm ẩn hộp thoại modal theo ID phần tử
@@ -778,7 +778,7 @@ function hienThiTheThongBaoChung(idVungChua, danhSachTB, nguoiDung) {
 }
 
 // Hàm mở và xem nội dung chi tiết của một thông báo, đồng thời đánh dấu đã đọc
-function moHopThoaiDocThongBao(idThongBao) {
+async function moHopThoaiDocThongBao(idThongBao) {
     let thongBao = layCSDL('Notifications');
     // Tìm thông báo theo mã ID
     let tb = thongBao.find(x => x.id === idThongBao);
@@ -825,8 +825,23 @@ function moHopThoaiDocThongBao(idThongBao) {
     // -----------------------------------------------------------------------
     if (tb.materialId) {
         // Tìm thông tin tài liệu trong CSDL Materials
-        let materials = layCSDL('Materials');
+        let materials = layCSDL('Materials') || [];
         let baiTap = materials.find(m => m.id === tb.materialId);
+
+        if (!baiTap) {
+            // Nếu chưa có trong cache cục bộ, thực hiện fetch khẩn cấp từ máy chủ
+            try {
+                let response = await fetch(`${API_BASE}/api/tai-lieu`);
+                let data = await response.json();
+                if (data.success) {
+                    ghiCSDL('Materials', data.materials);
+                    materials = data.materials;
+                    baiTap = materials.find(m => m.id === tb.materialId);
+                }
+            } catch (err) {
+                console.warn("Lỗi tự động fetch tài liệu mới khi bấm thông báo:", err);
+            }
+        }
 
         if (baiTap) {
             // Mở modal xem chi tiết tài liệu/bài tập
@@ -858,13 +873,47 @@ function moModalChiTietBaiTap(baiTap, nguoiDung) {
         modal = document.getElementById('assignmentDetailModal');
     }
 
+    // Thiết lập icon, badge, nhãn mô tả động dựa trên loại tài liệu gv giao
+    let elIcon = document.getElementById('adm-icon');
+    let elBadge = document.getElementById('adm-badge');
+    let elDescLabel = document.getElementById('adm-desc-label');
+
+    if (baiTap.type === 'assignment') {
+        if (elIcon) elIcon.textContent = '📋';
+        if (elBadge) {
+            elBadge.textContent = 'BÀI TẬP';
+            elBadge.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+        }
+        if (elDescLabel) elDescLabel.textContent = '📝 Nội dung bài tập:';
+    } else if (baiTap.type === 'lecture') {
+        if (elIcon) elIcon.textContent = '📄';
+        if (elBadge) {
+            elBadge.textContent = 'BÀI GIẢNG';
+            elBadge.style.background = 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+        }
+        if (elDescLabel) elDescLabel.textContent = '📝 Mô tả bài giảng:';
+    } else {
+        if (elIcon) elIcon.textContent = '📎';
+        if (elBadge) {
+            elBadge.textContent = 'TÀI LIỆU';
+            elBadge.style.background = 'linear-gradient(135deg, #10b981, #047857)';
+        }
+        if (elDescLabel) elDescLabel.textContent = '📝 Mô tả tài liệu:';
+    }
+
     // Điền tiêu đề bài tập vào modal
     let elTitle = document.getElementById('adm-title');
     if (elTitle) elTitle.textContent = baiTap.title;
 
-    // Điền ngày giao bài tập
+    // Điền ngày giao hoặc ngày đăng tài liệu
     let elDate = document.getElementById('adm-date');
-    if (elDate) elDate.textContent = `📅 Ngày giao: ${baiTap.date}`;
+    if (elDate) {
+        if (baiTap.type === 'assignment') {
+            elDate.textContent = `📅 Ngày giao: ${baiTap.date}`;
+        } else {
+            elDate.textContent = `📅 Ngày đăng: ${baiTap.date}`;
+        }
+    }
 
     // Điền nội dung mô tả bài tập (hiển thị với xuống dòng)
     let elDesc = document.getElementById('adm-description');
@@ -975,8 +1024,8 @@ function moModalChiTietBaiTap(baiTap, nguoiDung) {
         }
     }
 
-    // Mở modal chi tiết bài tập
-    modal.style.display = 'block';
+    // Mở modal chi tiết bài tập ở chế độ flexbox để căn giữa hoàn hảo
+    modal.style.display = 'flex';
 }
 
 // Hàm tạo động modal xem chi tiết bài tập nếu chưa tồn tại trong HTML
@@ -988,11 +1037,11 @@ function taoModalChiTietBaiTap() {
         <div class="modal-content" style="max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; padding: 32px;">
             <span class="close-modal" onclick="dongHopThoai('assignmentDetailModal')">&times;</span>
             
-            <!-- Header bài tập -->
+            <!-- Header bài tập/tài liệu động -->
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-                <span style="font-size: 32px;">📋</span>
+                <span id="adm-icon" style="font-size: 32px;">📋</span>
                 <div>
-                    <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; font-size: 10px; font-weight: 800; border-radius: 6px; padding: 2px 10px; letter-spacing: 1px; display: inline-block; margin-bottom: 6px;">BÀI TẬP</div>
+                    <div id="adm-badge" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; font-size: 10px; font-weight: 800; border-radius: 6px; padding: 2px 10px; letter-spacing: 1px; display: inline-block; margin-bottom: 6px;">BÀI TẬP</div>
                     <h2 id="adm-title" class="text-primary" style="margin: 0; font-size: 20px; line-height: 1.4;"></h2>
                 </div>
             </div>
@@ -1000,7 +1049,7 @@ function taoModalChiTietBaiTap() {
 
             <!-- Mô tả / Đề bài -->
             <div style="background: #f8fafc; border-radius: 12px; padding: 18px; border-left: 4px solid #6366f1; margin-bottom: 8px;">
-                <p class="font-bold text-primary mb-10" style="font-size: 14px;">📝 Nội dung bài tập:</p>
+                <p id="adm-desc-label" class="font-bold text-primary mb-10" style="font-size: 14px;">📝 Nội dung bài tập:</p>
                 <div id="adm-description" style="line-height: 1.7; white-space: pre-line;"></div>
             </div>
 

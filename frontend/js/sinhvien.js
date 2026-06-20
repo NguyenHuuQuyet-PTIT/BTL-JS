@@ -317,9 +317,9 @@ function moHopThoaiLopSinhVien(idLop) {
                 linkHtml = `<button class="btn-primary" style="padding: 4px 10px; font-size:12px; width:auto;" onclick="moModalNopBai('${m.id}', '${m.title.replace(/'/g, "\\'")}')">Nộp bài</button>`;
             }
         } else {
-            // Đối với bài giảng hoặc tài liệu khác, chỉ hiển thị liên kết xem tài liệu thông thường
+            // Đối với bài giảng hoặc tài liệu khác, mở trực tiếp xem inline thay vì bắt tải xuống
             if (m.fileName) {
-                linkHtml = `<a href="#" onclick="event.preventDefault(); taiFileDinhKem('${m.link.replace(/'/g, "\\'")}', '${m.fileName.replace(/'/g, "\\'")}')" class="text-primary font-bold" style="text-decoration: underline;">Tải file</a>`;
+                linkHtml = `<a href="#" onclick="event.preventDefault(); moModalChiTietBaiTap(layCSDL('Materials').find(x => x.id === '${m.id}'), layCSDL('currentUser'))" class="text-primary font-bold" style="text-decoration: underline;">Xem file</a>`;
             } else {
                 linkHtml = `<a href="${m.link}" target="_blank" class="text-primary font-bold" style="text-decoration: underline;">Xem tài liệu</a>`;
             }
@@ -331,7 +331,7 @@ function moHopThoaiLopSinhVien(idLop) {
             detailHtml += `<p class="text-sm text-muted mt-5" style="white-space: pre-line;">${m.description}</p>`;
         }
         if (m.fileName) {
-            detailHtml += `<div class="mt-5 text-sm"><span class="font-bold text-success">Đính kèm: </span><a href="#" onclick="event.preventDefault(); taiFileDinhKem('${m.link.replace(/'/g, "\\'")}', '${m.fileName.replace(/'/g, "\\'")}')" class="text-primary font-bold" style="text-decoration: underline;">${m.fileName}</a></div>`;
+            detailHtml += `<div class="mt-5 text-sm"><span class="font-bold text-success">Đính kèm: </span><a href="#" onclick="event.preventDefault(); moModalChiTietBaiTap(layCSDL('Materials').find(x => x.id === '${m.id}'), layCSDL('currentUser'))" class="text-primary font-bold" style="text-decoration: underline;">${m.fileName}</a></div>`;
         }
 
         return `

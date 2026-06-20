@@ -625,11 +625,15 @@ canvas {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     transition: var(--transition);
+    
+    /* Sử dụng flexbox để căn giữa hoàn hảo theo cả chiều dọc và ngang */
+    justify-content: center;
+    align-items: center;
 }
 
 .modal-content { 
     background: var(--bg-card); 
-    margin: 6% auto; 
+    margin: auto; /* Thay 6% auto thành auto để căn giữa mượt mà hơn trong flex container */
     padding: 35px; 
     border-radius: var(--border-radius-lg); 
     width: 90%; 
