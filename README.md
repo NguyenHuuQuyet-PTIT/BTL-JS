@@ -1,4 +1,4 @@
-# 📚 Edu Report LMS
+# 📚 Edu Report
 
 ## 🚀 Hướng dẫn chạy dự án
 
