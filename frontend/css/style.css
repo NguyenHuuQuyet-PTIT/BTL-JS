@@ -672,13 +672,41 @@ canvas {
     position: absolute;
     top: 20px;
     right: 20px;
-    font-size: 26px; 
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px; 
     font-weight: bold; 
     cursor: pointer; 
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
 } 
 
-.close-modal:hover { color: var(--danger); }
+.close-modal:hover { 
+    color: white; 
+    background: var(--danger);
+    border-color: var(--danger);
+    transform: rotate(90deg);
+    box-shadow: 0 4px 12px rgba(255, 69, 58, 0.35);
+}
+
+/* Nút tải xuống tệp đính kèm cao cấp */
+.btn-download-premium {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-download-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 61, 255, 0.35) !important;
+    filter: brightness(1.05);
+}
+.btn-download-premium:active {
+    transform: translateY(0);
+}
 
 /* Custom radio cho điểm danh */
 .radio-group label {
