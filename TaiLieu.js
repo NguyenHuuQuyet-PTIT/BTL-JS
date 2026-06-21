@@ -39,3 +39,6 @@ const TaiLieuSchema = new mongoose.Schema({
 }, {
     timestamps: true        // Tự động ghi nhận thời gian tạo và sửa bản ghi (createdAt, updatedAt)
 });
+
+// Xuất Schema dưới dạng Model có tên là Material để sử dụng ở các API routes
+module.exports = mongoose.model('Material', TaiLieuSchema);
