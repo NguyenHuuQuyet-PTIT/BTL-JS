@@ -1,7 +1,5 @@
 # 📚 Edu Report LMS
 
-Hệ thống quản lý học tập và điều phối đào tạo dành cho khoa CNTT. Dự án phân chia rõ 3 vai trò: Sinh viên, Giảng viên và Admin.
-
 ## 🚀 Hướng dẫn chạy dự án
 
 ### 1. Khởi chạy Backend
