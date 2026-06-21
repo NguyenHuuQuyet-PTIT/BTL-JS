@@ -740,8 +740,8 @@ function capNhatHuyHieuThongBao(nguoiDung) {
     } 
     // Xử lý đếm cho Giảng viên
     else if (nguoiDung.role === 'giang-vien') {
-        // Lọc thông báo gửi chung cho tất cả giảng viên
-        let tbGiangVien = thongBao.filter(n => n.target === 'tat-ca-giang-vien');
+        // Lọc thông báo gửi chung cho tất cả giảng viên hoặc gửi riêng cho giảng viên này (ví dụ: thông báo nộp bài tập)
+        let tbGiangVien = thongBao.filter(n => n.target === 'tat-ca-giang-vien' || n.target === nguoiDung.id);
         // Đếm số lượng thông báo chưa đọc
         soChuaDoc = tbGiangVien.filter(n => !thongBaoDaDoc.includes(n.id)).length;
         
@@ -2154,7 +2154,7 @@ function danhDauDaDocTatCaThongBao(vaiTro) {
             }
         });
     } else if (vaiTro === 'giang-vien') {
-        filteredNotifs = thongBao.filter(n => n.target === 'tat-ca-giang-vien');
+        filteredNotifs = thongBao.filter(n => n.target === 'tat-ca-giang-vien' || n.target === user.id);
     }
     
     let coThayDoi = false;
