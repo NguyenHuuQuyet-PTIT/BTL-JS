@@ -638,10 +638,28 @@ canvas {
     border-radius: var(--border-radius-lg); 
     width: 90%; 
     max-width: 650px; 
+    max-height: 90vh; /* Giới hạn chiều cao tối đa của hộp thoại */
+    overflow-y: auto; /* Cho phép cuộn dọc khi nội dung vượt quá chiều cao */
     box-shadow: 0 25px 50px -12px rgba(139, 61, 255, 0.15); 
     border: 1px solid var(--border-color);
     position: relative;
     animation: modalFadeIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Hiển thị thanh cuộn mượt mà riêng cho các modal-content để người dùng dễ cuộn dọc */
+.modal-content::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+}
+.modal-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+.modal-content::-webkit-scrollbar-thumb {
+    background: rgba(139, 61, 255, 0.2);
+    border-radius: 10px;
+}
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 61, 255, 0.4);
 }
 
 @keyframes modalFadeIn {
