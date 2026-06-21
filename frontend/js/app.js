@@ -1946,21 +1946,22 @@ function hienThiDinhKemThongBao(tb) {
         let safeNameEscaped = escapeHTML(fileDataName);
 
         fileSection.innerHTML = `
-            <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #86efac; border-radius: 12px; padding: 16px; margin-top: 16px; text-align: left;">
-                <div class="flex-row align-center justify-between" style="border-bottom: 1px dashed #86efac; padding-bottom: 10px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
-                    <div class="flex-row align-center" style="gap: 10px;">
-                        <span style="font-size: 28px;">${iconFile}</span>
+            <div style="background: linear-gradient(135deg, rgba(139, 61, 255, 0.03) 0%, rgba(0, 196, 204, 0.04) 100%); border: 1px solid rgba(139, 61, 255, 0.12); border-radius: 16px; padding: 18px; margin-top: 20px; text-align: left; box-shadow: var(--shadow-sm);">
+                <div class="flex-row align-center justify-between" style="border-bottom: 1px dashed rgba(139, 61, 255, 0.15); padding-bottom: 12px; margin-bottom: 12px; flex-wrap: wrap; gap: 12px;">
+                    <div class="flex-row align-center" style="gap: 12px;">
+                        <span style="font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">${iconFile}</span>
                         <div>
-                            <p class="font-bold text-primary" style="font-size: 14px; margin: 0;">📎 File đính kèm thông báo:</p>
-                            <p class="font-bold" style="word-break: break-all; margin: 0; font-size: 13px;">${safeNameEscaped}</p>
+                            <p class="font-bold text-primary" style="font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">📎 File đính kèm thông báo:</p>
+                            <p class="font-bold" style="word-break: break-all; margin: 2px 0 0 0; font-size: 14px; color: var(--text-main);">${safeNameEscaped}</p>
                         </div>
                     </div>
                     <button onclick="taiFileDinhKem('${safeLink}', '${safeName}')" 
-                        style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; border-radius: 8px; padding: 6px 14px; font-weight: 700; cursor: pointer; font-size: 12px; width: auto;">
+                        class="btn-download-premium"
+                        style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); color: white; border: none; border-radius: 10px; padding: 8px 16px; font-weight: 700; cursor: pointer; font-size: 12px; width: auto; box-shadow: 0 4px 12px rgba(139, 61, 255, 0.2);">
                         ⬇️ Tải xuống bản gốc
                     </button>
                 </div>
-                <div id="inline-read-notif-preview" style="min-height: 100px; background: white; border-radius: 8px; padding: 10px; border: 1px solid #d1fae5;"></div>
+                <div id="inline-read-notif-preview" style="min-height: 120px; background: white; border-radius: 12px; padding: 12px; border: 1px solid rgba(139, 61, 255, 0.08); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);"></div>
             </div>
         `;
         fileSection.style.display = 'block';
@@ -1973,9 +1974,14 @@ function hienThiDinhKemThongBao(tb) {
         }, 50);
     } else if (linkData) {
         fileSection.innerHTML = `
-            <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 16px; margin-top: 16px; text-align: left;">
-                <p class="font-bold text-primary mb-10">🔗 Liên kết đính kèm:</p>
-                <a href="${escapeHTML(linkData)}" target="_blank" class="text-primary font-bold" style="text-decoration: underline; word-break: break-all;">${escapeHTML(linkData)}</a>
+            <div style="background: linear-gradient(135deg, rgba(0, 196, 204, 0.03) 0%, rgba(139, 61, 255, 0.03) 100%); border: 1px solid rgba(0, 196, 204, 0.15); border-radius: 16px; padding: 18px; margin-top: 20px; text-align: left; box-shadow: var(--shadow-sm);">
+                <div class="flex-row align-center" style="gap: 12px;">
+                    <span style="font-size: 28px;">🔗</span>
+                    <div style="flex: 1; min-width: 0;">
+                        <p class="font-bold text-primary" style="font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Liên kết đính kèm:</p>
+                        <a href="${escapeHTML(linkData)}" target="_blank" class="text-primary font-bold" style="text-decoration: underline; word-break: break-all; font-size: 14px; display: inline-block; margin-top: 4px;">${escapeHTML(linkData)}</a>
+                    </div>
+                </div>
             </div>
         `;
         fileSection.style.display = 'block';
