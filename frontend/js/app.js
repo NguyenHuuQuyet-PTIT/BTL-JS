@@ -1,18 +1,11 @@
-// ==========================================================================
-// HỆ THỐNG QUẢN LÝ HỌC TẬP EDU REPORT (CORE APPS ENGINE - HẠT NHÂN HỆ THỐNG)
-// TẤT CẢ CÁC HÀM ĐƯỢC CHÚ THÍCH CHI TIẾT TỪNG DÒNG TIẾNG VIỆT CÓ DẤU
-// ==========================================================================
-
 // Cấu hình URL cơ sở của backend (Tự động nhận diện chạy localhost hoặc chạy online khi deploy)
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5000'
-    : 'https://btl-js.onrender.com'; // Thay URL backend thực tế của bạn sau khi deploy lên Render/Railway
+    : 'https://btl-js.onrender.com'; // Thay URL backend thực tế của bạn sau khi deploy lên Render
 
 // Đường dẫn cơ sở kết nối đến cụm API xác thực của Backend Express
 const DUONG_DAN_API = `${API_BASE}/api/auth`;
 
-// --------------------------------------------------------------------------
-// HỆ THỐNG THÔNG BÁO TỰ CHẾ ĐẸP MẮT (CUSTOM PREMIUM ALERT SYSTEM)
 // Ghi đè hàm alert mặc định của trình duyệt để hiển thị giao diện Canva Glassmorphism
 // --------------------------------------------------------------------------
 function hienThiAlertTuyBien(noiDung, tieuDe = "Thông báo", kieu = "info", callback = null) {

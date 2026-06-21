@@ -1,8 +1,3 @@
-// ==========================================================================
-// HỆ THỐNG QUẢN LÝ HỌC TẬP EDU REPORT (ADMIN APPS ENGINE - GIAO DIỆN QUẢN TRỊ)
-// TẤT CẢ CÁC HÀM ĐƯỢC CHÚ THÍCH CHI TIẾT TỪNG DÒNG TIẾNG VIỆT CÓ DẤU
-// ==========================================================================
-
 // API_BASE đã được định nghĩa toàn cục ở app.js nên không cần khai báo lại const ở đây
 const API_NGUOI_DUNG = `${API_BASE}/api/nguoi-dung`; // Đường dẫn cơ sở kết nối API người dùng của Backend
 const API_DANG_KY = `${API_BASE}/api/auth/dang-ky`; // Đường dẫn API tạo tài khoản mới của Backend
