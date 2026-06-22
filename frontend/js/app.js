@@ -723,22 +723,20 @@ function khoiTaoHoSoCaNhan(nguoiDung) {
             // Lấy giá trị mật khẩu mới
             let matKhauMoi = formSua.elements['password'].value.trim();
             
-            // Cập nhật mật khẩu nếu người dùng nhập mật khẩu mới
-            if (matKhauMoi !== '') {
-                nguoiDung.password = matKhauMoi;
-            }
-            // Cập nhật số điện thoại và ngày sinh
+            // Cập nhật số điện thoại và ngày sinh (Tuyệt đối không lưu mật khẩu vào LocalStorage)
             nguoiDung.phone = formSua.elements['phone'].value.trim();
             nguoiDung.dob = formSua.elements['dob'].value;
             
             // Ghi nhận thông tin người dùng đăng nhập mới vào phiên hiện tại
             localStorage.setItem('currentUser', JSON.stringify(nguoiDung)); 
             
-            // Đồng bộ cập nhật thông tin vào danh sách Users trong LocalStorage
+            // Đồng bộ cập nhật thông tin vào danh sách Users trong LocalStorage (Đảm bảo không chứa mật khẩu)
             let danhSachNguoiDung = layCSDL('Users');
             let viTri = danhSachNguoiDung.findIndex(u => u.id === nguoiDung.id); 
             if (viTri > -1) {
-                danhSachNguoiDung[viTri] = nguoiDung; 
+                const updatedUser = { ...nguoiDung };
+                delete updatedUser.password; // Xóa mật khẩu khỏi cache cục bộ
+                danhSachNguoiDung[viTri] = updatedUser; 
                 ghiCSDL('Users', danhSachNguoiDung);
             }
 
@@ -1356,21 +1354,21 @@ function taoModalChiTietBaiNop() {
 // --------------------------------------------------------------------------
 function khoiTaoDuLieuMau() {
     let dataVersion = localStorage.getItem('DataVersion');
-    // Nếu phiên bản dữ liệu cũ hơn 7, xóa sạch cache để cập nhật dữ liệu Việt hóa mới và tài khoản admin đơn giản
-    if (dataVersion !== '7') {
+    // Nếu phiên bản dữ liệu cũ hơn 8, xóa sạch cache để dọn dẹp các trường mật khẩu nhạy cảm và cập nhật dữ liệu mới
+    if (dataVersion !== '8') {
         localStorage.removeItem('Users');
         localStorage.removeItem('Subjects');
         localStorage.removeItem('Classes');
         localStorage.removeItem('Notifications');
-        localStorage.setItem('DataVersion', '7');
+        localStorage.setItem('DataVersion', '8');
     }
 
-    // Gieo mầm dữ liệu tài khoản mẫu cục bộ (hỗ trợ chế độ offline)
+    // Gieo mầm dữ liệu tài khoản mẫu cục bộ (Tuyệt đối không lưu mật khẩu ở LocalStorage để bảo mật hệ thống)
     if (!localStorage.getItem('Users')) {
         ghiCSDL('Users', [
-            { id: 'AD001', role: 'admin', name: 'Quản trị viên HT', email: 'admin', password: 'admin', dob: '1990-01-01', phone: '0999888777', readNotifs: [] },
-            { id: 'GV001', role: 'giang-vien', name: 'ThS. Nguyễn Văn A', email: 'giaovien', password: 'giaovien', dob: '1985-05-10', phone: '0988111222', readNotifs: [] },
-            { id: 'SV202501', role: 'sinh-vien', name: 'Nguyễn Hữu Quyết', email: 'sinhvien', password: 'sinhvien', dob: '2005-01-15', phone: '0901000001', readNotifs: [] }
+            { id: 'AD001', role: 'admin', name: 'Quản trị viên HT', email: 'admin', dob: '1990-01-01', phone: '0999888777', readNotifs: [] },
+            { id: 'GV001', role: 'giang-vien', name: 'ThS. Nguyễn Văn A', email: 'giaovien', dob: '1985-05-10', phone: '0988111222', readNotifs: [] },
+            { id: 'SV202501', role: 'sinh-vien', name: 'Nguyễn Hữu Quyết', email: 'sinhvien', dob: '2005-01-15', phone: '0901000001', readNotifs: [] }
         ]);
     }
     
@@ -1579,40 +1577,25 @@ if (loginForm) {
                 // Lưu thông tin người dùng hiện tại vào LocalStorage
                 localStorage.setItem('currentUser', JSON.stringify(data.user));
                 
-                // Đồng bộ cập nhật thông tin tài khoản này vào CSDL offline
+                // Đồng bộ cập nhật thông tin tài khoản này vào CSDL offline (Không bao giờ lưu trường mật khẩu vào LocalStorage)
                 let users = layCSDL('Users');
                 let vt = users.findIndex(u => u.id === data.user.id);
                 if (vt === -1) {
-                    users.push({ ...data.user, password: passwordValue });
+                    users.push(data.user); // Lưu tài khoản mới không chứa mật khẩu
                 } else {
-                    users[vt] = { ...users[vt], ...data.user, password: passwordValue };
+                    users[vt] = { ...users[vt], ...data.user }; // Cập nhật đè dữ liệu mới không chứa mật khẩu
                 }
-                ghiCSDL('Users', users);
+                ghiCSDL('Users', users); // Ghi lại vào LocalStorage
                 
                 // Chuyển hướng trực tiếp không qua hộp thoại thông báo alert
-                chuyenHuongTrangQuanLy(roleValue);
+                chuyenHuongTrangQuanLy(roleValue); // Chuyển hướng theo vai trò đăng nhập
             } else {
-                console.warn("Đăng nhập trực tuyến thất bại. Tiến hành kiểm tra tài khoản ngoại tuyến...");
-                let users = layCSDL('Users');
-                let user = users.find(u => (u.email === emailValue || u.id === emailValue) && u.password === passwordValue && u.role === roleValue);
-                if (user) {
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    chuyenHuongTrangQuanLy(roleValue);
-                    return;
-                }
-                alert(data.message || "Sai thông tin đăng nhập!");
+                // Đăng nhập trực tuyến thất bại (sai tài khoản hoặc mật khẩu)
+                alert(data.message || "Sai thông tin đăng nhập!"); // Phản hồi thông báo lỗi từ server
             }
         } catch (error) {
-            console.warn("Lỗi kết nối. Đăng nhập ngoại tuyến...");
-            let users = layCSDL('Users');
-            let user = users.find(u => (u.email === emailValue || u.id === emailValue) && u.password === passwordValue && u.role === roleValue);
-            
-            if (user) { 
-                localStorage.setItem('currentUser', JSON.stringify(user)); 
-                chuyenHuongTrangQuanLy(roleValue);
-            } else {
-                alert("Thông tin tài khoản hoặc mật khẩu không chính xác!"); 
-            }
+            // Không thể kết nối đến máy chủ backend (lỗi mạng hoặc mất kết nối internet)
+            alert("Lỗi kết nối máy chủ! Vui lòng kết nối mạng để đăng nhập hệ thống."); // Thông báo yêu cầu kết nối mạng
         }
     });
 }

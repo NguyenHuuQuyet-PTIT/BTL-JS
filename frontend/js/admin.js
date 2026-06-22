@@ -125,9 +125,11 @@ if (formTaoTK) {
             
             // Xử lý khi API ghi nhận tạo tài khoản thành công
             if (response.ok && data.success) {
-                // Lưu tài khoản mới vào danh sách offline LocalStorage
+                // Lưu tài khoản mới vào danh sách offline LocalStorage (Tuyệt đối không lưu trường mật khẩu)
                 let users = layCSDL('Users');
-                users.push({ ...taiKhoanGui, readNotifs: [] });
+                const cleanUser = { ...taiKhoanGui, readNotifs: [] };
+                delete cleanUser.password; // Xóa mật khẩu khỏi dữ liệu cache cục bộ
+                users.push(cleanUser);
                 ghiCSDL('Users', users);
                 
                 alert("Tạo tài khoản mới thành công trên MongoDB Atlas!");
@@ -138,26 +140,9 @@ if (formTaoTK) {
                 alert(data.message || "Tạo tài khoản thất bại!");
             }
         } catch (error) {
-            console.warn("Không kết nối được server. Đang lưu tài khoản ở chế độ ngoại tuyến Local...");
-            
-            // Xử lý tạo tài khoản ở chế độ offline LocalStorage dự phòng
-            let users = layCSDL('Users');
-            if (users.some(u => u.email.toLowerCase() === emailVal.toLowerCase())) {
-                alert("Email này đã tồn tại trên LocalStorage offline!");
-                return;
-            }
-            if (users.some(u => u.id === idVal)) {
-                alert("Mã định danh đã tồn tại trên LocalStorage offline!");
-                return;
-            }
-            
-            users.push({ ...taiKhoanGui, readNotifs: [] });
-            ghiCSDL('Users', users);
-            
-            alert("Tạo tài khoản thành công! (Lưu ngoại tuyến)");
-            dongHopThoai('admCreateAccountModal');
-            formTaoTK.reset();
-            hienThiDanhSachTaiKhoan();
+            // Không kết nối được server, thông báo yêu cầu trực tuyến
+            alert("Lỗi kết nối máy chủ! Vui lòng kết nối mạng để tạo tài khoản mới.");
+        }
         }
     });
 }
@@ -219,11 +204,13 @@ if (formSuaTK) {
             let data = await response.json();
             
             if (response.ok && data.success) {
-                // Cập nhật thông tin vào danh sách offline LocalStorage
+                // Cập nhật thông tin vào danh sách offline LocalStorage (Không lưu mật khẩu vào cache)
                 let users = layCSDL('Users');
                 let vt = users.findIndex(u => u.id === idVal);
                 if (vt > -1) {
-                    users[vt] = { ...users[vt], ...taiKhoanCapNhat };
+                    const cleanUpdate = { ...taiKhoanCapNhat };
+                    delete cleanUpdate.password; // Đảm bảo xóa bỏ trường mật khẩu khỏi cache cục bộ
+                    users[vt] = { ...users[vt], ...cleanUpdate };
                     ghiCSDL('Users', users);
                 }
                 
@@ -234,18 +221,8 @@ if (formSuaTK) {
                 alert(data.message || "Cập nhật tài khoản thất bại!");
             }
         } catch (error) {
-            console.warn("Không kết nối được server. Đang lưu thay đổi offline...");
-            
-            // Xử lý lưu ngoại tuyến LocalStorage dự phòng
-            let users = layCSDL('Users');
-            let vt = users.findIndex(u => u.id === idVal);
-            if (vt > -1) {
-                users[vt] = { ...users[vt], ...taiKhoanCapNhat };
-                ghiCSDL('Users', users);
-                alert("Cập nhật thông tin thành công! (Lưu ngoại tuyến)");
-                dongHopThoai('admEditAccountModal');
-                hienThiDanhSachTaiKhoan();
-            }
+            // Không kết nối được server khi sửa tài khoản
+            alert("Lỗi kết nối máy chủ! Vui lòng kết nối mạng để cập nhật tài khoản.");
         }
     });
 }
