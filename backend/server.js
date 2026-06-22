@@ -394,8 +394,8 @@ app.post('/api/auth/dang-nhap', async (req, res) => {
     }
 });
 
-// API lấy toàn bộ danh sách tài khoản người dùng có trên hệ thống (Yêu cầu vai trò: admin, giang-vien, sinh-vien)
-app.get('/api/nguoi-dung', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
+// API lấy toàn bộ danh sách tài khoản người dùng có trên hệ thống (Yêu cầu vai trò: admin)
+app.get('/api/nguoi-dung', xacThucQuyenHan(['admin']), async (req, res) => {
     try {
         // Lấy toàn bộ tài khoản người dùng từ MongoDB Atlas
         const users = await NguoiDungModel.find({});
@@ -404,6 +404,37 @@ app.get('/api/nguoi-dung', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien'])
     } catch (error) {
         // Phản hồi lỗi nếu quá trình truy vấn gặp sự cố
         res.status(500).json({ success: false, message: 'Không thể lấy danh sách người dùng.' });
+    }
+});
+
+// API lấy danh sách thông tin công khai rút gọn (chỉ gồm id, name, role) phục vụ hiển thị (Yêu cầu vai trò: admin, giang-vien, sinh-vien)
+app.get('/api/nguoi-dung/cong-khai', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
+    try {
+        // Chỉ lấy các trường id, name, role để tránh rò rỉ dữ liệu nhạy cảm
+        const users = await NguoiDungModel.find({}, 'id name role');
+        res.status(200).json({ success: true, users });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Không thể lấy danh sách người dùng công khai.' });
+    }
+});
+
+// API lấy chi tiết tài khoản của cá nhân (Yêu cầu vai trò: admin, giang-vien, sinh-vien)
+app.get('/api/nguoi-dung/:id', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        // BẢO MẬT (BOLA): Chỉ cho phép Admin hoặc chính chủ tài khoản xem thông tin cá nhân chi tiết
+        if (req.user.role !== 'admin' && req.user.id !== id) {
+            return res.status(403).json({ success: false, message: 'Bạn không có quyền xem thông tin tài khoản này!' });
+        }
+        const user = await NguoiDungModel.findOne({ id });
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy người dùng!' });
+        }
+        const userObj = user.toObject();
+        delete userObj.password;
+        res.status(200).json({ success: true, user: userObj });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi lấy chi tiết người dùng.' });
     }
 });
 
@@ -428,7 +459,13 @@ app.put('/api/nguoi-dung/:id', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vie
         if (name !== undefined) nguoiDung.name = name.trim();
         if (email !== undefined) nguoiDung.email = email.toLowerCase().trim();
         if (password !== undefined && password.trim() !== '') nguoiDung.password = bcrypt.hashSync(password, 10); // Sửa mật khẩu đã băm nếu không rỗng
-        if (role !== undefined) nguoiDung.role = role;
+        if (role !== undefined) {
+            // BẢO MẬT: Chỉ Admin mới có quyền thay đổi vai trò tài khoản (tránh leo thang đặc quyền)
+            if (req.user.role !== 'admin' && role !== nguoiDung.role) {
+                return res.status(403).json({ success: false, message: 'Từ chối: Bạn không có quyền tự thay đổi vai trò tài khoản của mình!' });
+            }
+            nguoiDung.role = role;
+        }
         if (dob !== undefined) nguoiDung.dob = dob;
         if (phone !== undefined) nguoiDung.phone = phone.trim();
         if (readNotifs !== undefined) nguoiDung.readNotifs = readNotifs; // Cập nhật mảng thông báo đã đọc
@@ -491,6 +528,28 @@ app.post('/api/thong-bao', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien'])
             return res.status(400).json({ success: false, message: 'Thiếu thông tin thông báo!' });
         }
 
+        // BẢO MẬT: Kiểm soát danh tính người gửi (tránh giả mạo tên người gửi)
+        if (req.user.role !== 'admin' && senderName !== req.user.name) {
+            return res.status(403).json({ success: false, message: 'Từ chối: Tên người gửi không hợp lệ (không khớp với thông tin tài khoản đăng nhập)!' });
+        }
+
+        // BẢO MẬT: Phân quyền đối tượng nhận thông báo (target)
+        if (req.user.role === 'sinh-vien') {
+            // Học sinh chỉ được gửi target đến ID giảng viên cụ thể hoặc Admin
+            const targetUser = await NguoiDungModel.findOne({ id: target });
+            if (!targetUser || (targetUser.role !== 'giang-vien' && targetUser.role !== 'admin')) {
+                return res.status(403).json({ success: false, message: 'Từ chối: Sinh viên chỉ được gửi thông báo đến Giảng viên hoặc Admin!' });
+            }
+        } else if (req.user.role === 'giang-vien') {
+            // Giảng viên chỉ được gửi target cho tất cả giảng viên hoặc các lớp do mình dạy
+            if (target !== 'tat-ca-giang-vien') {
+                const targetClass = await LopHocModel.findOne({ id: target });
+                if (!targetClass || targetClass.teacherId !== req.user.id) {
+                    return res.status(403).json({ success: false, message: 'Từ chối: Giảng viên chỉ được gửi thông báo đến các lớp học phần mình phụ trách dạy hoặc đến tất cả giảng viên!' });
+                }
+            }
+        }
+
         // Khởi tạo đối tượng model thông báo mới (kèm các trường liên kết động nếu có)
         const thongBaoMoi = new ThongBaoModel({ 
             id, senderName, target, text, date, 
@@ -517,6 +576,16 @@ app.put('/api/thong-bao/:id', xacThucQuyenHan(['admin', 'giang-vien']), async (r
         const { id } = req.params; // Lấy ID thông báo từ URL
         const { text, fileName, link } = req.body; // Lấy nội dung mới từ body
 
+        const currentNotif = await ThongBaoModel.findOne({ id });
+        if (!currentNotif) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy thông báo!' });
+        }
+
+        // BẢO MẬT: Giảng viên chỉ được sửa thông báo do chính mình viết
+        if (req.user.role !== 'admin' && currentNotif.senderName !== req.user.name) {
+            return res.status(403).json({ success: false, message: 'Từ chối: Bạn không có quyền chỉnh sửa thông báo của người khác!' });
+        }
+
         const updateData = {};
         if (text !== undefined) updateData.text = text;
         if (fileName !== undefined) updateData.fileName = fileName;
@@ -524,9 +593,6 @@ app.put('/api/thong-bao/:id', xacThucQuyenHan(['admin', 'giang-vien']), async (r
 
         // Tìm và cập nhật thông tin nội dung thông báo
         const result = await ThongBaoModel.findOneAndUpdate({ id }, updateData, { new: true });
-        if (!result) {
-            return res.status(404).json({ success: false, message: 'Không tìm thấy thông báo!' });
-        }
         
         // Phản hồi cập nhật thành công cho client
         res.status(200).json({ success: true, message: 'Cập nhật thông báo thành công.', notification: result });
@@ -541,11 +607,18 @@ app.delete('/api/thong-bao/:id', xacThucQuyenHan(['admin', 'giang-vien']), async
     try {
         const { id } = req.params; // Lấy ID thông báo từ URL
         
-        // Tiến hành truy vấn tìm kiếm và xóa thông báo khỏi database
-        const result = await ThongBaoModel.findOneAndDelete({ id });
-        if (!result) {
+        const currentNotif = await ThongBaoModel.findOne({ id });
+        if (!currentNotif) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy thông báo!' });
         }
+
+        // BẢO MẬT: Giảng viên chỉ được xóa thông báo do chính mình viết
+        if (req.user.role !== 'admin' && currentNotif.senderName !== req.user.name) {
+            return res.status(403).json({ success: false, message: 'Từ chối: Bạn không có quyền xóa thông báo của người khác!' });
+        }
+
+        // Tiến hành truy vấn tìm kiếm và xóa thông báo khỏi database
+        await ThongBaoModel.findOneAndDelete({ id });
         
         // Trả kết quả thành công cho client
         res.status(200).json({ success: true, message: 'Xóa thông báo thành công.' });
@@ -596,6 +669,14 @@ app.post('/api/tai-lieu', xacThucQuyenHan(['admin', 'giang-vien']), async (req, 
             return res.status(400).json({ success: false, message: 'Thiếu thông tin tài liệu bắt buộc!' });
         }
 
+        // BẢO MẬT: Giảng viên chỉ được tải lên tài liệu thuộc lớp mình dạy
+        if (req.user.role === 'giang-vien') {
+            const cls = await LopHocModel.findOne({ id: classId });
+            if (!cls || cls.teacherId !== req.user.id) {
+                return res.status(403).json({ success: false, message: 'Từ chối: Bạn không giảng dạy lớp học phần này nên không thể tải tài liệu lên!' });
+            }
+        }
+
         // Tạo đối tượng tài liệu mới và tiến hành lưu vào cơ sở dữ liệu MongoDB
         const taiLieuMoi = new TaiLieuModel({ id, classId, title, type, link, date, description, fileName });
         await taiLieuMoi.save();
@@ -613,11 +694,21 @@ app.delete('/api/tai-lieu/:id', xacThucQuyenHan(['admin', 'giang-vien']), async 
     try {
         const { id } = req.params; // Lấy ID tài liệu từ tham số truyền
         
-        // Tìm tài liệu tương ứng và thực hiện xóa khỏi MongoDB database
-        const result = await TaiLieuModel.findOneAndDelete({ id });
-        if (!result) {
+        const currentMaterial = await TaiLieuModel.findOne({ id });
+        if (!currentMaterial) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy tài liệu!' });
         }
+
+        // BẢO MẬT: Giảng viên chỉ được xóa tài liệu thuộc lớp mình dạy
+        if (req.user.role === 'giang-vien') {
+            const cls = await LopHocModel.findOne({ id: currentMaterial.classId });
+            if (!cls || cls.teacherId !== req.user.id) {
+                return res.status(403).json({ success: false, message: 'Từ chối: Bạn không có quyền xóa tài liệu của lớp học phần do giảng viên khác phụ trách!' });
+            }
+        }
+
+        // Tìm tài liệu tương ứng và thực hiện xóa khỏi MongoDB database
+        await TaiLieuModel.findOneAndDelete({ id });
         
         // Trả kết quả xóa thành công
         res.status(200).json({ success: true, message: 'Xóa tài liệu thành công.' });
@@ -633,6 +724,19 @@ app.put('/api/tai-lieu/:id', xacThucQuyenHan(['admin', 'giang-vien']), async (re
         const { id } = req.params;
         const { title, type, link, description, fileName } = req.body;
 
+        const currentMaterial = await TaiLieuModel.findOne({ id });
+        if (!currentMaterial) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy tài liệu!' });
+        }
+
+        // BẢO MẬT: Giảng viên chỉ được cập nhật tài liệu thuộc lớp mình dạy
+        if (req.user.role === 'giang-vien') {
+            const cls = await LopHocModel.findOne({ id: currentMaterial.classId });
+            if (!cls || cls.teacherId !== req.user.id) {
+                return res.status(403).json({ success: false, message: 'Từ chối: Bạn không có quyền cập nhật tài liệu của lớp học phần do giảng viên khác phụ trách!' });
+            }
+        }
+
         const updateData = {};
         if (title !== undefined) updateData.title = title;
         if (type !== undefined) updateData.type = type;
@@ -641,9 +745,6 @@ app.put('/api/tai-lieu/:id', xacThucQuyenHan(['admin', 'giang-vien']), async (re
         if (fileName !== undefined) updateData.fileName = fileName;
 
         const result = await TaiLieuModel.findOneAndUpdate({ id }, updateData, { new: true });
-        if (!result) {
-            return res.status(404).json({ success: false, message: 'Không tìm thấy tài liệu!' });
-        }
         
         res.status(200).json({ success: true, message: 'Cập nhật tài liệu thành công.', material: result });
     } catch (error) {
@@ -655,11 +756,24 @@ app.put('/api/tai-lieu/:id', xacThucQuyenHan(['admin', 'giang-vien']), async (re
 // CÁC ROUTE API DÀNH CHO NỘP BÀI TẬP TRỰC TUYẾN (ASSIGNMENT SUBMISSIONS ENDPOINTS)
 // ==========================================================================
 
-// API lấy toàn bộ danh sách bài nộp của tất cả sinh viên (Xác thực quyền hạn: Cả Admin, Giảng viên và Sinh viên đều được phép tải danh sách)
+// API lấy toàn bộ danh sách bài nộp của tất cả sinh viên (Xác thực quyền hạn: Cả Admin, Giảng viên và Sinh viên đều được phép tải danh sách theo giới hạn)
 app.get('/api/nop-bai', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
     try {
-        // Lấy danh sách toàn bộ bài làm sinh viên đã nộp lên hệ thống
-        const submissions = await NopBaiModel.find({}).sort({ createdAt: -1 });
+        let submissions = [];
+        if (req.user.role === 'admin') {
+            // Admin được xem toàn bộ
+            submissions = await NopBaiModel.find({}).sort({ createdAt: -1 });
+        } else if (req.user.role === 'giang-vien') {
+            // Giảng viên chỉ xem các bài nộp của các lớp mình dạy
+            const myClasses = await LopHocModel.find({ teacherId: req.user.id });
+            const myClassIds = myClasses.map(c => c.id);
+            const myMaterials = await TaiLieuModel.find({ classId: { $in: myClassIds } });
+            const myMaterialIds = myMaterials.map(m => m.id);
+            submissions = await NopBaiModel.find({ materialId: { $in: myMaterialIds } }).sort({ createdAt: -1 });
+        } else if (req.user.role === 'sinh-vien') {
+            // Sinh viên chỉ được xem bài nộp của chính mình
+            submissions = await NopBaiModel.find({ studentId: req.user.id }).sort({ createdAt: -1 });
+        }
         res.status(200).json({ success: true, submissions });
     } catch (error) {
         // Phản hồi lỗi truy vấn
@@ -675,6 +789,21 @@ app.get('/api/nop-bai/:id', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']
         if (!submission) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy bài nộp!' });
         }
+
+        // BẢO MẬT (BOLA): Kiểm soát quyền truy cập chi tiết bài nộp
+        if (req.user.role === 'sinh-vien' && submission.studentId !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'Từ chối: Bạn không được phép xem bài nộp của sinh viên khác!' });
+        }
+        if (req.user.role === 'giang-vien') {
+            const material = await TaiLieuModel.findOne({ id: submission.materialId });
+            if (material) {
+                const cls = await LopHocModel.findOne({ id: material.classId });
+                if (cls && cls.teacherId !== req.user.id) {
+                    return res.status(403).json({ success: false, message: 'Từ chối: Bạn không giảng dạy lớp học phần chứa bài nộp này!' });
+                }
+            }
+        }
+
         res.status(200).json({ success: true, submission });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Lỗi lấy chi tiết bài nộp.' });
@@ -690,6 +819,21 @@ app.post('/api/nop-bai', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), 
         // Xác thực thông tin: tất cả các trường dữ liệu đều là bắt buộc
         if (!id || !materialId || !studentId || !studentName || !link || !date) {
             return res.status(400).json({ success: false, message: 'Thiếu thông tin nộp bài tập!' });
+        }
+
+        // BẢO MẬT: Kiểm soát quyền nộp bài, chỉ được phép nộp dưới danh nghĩa chính mình
+        if (req.user.role === 'sinh-vien' && studentId !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'Từ chối: Bạn không được phép nộp bài tập thay cho sinh viên khác!' });
+        }
+
+        // BẢO MẬT: Kiểm tra xem sinh viên có thực sự đăng ký lớp học chứa bài tập này không
+        const material = await TaiLieuModel.findOne({ id: materialId });
+        if (!material) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy tài liệu/bài tập tương ứng!' });
+        }
+        const cls = await LopHocModel.findOne({ id: material.classId });
+        if (!cls || (req.user.role === 'sinh-vien' && (!cls.enrolledStudents || !cls.enrolledStudents.includes(studentId)))) {
+            return res.status(403).json({ success: false, message: 'Từ chối: Bạn chưa đăng ký học lớp học phần chứa bài tập này!' });
         }
 
         // Tìm kiếm xem sinh viên này đã từng nộp bài cho bài tập này chưa
@@ -751,10 +895,54 @@ app.put('/api/lop-hoc/:id', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']
         const { id } = req.params;
         const classData = req.body;
         
-        const result = await LopHocModel.findOneAndUpdate({ id }, classData, { new: true });
-        if (!result) {
+        // BẢO MẬT (Broken Access Control): Kiểm tra sâu tại Backend dựa trên vai trò người gửi
+        const currentClass = await LopHocModel.findOne({ id });
+        if (!currentClass) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy lớp học!' });
         }
+
+        if (req.user.role === 'sinh-vien') {
+            // Sinh viên CHỈ được ghi danh/hủy ghi danh cho chính mình, cấm đổi thông tin lớp học, môn học, lịch dạy và điểm số người khác
+            if (classData.subjectId !== currentClass.subjectId ||
+                classData.teacherId !== currentClass.teacherId ||
+                classData.room !== currentClass.room ||
+                classData.dayOfWeek !== currentClass.dayOfWeek ||
+                JSON.stringify(classData.sessions) !== JSON.stringify(currentClass.sessions)) {
+                return res.status(403).json({ success: false, message: 'Từ chối: Sinh viên không có quyền thay đổi thông tin cấu trúc lớp học!' });
+            }
+
+            const oldEnrolled = currentClass.enrolledStudents || [];
+            const newEnrolled = classData.enrolledStudents || [];
+            const added = newEnrolled.filter(s => !oldEnrolled.includes(s));
+            const removed = oldEnrolled.filter(s => !newEnrolled.includes(s));
+
+            if (added.length > 1 || removed.length > 1 || (added.length === 1 && added[0] !== req.user.id) || (removed.length === 1 && removed[0] !== req.user.id)) {
+                return res.status(403).json({ success: false, message: 'Từ chối: Bạn chỉ có thể đăng ký hoặc hủy đăng ký học cho chính tài khoản của mình!' });
+            }
+
+            // Đồng bộ tự động khởi tạo bảng điểm trống cho sinh viên mới vào lớp hoặc xóa đi khi hủy đăng ký
+            if (added.length === 1) {
+                if (!classData.grades) classData.grades = currentClass.grades || {};
+                classData.grades[req.user.id] = { cc: '', gk: '', ck: '' };
+            }
+            if (removed.length === 1) {
+                if (classData.grades) {
+                    delete classData.grades[req.user.id];
+                }
+            }
+        } else if (req.user.role === 'giang-vien') {
+            // Giảng viên chỉ được sửa lớp do mình phụ trách dạy, và cấm đổi môn học/giảng viên của lớp
+            if (currentClass.teacherId !== req.user.id) {
+                return res.status(403).json({ success: false, message: 'Từ chối: Bạn không có quyền chỉnh sửa lớp học của giảng viên khác!' });
+            }
+            if (classData.subjectId !== currentClass.subjectId ||
+                classData.teacherId !== currentClass.teacherId) {
+                return res.status(403).json({ success: false, message: 'Từ chối: Giảng viên không được phép đổi môn học hoặc giảng viên của lớp học phần!' });
+            }
+        }
+        // Admin giữ toàn quyền cập nhật
+
+        const result = await LopHocModel.findOneAndUpdate({ id }, classData, { new: true });
         res.status(200).json({ success: true, message: 'Cập nhật lớp học thành công.', class: result });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Lỗi cập nhật lớp học phần.' });

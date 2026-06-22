@@ -56,7 +56,7 @@ function hienThiBaoCaoHocTapSinhVien(sinhVien) {
     let nguoiDungs = layCSDL('Users');
     
     // Lọc ra các lớp học phần mà sinh viên này đang theo học
-    let lopCuaToi = lopHocs.filter(c => c.enrolledStudents.includes(sinhVien.id));
+    let lopCuaToi = lopHocs.filter(c => (c.enrolledStudents || []).includes(sinhVien.id));
     // Định dạng chuỗi ngày hôm nay (YYYY-MM-DD)
     let homNay = new Date().toLocaleDateString('en-CA');
     
@@ -365,7 +365,7 @@ function hienThiTabDangKyTinChi(sinhVien) {
     // Kiểm tra trạng thái cổng đăng ký mở hay đóng trong CSDL
     let congDangKyMo = JSON.parse(localStorage.getItem('RegistrationOpen'));
     // Lọc danh sách lớp sinh viên đã đăng ký học
-    let lopDaDangKy = lopHocs.filter(cls => cls.enrolledStudents.includes(sinhVien.id));
+    let lopDaDangKy = lopHocs.filter(cls => (cls.enrolledStudents || []).includes(sinhVien.id));
     let htmlResult = '';
     
     // Hiển thị cảnh báo nếu cổng đăng ký đang bị khóa
@@ -384,7 +384,7 @@ function hienThiTabDangKyTinChi(sinhVien) {
         if (dsLopCuaMon.length === 0) return;
         
         // Tìm xem môn học này sinh viên đã đăng ký lớp nào chưa
-        let lopMonNayDaDangKy = dsLopCuaMon.find(c => c.enrolledStudents.includes(sinhVien.id));
+        let lopMonNayDaDangKy = dsLopCuaMon.find(c => (c.enrolledStudents || []).includes(sinhVien.id));
         htmlResult += `<h3 class="border-bottom mt-20 mb-10 text-primary font-bold">${mon.name}</h3>`;
 
         // Duyệt danh sách các lớp của môn học
@@ -394,7 +394,7 @@ function hienThiTabDangKyTinChi(sinhVien) {
             let thongTinTiet = layThongTinTietHoc(c.startPeriod, c.endPeriod);
             
             // Các điều kiện ràng buộc đăng ký
-            let daDangKy = c.enrolledStudents.includes(sinhVien.id);
+            let daDangKy = (c.enrolledStudents || []).includes(sinhVien.id);
             let daDangKyLopKhacCungMon = (lopMonNayDaDangKy && lopMonNayDaDangKy.id !== c.id);
             let biTrungLich = lopDaDangKy.some(lopDaDK => kiemTraTrungLich(c, lopDaDK));
             
@@ -441,9 +441,11 @@ function dangKyLopHoc(idLop) {
     let user = layCSDL('currentUser');
     // Thực hiện thêm sinh viên vào danh sách lớp và gieo bảng điểm trống
     capNhatLopCSDL(idLop, function(c) { 
+        if (!c.enrolledStudents) c.enrolledStudents = [];
+        if (!c.grades) c.grades = {};
         if (!c.enrolledStudents.includes(user.id)) {
             c.enrolledStudents.push(user.id); 
-            c.grades[user.id] = { cc: null, gk: null, ck: null };
+            c.grades[user.id] = { cc: '', gk: '', ck: '' };
         }
     }); 
     
@@ -459,8 +461,8 @@ function huyDangKyLopHoc(idLop) {
     hienThiConfirmTuyBien("Xác nhận hủy đăng ký học phần này? Dữ liệu điểm của bạn ở lớp này sẽ bị xóa!", () => {
         let user = layCSDL('currentUser');
         capNhatLopCSDL(idLop, function(c) { 
-            c.enrolledStudents = c.enrolledStudents.filter(id => id !== user.id); 
-            delete c.grades[user.id];
+            c.enrolledStudents = (c.enrolledStudents || []).filter(id => id !== user.id); 
+            if (c.grades) delete c.grades[user.id];
         }); 
         
         alert("Hủy đăng ký học phần thành công!"); 
@@ -474,7 +476,7 @@ function huyDangKyLopHoc(idLop) {
 function hienThiThongBaoSinhVien(sinhVien) {
     let lopHocs = layCSDL('Classes');
     // Lấy danh sách lớp sinh viên đã đăng ký học
-    let lopCuaToi = lopHocs.filter(c => c.enrolledStudents.includes(sinhVien.id));
+    let lopCuaToi = lopHocs.filter(c => (c.enrolledStudents || []).includes(sinhVien.id));
     
     // Cập nhật lại danh mục lớp học vào bộ lọc thông báo để tránh bị lệch giữa các tài khoản đăng nhập
     let locSelect = document.getElementById('stuNotifFilter');

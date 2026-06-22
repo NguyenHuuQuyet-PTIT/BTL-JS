@@ -1,7 +1,9 @@
 // Cấu hình URL cơ sở của backend (Tự động nhận diện chạy localhost hoặc online qua window.location.origin)
-const API_BASE = window.location.origin.startsWith('http')
-    ? window.location.origin
-    : 'https://btl-js.onrender.com'; // Fallback kết nối đến server Render khi mở file HTML tĩnh trực tiếp (file://)
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:5000'
+    : (window.location.origin.startsWith('http') && !window.location.origin.includes('vercel.app'))
+        ? window.location.origin
+        : 'https://btl-js.onrender.com'; // Fallback kết nối đến server Render khi mở file HTML tĩnh trực tiếp hoặc Vercel
 
 // Đường dẫn cơ sở kết nối đến cụm API xác thực của Backend Express
 const DUONG_DAN_API = `${API_BASE}/api/auth`;
@@ -271,6 +273,8 @@ function capNhatLopCSDL(maLop, hamCapNhat) {
     let lopCanTim = danhSachLop.find(l => l.id === maLop);
     if (lopCanTim) { 
         hamCapNhat(lopCanTim, danhSachLop); 
+        // Đánh dấu là chưa đồng bộ lên server để đề phòng mất kết nối
+        lopCanTim.isUnsynced = true;
         ghiCSDL('Classes', danhSachLop); 
         
         // Đồng bộ dữ liệu lớp học trực tiếp lên MongoDB Atlas
@@ -278,7 +282,22 @@ function capNhatLopCSDL(maLop, hamCapNhat) {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(lopCanTim)
-        }).catch(err => console.warn("Lỗi đồng bộ lớp học lên server:", err));
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Đã đồng bộ thành công, xóa cờ isUnsynced khỏi CSDL Local
+                let freshLop = layCSDL('Classes');
+                let targetLop = freshLop.find(l => l.id === maLop);
+                if (targetLop && targetLop.isUnsynced) {
+                    delete targetLop.isUnsynced;
+                    ghiCSDL('Classes', freshLop);
+                }
+            }
+        })
+        .catch(err => {
+            console.warn("Lỗi đồng bộ lớp học lên server (đã lưu ngoại tuyến):", err);
+        });
     }
 }
 
@@ -541,8 +560,8 @@ function xemFileTrucTiep(base64Data, fileName) {
 
 // Hàm thực hiện đăng xuất tài khoản khỏi hệ thống
 function xuLyDangXuat() {
-    // Xóa sạch toàn bộ dữ liệu LocalStorage của phiên làm việc cũ để tránh rò rỉ thông tin cá nhân/điểm số
-    localStorage.clear(); 
+    // Chỉ xóa sạch phiên đăng nhập hiện tại để tránh rò rỉ thông tin cá nhân
+    localStorage.removeItem('currentUser'); 
     // Chuyển hướng trình duyệt về lại trang đăng nhập index.html
     window.location.href = 'index.html'; 
 }
@@ -659,8 +678,20 @@ function khoiTaoGiaoDienChung() {
             // Ẩn toàn bộ các phân vùng nội dung tab trên màn hình
             document.querySelectorAll('.tab-section').forEach(tab => tab.style.display = 'none');
             // Tìm và hiển thị phân vùng nội dung ứng với tab menu vừa chọn
-            let mucTieu = document.getElementById(this.getAttribute('data-target'));
+            let targetId = this.getAttribute('data-target');
+            let mucTieu = document.getElementById(targetId);
             if (mucTieu) mucTieu.style.display = 'block';
+
+            // Vẽ lại danh sách thông báo tức thời khi click tab để tránh chờ đồng bộ
+            let user = layCSDL('currentUser');
+            if (user) {
+                if (targetId === 'student-notifs' && typeof hienThiThongBaoSinhVien === 'function') {
+                    hienThiThongBaoSinhVien(user);
+                } else if (targetId === 'teacher-notifs') {
+                    if (typeof hienThiHopThuDenGiangVien === 'function') hienThiHopThuDenGiangVien(user);
+                    if (typeof hienThiLichSuGuiGiangVien === 'function') hienThiLichSuGuiGiangVien(user);
+                }
+            }
         });
     });
 
@@ -851,7 +882,8 @@ function hienThiTheThongBaoChung(idVungChua, danhSachTB, nguoiDung) {
         // Hiển thị dấu tròn đỏ nếu là thông báo mới tinh
         let dotDo = checkDaDoc ? '' : '<span class="text-danger ml-10">●</span>';
         // Cắt ngắn nội dung để hiển thị xem trước (bỏ các emoji đặc biệt cho gọn)
-        let xemTruoc = n.text.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+        let safeText = n.text || '';
+        let xemTruoc = safeText.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
         xemTruoc = xemTruoc.length > 90 ? xemTruoc.substring(0, 90) + '...' : xemTruoc;
 
         // Tạo nhãn badge tương ứng với loại tài liệu liên kết nếu có
@@ -1659,41 +1691,160 @@ function chuyenHuongTrangQuanLy(vaiTro) {
 // 6. ĐỊNH TUYẾN KHI TẢI TRANG (BOOTSTRAP PROCESS & ROUTING)
 // --------------------------------------------------------------------------
 // Hàm tự động đồng bộ dữ liệu hai chiều giữa MongoDB Atlas và LocalStorage
-function dongBoDuLieuTuDong() {
+// Hàm tự động đẩy (upload) các bản ghi offline chưa đồng bộ (gồm Notifications, Materials, Submissions chưa có _id) lên server
+async function dongBoNgoaiTuyenTruocKhiKeo() {
+    // 1. Đồng bộ Notifications
+    let localNotifs = layCSDL('Notifications');
+    let unsyncedNotifs = localNotifs.filter(n => !n._id && n.id);
+    for (let notif of unsyncedNotifs) {
+        try {
+            let res = await fetch(`${API_BASE}/api/thong-bao`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(notif)
+            });
+            let data = await res.json();
+            if (res.ok && data.success) {
+                // Cập nhật _id tạm để không đồng bộ lại
+                notif._id = data.notification._id || 'synced';
+            }
+        } catch (err) {
+            console.warn("Lỗi đồng bộ thông báo ngoại tuyến:", err);
+        }
+    }
+    ghiCSDL('Notifications', localNotifs);
+
+    // 2. Đồng bộ Materials
+    let localMaterials = layCSDL('Materials');
+    let unsyncedMaterials = localMaterials.filter(m => !m._id && m.id);
+    for (let mat of unsyncedMaterials) {
+        try {
+            let res = await fetch(`${API_BASE}/api/tai-lieu`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(mat)
+            });
+            let data = await res.json();
+            if (res.ok && data.success) {
+                mat._id = data.material._id || 'synced';
+            }
+        } catch (err) {
+            console.warn("Lỗi đồng bộ tài liệu ngoại tuyến:", err);
+        }
+    }
+    ghiCSDL('Materials', localMaterials);
+
+    // 3. Đồng bộ Submissions
+    let localSubmissions = layCSDL('Submissions');
+    let unsyncedSubmissions = localSubmissions.filter(s => !s._id && s.id);
+    for (let sub of unsyncedSubmissions) {
+        try {
+            let res = await fetch(`${API_BASE}/api/nop-bai`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(sub)
+            });
+            let data = await res.json();
+            if (res.ok && data.success) {
+                sub._id = data.submission._id || 'synced';
+            }
+        } catch (err) {
+            console.warn("Lỗi đồng bộ bài nộp ngoại tuyến:", err);
+        }
+    }
+    ghiCSDL('Submissions', localSubmissions);
+
+    // 4. Đồng bộ Classes
+    let localClasses = layCSDL('Classes');
+    let unsyncedClasses = localClasses.filter(c => c.isUnsynced === true);
+    for (let cls of unsyncedClasses) {
+        try {
+            let res = await fetch(`${API_BASE}/api/lop-hoc/${cls.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cls)
+            });
+            let data = await res.json();
+            if (res.ok && data.success) {
+                delete cls.isUnsynced;
+            }
+        } catch (err) {
+            console.warn("Lỗi đồng bộ lớp học ngoại tuyến:", err);
+        }
+    }
+    ghiCSDL('Classes', localClasses);
+}
+
+// Hàm tự động đồng bộ dữ liệu hai chiều giữa MongoDB Atlas và LocalStorage
+async function dongBoDuLieuTuDong() {
     let user = layCSDL('currentUser');
     if (!user) return;
+    
+    // Đẩy các thay đổi offline lên trước
+    await dongBoNgoaiTuyenTruocKhiKeo();
     
     let duongDanTrang = window.location.pathname;
 
     // 1. Đồng bộ danh sách người dùng và cập nhật thông tin currentUser mới nhất để tránh stale data
-    fetch(`${API_BASE}/api/nguoi-dung`)
-        .then(res => {
-            if (!res.ok) throw new Error("HTTP error " + res.status);
-            return res.json();
-        })
-        .then(data => {
-            if (data.success) {
-                ghiCSDL('Users', data.users);
-                let freshUser = data.users.find(u => u.id === user.id);
-                if (freshUser) {
-                    // Trộn danh sách thông báo đã đọc cục bộ và server để tránh bị ghi đè mất trạng thái
-                    let mergedReadNotifs = Array.from(new Set([...(user.readNotifs || []), ...(freshUser.readNotifs || [])]));
-                    freshUser.readNotifs = mergedReadNotifs;
+    if (user.role === 'admin') {
+        fetch(`${API_BASE}/api/nguoi-dung`)
+            .then(res => {
+                if (!res.ok) throw new Error("HTTP error " + res.status);
+                return res.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    ghiCSDL('Users', data.users);
+                    let freshUser = data.users.find(u => u.id === user.id);
+                    if (freshUser) {
+                        // Trộn danh sách thông báo đã đọc cục bộ và server để tránh bị ghi đè mất trạng thái
+                        let mergedReadNotifs = Array.from(new Set([...(user.readNotifs || []), ...(freshUser.readNotifs || [])]));
+                        freshUser.readNotifs = mergedReadNotifs;
 
-                    // Cập nhật lại currentUser cục bộ từ bản ghi mới nhất của server
-                    localStorage.setItem('currentUser', JSON.stringify(freshUser));
-                    user = freshUser;
+                        // Cập nhật lại currentUser cục bộ từ bản ghi mới nhất của server
+                        localStorage.setItem('currentUser', JSON.stringify(freshUser));
+                        user = freshUser;
+                    }
+                    if (duongDanTrang.includes('admin.html') && typeof hienThiDanhSachTaiKhoan === 'function') {
+                        hienThiDanhSachTaiKhoan();
+                    }
                 }
-                if (duongDanTrang.includes('admin.html') && typeof hienThiDanhSachTaiKhoan === 'function') {
-                    hienThiDanhSachTaiKhoan();
-                } else if (duongDanTrang.includes('teacher-dashboard.html') && typeof hienThiBaoCaoGiangVien === 'function') {
-                    hienThiBaoCaoGiangVien(user);
-                } else if (duongDanTrang.includes('student-dashboard.html') && typeof hienThiBaoCaoHocTapSinhVien === 'function') {
-                    hienThiBaoCaoHocTapSinhVien(user);
-                }
+            })
+            .catch(err => console.warn("Lỗi đồng bộ danh sách tài khoản (Admin):", err));
+    } else {
+        // Học sinh và Giảng viên
+        Promise.all([
+            fetch(`${API_BASE}/api/nguoi-dung/cong-khai`).then(res => {
+                if (!res.ok) throw new Error("HTTP error " + res.status);
+                return res.json();
+            }),
+            fetch(`${API_BASE}/api/nguoi-dung/${user.id}`).then(res => {
+                if (!res.ok) throw new Error("HTTP error " + res.status);
+                return res.json();
+            })
+        ])
+        .then(([publicData, privateData]) => {
+            if (publicData.success) {
+                ghiCSDL('Users', publicData.users);
+            }
+            if (privateData.success && privateData.user) {
+                let freshUser = privateData.user;
+                // Trộn danh sách thông báo đã đọc cục bộ và server để tránh bị ghi đè mất trạng thái
+                let mergedReadNotifs = Array.from(new Set([...(user.readNotifs || []), ...(freshUser.readNotifs || [])]));
+                freshUser.readNotifs = mergedReadNotifs;
+
+                // Cập nhật lại currentUser cục bộ từ bản ghi mới nhất của server
+                localStorage.setItem('currentUser', JSON.stringify(freshUser));
+                user = freshUser;
+            }
+            if (duongDanTrang.includes('teacher-dashboard.html') && typeof hienThiBaoCaoGiangVien === 'function') {
+                hienThiBaoCaoGiangVien(user);
+            } else if (duongDanTrang.includes('student-dashboard.html') && typeof hienThiBaoCaoHocTapSinhVien === 'function') {
+                hienThiBaoCaoHocTapSinhVien(user);
             }
         })
-        .catch(err => console.warn("Lỗi đồng bộ danh sách tài khoản:", err));
+        .catch(err => console.warn("Lỗi đồng bộ danh sách tài khoản (User):", err));
+    }
 
     // 2. Đồng bộ danh sách thông báo và cập nhật lại hòm thư của từng giao diện
     fetch(`${API_BASE}/api/thong-bao`)

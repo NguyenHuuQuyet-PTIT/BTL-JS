@@ -35,7 +35,7 @@ function hienThiBaoCaoGiangVien(giangVien) {
         let mon = monHocs.find(s => s.id === c.subjectId);
         let tenMon = mon ? mon.name : 'Môn học';
         // Cộng dồn số sinh viên ghi danh trong các lớp
-        tongSoSinhVienLop += c.enrolledStudents.length;
+        tongSoSinhVienLop += (c.enrolledStudents || []).length;
         
         // Đẩy lịch dạy của lớp này vào thứ học phần tương ứng
         lichDayTuan[c.dayOfWeek].push({ 
@@ -63,7 +63,7 @@ function hienThiBaoCaoGiangVien(giangVien) {
                 <div class="border-box border-left-dark flex-row align-center justify-between mb-10 cursor-pointer" onclick="moLopPhuTrachGiangVien('${c.id}', '${tenHienThi}')">
                     <div class="flex-1">
                         <h4 class="mb-10 text-primary">Tên lớp: ${tenHienThi}</h4>
-                        <p class="text-sm text-muted mb-10">Phòng học: <span class="font-bold">${c.room}</span> | <span class="text-success font-bold">${c.enrolledStudents.length} Sinh viên</span></p>
+                        <p class="text-sm text-muted mb-10">Phòng học: <span class="font-bold">${c.room}</span> | <span class="text-success font-bold">${(c.enrolledStudents || []).length} Sinh viên</span></p>
                         <div class="progress-bg mt-10">
                             <div class="progress-fill" style="width:${phanTram}%;"></div>
                         </div>
@@ -133,11 +133,11 @@ function hienThiDiemHocSinhGiangVien() {
     let users = layCSDL('Users');
     
     // Bản đồ HTML cho từng hàng sinh viên kèm các ô input điểm
-    let htmlDong = lop.enrolledStudents.map(studentId => {
+    let htmlDong = (lop.enrolledStudents || []).map(studentId => {
         let stu = users.find(u => u.id === studentId); 
         if (!stu) return '';
         
-        let diem = lop.grades[studentId] || { cc: null, gk: null, ck: null };
+        let diem = (lop.grades || {})[studentId] || { cc: null, gk: null, ck: null };
         let diemTBMon = tinhDiemTrungBinh(diem.cc, diem.gk, diem.ck);
         
         let valCC = diem.cc !== null ? diem.cc : '';
@@ -232,11 +232,11 @@ function moHopThoaiDiemDanhGiangVien(idBuoiHoc) {
     document.getElementById('tcAttSessionInfo').textContent = `Điểm danh chuyên cần (Ngày ${buoi.date})`;
     
     // Duyệt danh sách sinh viên lớp để hiển thị các nút chọn điểm danh (Có mặt, Muộn, Vắng)
-    let htmlDong = lop.enrolledStudents.map(studentId => {
+    let htmlDong = (lop.enrolledStudents || []).map(studentId => {
         let stu = users.find(u => u.id === studentId); 
         if (!stu) return ''; 
         
-        let status = buoi.attendance[studentId] || '';
+        let status = (buoi.attendance || {})[studentId] || '';
         let isPresent = status === 'present' ? 'checked' : '';
         let isLate = status === 'late' ? 'checked' : '';
         let isAbsent = status === 'absent' ? 'checked' : '';
@@ -272,7 +272,8 @@ function luuDiemDanhGiangVien() {
     // Quét toàn bộ trạng thái radio button được chọn để lưu trữ
     capNhatLopCSDL(idLop, function(c) {
         let buoi = c.sessions.find(x => x.id === idBuoiHoc);
-        c.enrolledStudents.forEach(studentId => { 
+        if (!buoi.attendance) buoi.attendance = {};
+        (c.enrolledStudents || []).forEach(studentId => { 
             let radioInp = document.querySelector(`input[name="att_${studentId}"]:checked`); 
             if (radioInp) {
                 buoi.attendance[studentId] = radioInp.value; 
@@ -323,7 +324,8 @@ function hienThiLichSuGuiGiangVien(giangVien) {
     let html = thongBao.map(n => {
         let tenLopNhan = layTenLopHienThi(n.target);
         // Rút gọn nội dung xem trước, bỏ emoji để gọn gàng
-        let xemTruocRaw = n.text.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+        let safeText = n.text || '';
+        let xemTruocRaw = safeText.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
         let xemTruoc = xemTruocRaw.length > 60 ? xemTruocRaw.substring(0, 60) + '...' : xemTruocRaw;
         
         // Hiển thị badge nếu thông báo có file/link đính kèm

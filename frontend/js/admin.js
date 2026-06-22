@@ -388,7 +388,7 @@ function hienThiDanhSachLopDieuPhoi() {
                         <h4 class="mb-10 text-primary">Tên lớp: ${displayClassName}</h4>
                         <p class="text-sm text-muted mb-10">GV: <span class="font-bold">${tcName}</span> | P.${c.room}</p>
                         <p class="text-sm">Lịch: ${c.dayOfWeek} (${timeStr})</p>
-                        <p class="font-bold text-success mt-10">${c.enrolledStudents.length} SV | ${c.sessions.length} Buổi</p>
+                        <p class="font-bold text-success mt-10">${(c.enrolledStudents || []).length} SV | ${c.sessions.length} Buổi</p>
                     </div>
                     <div class="flex-row">
                         <button class="action-btn" onclick="event.stopPropagation(); suaThongTinLopDieuPhoi('${c.id}')">Sửa</button>
@@ -464,7 +464,7 @@ function hienThiDanhSachSinhVienDieuPhoi() {
     let users = layCSDL('Users'); // Lấy danh sách người dùng trong hệ thống
     
     // Tạo mã HTML hàng bảng dữ liệu sinh viên trong lớp học phần
-    let htmlContent = lop.enrolledStudents.map(studentId => {
+    let htmlContent = (lop.enrolledStudents || []).map(studentId => {
         let stu = users.find(u => u.id === studentId); // Tìm tài khoản sinh viên tương ứng
         if (stu) {
             return `
@@ -497,11 +497,13 @@ function themSinhVienVaoLopDieuPhoi() {
     
     // Thực hiện cập nhật thêm mã sinh viên vào lớp học phần và cập nhật bảng điểm
     capNhatLopCSDL(idLop, function(c) { 
+        if (!c.enrolledStudents) c.enrolledStudents = [];
+        if (!c.grades) c.grades = {};
         if (c.enrolledStudents.includes(idSVDien)) {
             alert("Sinh viên này đã học trong lớp!"); // Báo lỗi nếu đã ghi danh từ trước
         } else {
             c.enrolledStudents.push(idSVDien); // Thêm mã sinh viên mới vào mảng
-            c.grades[idSVDien] = { cc: null, gk: null, ck: null }; // Khởi tạo các đầu điểm trống cho sinh viên này
+            c.grades[idSVDien] = { cc: '', gk: '', ck: '' }; // Khởi tạo các đầu điểm trống cho sinh viên này
             alert("Thêm sinh viên thành công!");
         }
     });
@@ -516,8 +518,8 @@ function xoaSinhVienKhoiLopDieuPhoi(idSinhVien) {
     hienThiConfirmTuyBien(`Xác nhận xóa sinh viên <strong>${idSinhVien}</strong> khỏi lớp học?`, () => {
         let idLop = document.getElementById('admin-class-detail').dataset.classId;
         capNhatLopCSDL(idLop, function(c) {
-            c.enrolledStudents = c.enrolledStudents.filter(id => id !== idSinhVien);
-            delete c.grades[idSinhVien];
+            c.enrolledStudents = (c.enrolledStudents || []).filter(id => id !== idSinhVien);
+            if (c.grades) delete c.grades[idSinhVien];
         });
         hienThiDanhSachSinhVienDieuPhoi();
     });
@@ -818,7 +820,8 @@ function hienThiDanhSachThongBaoAdmin() {
     let html = adminNotifs.map(n => {
         let targetText = n.target === 'tat-ca-sinh-vien' ? 'Sinh viên' : 'Giảng viên';
         // Rút gọn nội dung xem trước, bỏ emoji để gọn gàng
-        let previewRaw = n.text.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
+        let safeText = n.text || '';
+        let previewRaw = safeText.replace(/[\u{1F300}-\u{1FFFF}]/gu, '').trim();
         let previewText = previewRaw.length > 65 ? previewRaw.substring(0, 65) + '...' : previewRaw;
         
         // Hiển thị badge nếu thông báo có file/link đính kèm
