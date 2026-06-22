@@ -1,5 +1,5 @@
 // Cấu hình URL cơ sở của backend (Tự động nhận diện chạy localhost hoặc online qua window.location.origin)
-const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
     ? 'http://localhost:5000'
     : (window.location.origin.startsWith('http') && !window.location.origin.includes('vercel.app'))
         ? window.location.origin
@@ -93,7 +93,16 @@ window.fetch = function (resource, options = {}) {
         }
     }
     // Gọi lại hàm fetch nguyên bản của trình duyệt với cấu hình mới đã được đính kèm headers
-    return nguyenBanFetch(resource, options);
+    return nguyenBanFetch(resource, options).then(response => {
+        // Nếu nhận mã lỗi 401 Unauthorized và chúng ta không ở trang đăng nhập
+        if (response.status === 401 && !window.location.pathname.includes('index.html')) {
+            console.warn("Nhận mã lỗi 401 Unauthorized từ server, tự động đăng xuất để làm mới phiên làm việc...");
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('sessionToken');
+            window.location.href = 'index.html';
+        }
+        return response;
+    });
 };
 
 // Ghi đè hàm alert mặc định của trình duyệt để hiển thị giao diện Canva Glassmorphism
