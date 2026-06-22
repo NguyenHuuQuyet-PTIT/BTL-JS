@@ -20,20 +20,76 @@ function bamMatKhauClient(chuoi) {
     return 'client_hash_' + Math.abs(hash).toString(16); // Trả về chuỗi băm dạng lục phân
 }
 
-// Ghi đè phương thức fetch toàn cục của trình duyệt để tự động đính kèm ID người gọi (x-requester-id) vào request headers
+// Hàm mã hóa đơn giản bằng cơ chế XOR và Base64 để bảo mật dữ liệu LocalStorage
+const MA_HOA_KEY = 42; // Khóa mã hóa đối xứng cục bộ
+
+function maHoaDuLieu(chuoi) {
+    if (!chuoi) return '';
+    let result = '';
+    for (let i = 0; i < chuoi.length; i++) {
+        result += String.fromCharCode(chuoi.charCodeAt(i) ^ MA_HOA_KEY);
+    }
+    return btoa(unescape(encodeURIComponent(result))); // Chuyển sang Base64 an toàn Unicode
+}
+
+function giaiMaDuLieu(base64Str) {
+    if (!base64Str) return '';
+    try {
+        let decoded = decodeURIComponent(escape(atob(base64Str)));
+        let result = '';
+        for (let i = 0; i < decoded.length; i++) {
+            result += String.fromCharCode(decoded.charCodeAt(i) ^ MA_HOA_KEY);
+        }
+        return result;
+    } catch (e) {
+        return '';
+    }
+}
+
+// Hàm lấy dữ liệu từ LocalStorage theo khóa tương ứng và giải mã bảo mật tự động
+function layCSDL(khoa) {
+    try {
+        let rawVal = localStorage.getItem(khoa);
+        if (!rawVal) {
+            if (['currentUser', 'sessionToken', 'RegistrationOpen', 'DataVersion'].includes(khoa)) {
+                return null;
+            }
+            return [];
+        }
+        
+        let decrypted = giaiMaDuLieu(rawVal);
+        if (decrypted) {
+            try {
+                return JSON.parse(decrypted);
+            } catch (e) {
+                // Nếu lỗi giải mã, thử parse trực tiếp rawVal phòng khi là dữ liệu cũ chưa mã hóa
+                return JSON.parse(rawVal);
+            }
+        } else {
+            return JSON.parse(rawVal);
+        }
+    } catch (e) {
+        if (['currentUser', 'sessionToken', 'RegistrationOpen', 'DataVersion'].includes(khoa)) {
+            return null;
+        }
+        return [];
+    }
+}
+
+// Ghi đè phương thức fetch toàn cục của trình duyệt để tự động đính kèm Token xác thực bảo mật Bearer
 const nguyenBanFetch = window.fetch; // Lưu lại hàm fetch nguyên bản của trình duyệt
 window.fetch = function (resource, options = {}) {
     // Chỉ can thiệp nếu đường dẫn gọi đến API của hệ thống
     if (typeof resource === 'string' && resource.startsWith(API_BASE)) {
-        // Lấy thông tin người dùng đăng nhập hiện tại từ LocalStorage
-        const user = JSON.parse(localStorage.getItem('currentUser'));
-        if (user && user.id) {
+        // Lấy token bảo mật từ LocalStorage đã giải mã
+        const token = layCSDL('sessionToken');
+        if (token) {
             // Khởi tạo đối tượng headers nếu chưa tồn tại
             if (!options.headers) {
                 options.headers = {};
             }
-            // Đính kèm ID người dùng vào headers 'x-requester-id' để backend xác thực quyền hạn
-            options.headers['x-requester-id'] = user.id;
+            // Đính kèm Token vào headers 'Authorization'
+            options.headers['Authorization'] = 'Bearer ' + token;
         }
     }
     // Gọi lại hàm fetch nguyên bản của trình duyệt với cấu hình mới đã được đính kèm headers
@@ -176,11 +232,7 @@ window.addEventListener('click', function(e) {
 // 1. CƠ SỞ DỮ LIỆU LOCALSTORAGE & TRUY XUẤT (DATABASE & HELPERS)
 // --------------------------------------------------------------------------
 
-// Hàm lấy dữ liệu từ LocalStorage theo khóa tương ứng
-function layCSDL(khoa) {
-    // Trả về mảng đối tượng phân tích từ chuỗi JSON hoặc mảng rỗng nếu chưa tồn tại
-    return JSON.parse(localStorage.getItem(khoa)) || [];
-}
+// Hàm lấy dữ liệu từ LocalStorage (Đã được định nghĩa bảo mật ở đầu trang)
 
 // Hàm chuyển đổi các ký tự đặc biệt sang thực thể HTML để phòng chống lỗ hổng bảo mật XSS
 function escapeHTML(chuoi) {
@@ -208,10 +260,12 @@ function sapXepThongBaoMoiNhat(danhSach) {
     });
 }
 
-// Hàm ghi mảng dữ liệu vào LocalStorage dưới dạng chuỗi JSON, có xử lý khi bộ nhớ đầy
+// Hàm ghi mảng dữ liệu vào LocalStorage dưới dạng chuỗi JSON mã hóa bảo mật, có xử lý khi bộ nhớ đầy
 function ghiCSDL(khoa, duLieu) {
     try {
-        localStorage.setItem(khoa, JSON.stringify(duLieu));
+        let jsonStr = JSON.stringify(duLieu);
+        let encrypted = maHoaDuLieu(jsonStr);
+        localStorage.setItem(khoa, encrypted);
     } catch (e) {
         // Khi xảy ra lỗi vượt quá dung lượng LocalStorage (tối đa 5MB)
         if (e.name === 'QuotaExceededError' || e.code === 22) {
@@ -238,7 +292,7 @@ function ghiCSDL(khoa, duLieu) {
                         m.fileName = m.fileName + ' (Tệp đã bị xóa khỏi cache do đầy bộ nhớ)';
                     }
                 });
-                localStorage.setItem('Materials', JSON.stringify(materials));
+                localStorage.setItem('Materials', maHoaDuLieu(JSON.stringify(materials)));
             }
 
             // Xóa dữ liệu base64 trong các bài nộp của học sinh để lấy lại dung lượng trống
@@ -250,12 +304,14 @@ function ghiCSDL(khoa, duLieu) {
                         s.fileName = s.fileName + ' (Tệp đã bị xóa khỏi cache do đầy bộ nhớ)';
                     }
                 });
-                localStorage.setItem('Submissions', JSON.stringify(submissions));
+                localStorage.setItem('Submissions', maHoaDuLieu(JSON.stringify(submissions)));
             }
 
             // Thử thực hiện lưu lại dữ liệu mới sau khi đã dọn dẹp
             try {
-                localStorage.setItem(khoa, JSON.stringify(duLieu));
+                let jsonStr = JSON.stringify(duLieu);
+                let encrypted = maHoaDuLieu(jsonStr);
+                localStorage.setItem(khoa, encrypted);
             } catch (retryError) {
                 console.error("Không thể dọn dẹp đủ dung lượng cho LocalStorage:", retryError);
             }
@@ -562,6 +618,7 @@ function xemFileTrucTiep(base64Data, fileName) {
 function xuLyDangXuat() {
     // Chỉ xóa sạch phiên đăng nhập hiện tại để tránh rò rỉ thông tin cá nhân
     localStorage.removeItem('currentUser'); 
+    localStorage.removeItem('sessionToken'); 
     // Chuyển hướng trình duyệt về lại trang đăng nhập index.html
     window.location.href = 'index.html'; 
 }
@@ -774,7 +831,7 @@ function khoiTaoHoSoCaNhan(nguoiDung) {
             }
             
             // Ghi nhận thông tin người dùng đăng nhập mới vào phiên hiện tại
-            localStorage.setItem('currentUser', JSON.stringify(nguoiDung)); 
+            ghiCSDL('currentUser', nguoiDung); 
             
             // Đồng bộ cập nhật thông tin vào danh sách Users trong LocalStorage (Đảm bảo không chứa mật khẩu)
             let danhSachNguoiDung = layCSDL('Users');
@@ -930,7 +987,7 @@ async function moHopThoaiDocThongBao(idThongBao) {
         // Nếu thông báo chưa được đọc, thêm vào mảng đã đọc và cập nhật CSDL
         if (!nguoiDung.readNotifs.includes(idThongBao)) {
             nguoiDung.readNotifs.push(idThongBao);
-            localStorage.setItem('currentUser', JSON.stringify(nguoiDung));
+            ghiCSDL('currentUser', nguoiDung);
             
             // Đồng bộ trạng thái đã đọc vào danh sách tài khoản cục bộ
             let dsNguoiDung = layCSDL('Users');
@@ -1400,18 +1457,18 @@ function taoModalChiTietBaiNop() {
 // 4. KHỞI TẠO CƠ SỞ DỮ LIỆU NGOẠI TUYẾN MẪU (LOCAL STORAGE OFFLINE SEEDING)
 // --------------------------------------------------------------------------
 function khoiTaoDuLieuMau() {
-    let dataVersion = localStorage.getItem('DataVersion');
+    let dataVersion = layCSDL('DataVersion');
     // Nếu phiên bản dữ liệu cũ hơn 9, xóa sạch cache để dọn dẹp các trường mật khẩu nhạy cảm và cập nhật dữ liệu mới
     if (dataVersion !== '9') {
         localStorage.removeItem('Users');
         localStorage.removeItem('Subjects');
         localStorage.removeItem('Classes');
         localStorage.removeItem('Notifications');
-        localStorage.setItem('DataVersion', '9');
+        ghiCSDL('DataVersion', '9');
     }
 
     // Gieo mầm dữ liệu tài khoản mẫu cục bộ (Tuyệt đối không lưu mật khẩu ở dạng rõ tại LocalStorage, mà lưu dạng băm client)
-    if (!localStorage.getItem('Users')) {
+    if (!layCSDL('Users') || layCSDL('Users').length === 0) {
         ghiCSDL('Users', [
             { id: 'AD001', role: 'admin', name: 'Quản trị viên HT', email: 'admin', dob: '1990-01-01', phone: '0999888777', readNotifs: [], passwordHash: bamMatKhauClient('admin') },
             { id: 'GV001', role: 'giang-vien', name: 'ThS. Nguyễn Văn A', email: 'giaovien', dob: '1985-05-10', phone: '0988111222', readNotifs: [], passwordHash: bamMatKhauClient('giaovien') },
@@ -1420,7 +1477,7 @@ function khoiTaoDuLieuMau() {
     }
     
     // Khởi tạo danh mục môn học ngành CNTT
-    if (!localStorage.getItem('Subjects')) {
+    if (!layCSDL('Subjects') || layCSDL('Subjects').length === 0) {
         ghiCSDL('Subjects', [ 
             { id: 'SUB01', name: 'Lập trình Web nâng cao', abbr: 'WEB' }, 
             { id: 'SUB02', name: 'Cấu trúc dữ liệu & Giải thuật', abbr: 'CTDL_GT' }, 
@@ -1434,7 +1491,7 @@ function khoiTaoDuLieuMau() {
     }
     
     // Gieo mầm danh sách lớp học và lịch học, điểm số cho sinh viên
-    if (!localStorage.getItem('Classes')) {
+    if (!layCSDL('Classes') || layCSDL('Classes').length === 0) {
         let maLopWeb = 'WEB_CLASS_2026';
         let maLopCtdl = 'CTDL_CLASS_2026';
         let maLopCsdl = 'CSDL_CLASS_2026';
@@ -1561,7 +1618,7 @@ function khoiTaoDuLieuMau() {
     }
 
     // Gieo mầm dữ liệu thông báo mẫu
-    if (!localStorage.getItem('Notifications')) {
+    if (!layCSDL('Notifications') || layCSDL('Notifications').length === 0) {
         ghiCSDL('Notifications', [
             { 
                 id: 'NOTIF_1', 
@@ -1581,8 +1638,8 @@ function khoiTaoDuLieuMau() {
     }
 
     // Mở đăng ký tín chỉ mặc định nếu chưa được định nghĩa
-    if (localStorage.getItem('RegistrationOpen') === null) {
-        localStorage.setItem('RegistrationOpen', JSON.stringify(true));
+    if (layCSDL('RegistrationOpen') === null) {
+        ghiCSDL('RegistrationOpen', true);
     }
 }
 // Chạy hàm gieo mầm dữ liệu offline
@@ -1621,11 +1678,14 @@ if (loginForm) {
             
             // Nếu đăng nhập thành công trực tuyến qua MongoDB Atlas
             if (response.ok && data.success) {
+                // Lưu token xác thực vào LocalStorage dưới dạng mã hóa
+                ghiCSDL('sessionToken', data.token);
+
                 // Tạo một bản sao dữ liệu sạch, lưu kèm mật khẩu băm để đăng nhập ngoại tuyến lần sau
                 const nguoiDungKemHash = { ...data.user, passwordHash: bamMatKhauClient(passwordValue) };
                 
-                // Lưu thông tin người dùng hiện tại vào LocalStorage
-                localStorage.setItem('currentUser', JSON.stringify(nguoiDungKemHash));
+                // Lưu thông tin người dùng hiện tại vào LocalStorage dưới dạng mã hóa
+                ghiCSDL('currentUser', nguoiDungKemHash);
                 
                 // Đồng bộ cập nhật thông tin tài khoản này vào CSDL offline (Không bao giờ lưu trường mật khẩu vào LocalStorage)
                 let users = layCSDL('Users');
@@ -1662,7 +1722,7 @@ if (loginForm) {
                 
                 if (hopLe) {
                     // Đăng nhập ngoại tuyến thành công
-                    localStorage.setItem('currentUser', JSON.stringify(localUser));
+                    ghiCSDL('currentUser', localUser);
                     chuyenHuongTrangQuanLy(roleValue);
                 } else {
                     alert("Sai mật khẩu ngoại tuyến!");
@@ -1802,7 +1862,7 @@ async function dongBoDuLieuTuDong() {
                         freshUser.readNotifs = mergedReadNotifs;
 
                         // Cập nhật lại currentUser cục bộ từ bản ghi mới nhất của server
-                        localStorage.setItem('currentUser', JSON.stringify(freshUser));
+                        ghiCSDL('currentUser', freshUser);
                         user = freshUser;
                     }
                     if (duongDanTrang.includes('admin.html') && typeof hienThiDanhSachTaiKhoan === 'function') {
@@ -1834,7 +1894,7 @@ async function dongBoDuLieuTuDong() {
                 freshUser.readNotifs = mergedReadNotifs;
 
                 // Cập nhật lại currentUser cục bộ từ bản ghi mới nhất của server
-                localStorage.setItem('currentUser', JSON.stringify(freshUser));
+                ghiCSDL('currentUser', freshUser);
                 user = freshUser;
             }
             if (duongDanTrang.includes('teacher-dashboard.html') && typeof hienThiBaoCaoGiangVien === 'function') {
@@ -2428,7 +2488,7 @@ function danhDauDaDocTatCaThongBao(vaiTro) {
     });
     
     if (coThayDoi) {
-        localStorage.setItem('currentUser', JSON.stringify(user));
+        ghiCSDL('currentUser', user);
         let dsNguoiDung = layCSDL('Users');
         let vt = dsNguoiDung.findIndex(u => u.id === user.id);
         if (vt > -1) {

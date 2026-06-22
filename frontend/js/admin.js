@@ -579,7 +579,7 @@ function hienThiNutBatTatCongDangKy() {
     let vungNut = document.getElementById('adminRegToggleContainer'); // Tìm vùng chứa nút
     if (!vungNut) return; // Nếu không tìm thấy thì dừng
     
-    let dangMo = JSON.parse(localStorage.getItem('RegistrationOpen')); // Đọc trạng thái cổng từ LocalStorage
+    let dangMo = layCSDL('RegistrationOpen'); // Đọc trạng thái cổng từ LocalStorage
     // Nếu đang mở, tạo nút click để khóa
     if (dangMo) {
         vungNut.innerHTML = `<button class="btn-danger" style="width: auto;" onclick="thayDoiTrangThaiCongDangKy(false)">Cổng tín chỉ: ĐANG MỞ - Bấm để KHÓA</button>`;
@@ -591,7 +591,7 @@ function hienThiNutBatTatCongDangKy() {
 
 // Hàm thay đổi trạng thái cổng đăng ký tín chỉ trực tuyến toàn trường
 function thayDoiTrangThaiCongDangKy(trangThai) {
-    localStorage.setItem('RegistrationOpen', JSON.stringify(trangThai)); // Ghi trạng thái mới vào CSDL Local
+    ghiCSDL('RegistrationOpen', trangThai); // Ghi trạng thái mới vào CSDL Local
     hienThiNutBatTatCongDangKy(); // Cập nhật lại giao diện nút tương ứng
 }
 

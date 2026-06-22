@@ -22,34 +22,71 @@ const LopHocModel = require('./models/LopHoc'); // Thêm model lớp học
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware xác thực quyền hạn dựa trên ID người gọi gửi lên trong headers
+const crypto = require('crypto'); // Thư viện mật mã học của Node.js để tạo và xác minh Token chữ ký bảo mật
+const JWT_SECRET = process.env.JWT_SECRET || 'BiMatHeThongSieuBaoMat2026'; // Khóa bảo mật của server
+
+// Hàm tự phát hành token chữ ký điện tử HMAC-SHA256 (tương tự cơ chế của JWT)
+function generateToken(userId, role) {
+    const exp = Date.now() + 24 * 60 * 60 * 1000; // Token có giá trị trong 24 giờ
+    const payload = `${userId}:${role}:${exp}`;
+    const signature = crypto.createHmac('sha256', JWT_SECRET).update(payload).digest('hex');
+    return `${Buffer.from(payload).toString('base64')}.${signature}`;
+}
+
+// Hàm xác thực tính nguyên vẹn và hạn dùng của token
+function verifyToken(token) {
+    try {
+        if (!token) return null;
+        const parts = token.split('.');
+        if (parts.length !== 2) return null;
+        const [payloadBase64, signature] = parts;
+        const payload = Buffer.from(payloadBase64, 'base64').toString('utf8');
+        const [userId, role, exp] = payload.split(':');
+        
+        // Kiểm tra token đã hết hạn chưa
+        if (Date.now() > parseInt(exp)) return null;
+        
+        // So khớp chữ ký số để bảo đảm dữ liệu không bị sửa đổi ở Client
+        const expectedSignature = crypto.createHmac('sha256', JWT_SECRET).update(payload).digest('hex');
+        if (signature !== expectedSignature) return null;
+        
+        return { id: userId, role, exp: parseInt(exp) };
+    } catch (e) {
+        return null;
+    }
+}
+
+// Middleware xác thực quyền hạn dựa trên Token chữ ký điện tử được gửi lên trong headers
 const xacThucQuyenHan = (cacVaiTroChoPhep) => {
     return async (req, res, next) => {
         try {
-            // Lấy mã ID người thực hiện yêu cầu từ Custom Headers 'x-requester-id'
-            const requesterId = req.headers['x-requester-id'];
-            
-            // Nếu không có thông tin định danh người gọi, chặn truy cập ngay lập tức để bảo mật
-            if (!requesterId) { // Kiểm tra biến requesterId xem có rỗng không
-                return res.status(401).json({ success: false, message: 'Yêu cầu bị từ chối: Thiếu thông tin định danh x-requester-id trong headers!' }); // Trả về mã lỗi 401 Unauthorized
+            // Lấy token xác thực từ header 'Authorization: Bearer <token>'
+            const authHeader = req.headers['authorization'];
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                return res.status(401).json({ success: false, message: 'Yêu cầu bị từ chối: Thiếu token xác thực hợp lệ!' });
             }
 
-            // Tìm thông tin tài khoản người gọi trong database thông qua Mongoose
-            const user = await NguoiDungModel.findOne({ id: requesterId }); // Truy vấn tìm người dùng có mã ID tương ứng
+            const token = authHeader.split(' ')[1];
+            const decoded = verifyToken(token);
+            if (!decoded) {
+                return res.status(401).json({ success: false, message: 'Yêu cầu bị từ chối: Token không hợp lệ hoặc đã hết hạn!' });
+            }
+
+            // Tìm thông tin tài khoản người gọi trong database
+            const user = await NguoiDungModel.findOne({ id: decoded.id });
             
-            // Nếu không tìm thấy người dùng hoặc vai trò không hợp lệ trong danh sách được cấp phép
-            if (!user || !cacVaiTroChoPhep.includes(user.role)) { // Kiểm tra sự tồn tại và vai trò quyền hạn
-                return res.status(403).json({ success: false, message: 'Yêu cầu bị từ chối: Bạn không có quyền truy cập chức năng này!' }); // Trả về mã lỗi 403 Forbidden
+            // Nếu không tìm thấy người dùng hoặc vai trò không được cấp phép
+            if (!user || !cacVaiTroChoPhep.includes(user.role)) {
+                return res.status(403).json({ success: false, message: 'Yêu cầu bị từ chối: Bạn không có quyền truy cập chức năng này!' });
             }
 
             // Gắn thông tin người dùng vào request để sử dụng tiếp ở các API handler phía sau
-            req.user = user; // Lưu đối tượng user đã tìm thấy vào request
+            req.user = user;
             
-            // Chuyển sang middleware/handler tiếp theo trong chuỗi Express router
-            next(); // Gọi hàm next() để Express tiếp tục điều phối
-        } catch (err) { // Bắt các lỗi ngoại lệ phát sinh trong quá trình chạy
-            // Xử lý lỗi ngoại lệ hệ thống và trả về mã lỗi 500
-            res.status(500).json({ success: false, message: 'Lỗi kiểm duyệt phân quyền hệ thống.' }); // Phản hồi lỗi hệ thống
+            // Chuyển sang middleware tiếp theo
+            next();
+        } catch (err) {
+            res.status(500).json({ success: false, message: 'Lỗi kiểm duyệt phân quyền hệ thống.' });
         }
     };
 };
@@ -302,8 +339,8 @@ async function taoDuLieuMau() {
 // CÁC ROUTE API DÀNH CHO XÁC THỰC & NGƯỜI DÙNG (USER & AUTHENTICATION ENDPOINTS)
 // ==========================================================================
 
-// API đăng ký tài khoản mới trực tuyến
-app.post('/api/auth/dang-ky', async (req, res) => {
+// API đăng ký tài khoản mới trực tuyến (Yêu cầu quyền Admin)
+app.post('/api/auth/dang-ky', xacThucQuyenHan(['admin']), async (req, res) => {
     try {
         // Lấy các tham số gửi lên trong phần Body của Request
         const { id, name, email, password, role, dob, phone } = req.body;
@@ -387,7 +424,11 @@ app.post('/api/auth/dang-nhap', async (req, res) => {
         // Trả về mã trạng thái 200 (OK) và đối tượng người dùng đã ẩn mật khẩu để bảo mật
         const userObj = nguoiDung.toObject();
         delete userObj.password;
-        res.status(200).json({ success: true, user: userObj });
+
+        // Tạo token xác thực bảo mật chữ ký số HMAC-SHA256
+        const token = generateToken(nguoiDung.id, nguoiDung.role);
+
+        res.status(200).json({ success: true, user: userObj, token });
     } catch (error) {
         // Báo lỗi 500 nếu xảy ra sự cố phía máy chủ
         res.status(500).json({ success: false, message: 'Lỗi máy chủ.' });

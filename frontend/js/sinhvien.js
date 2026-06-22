@@ -363,7 +363,7 @@ function hienThiTabDangKyTinChi(sinhVien) {
     if (!vungChua) return;
     
     // Kiểm tra trạng thái cổng đăng ký mở hay đóng trong CSDL
-    let congDangKyMo = JSON.parse(localStorage.getItem('RegistrationOpen'));
+    let congDangKyMo = layCSDL('RegistrationOpen');
     // Lọc danh sách lớp sinh viên đã đăng ký học
     let lopDaDangKy = lopHocs.filter(cls => (cls.enrolledStudents || []).includes(sinhVien.id));
     let htmlResult = '';
