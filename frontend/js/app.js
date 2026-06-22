@@ -1631,9 +1631,7 @@ if (loginForm) {
                 if (hopLe) {
                     // Đăng nhập ngoại tuyến thành công
                     localStorage.setItem('currentUser', JSON.stringify(localUser));
-                    alert("Đăng nhập ngoại tuyến thành công (Đang chạy ở chế độ offline)!", () => {
-                        chuyenHuongTrangQuanLy(roleValue);
-                    });
+                    chuyenHuongTrangQuanLy(roleValue);
                 } else {
                     alert("Sai mật khẩu ngoại tuyến!");
                 }
