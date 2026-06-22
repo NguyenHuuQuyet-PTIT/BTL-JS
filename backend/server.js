@@ -72,23 +72,55 @@ mongoose.connect(MONGO_URI)
         console.error('Lỗi kết nối MongoDB:', err.message);
     });
 
-// Khởi tạo dữ liệu mẫu cho database
 async function taoDuLieuMau() {
     try {
-        // 1. Tạo người dùng mẫu nếu bảng trống
-        const soTaiKhoan = await NguoiDungModel.countDocuments(); // Đếm tổng số tài khoản người dùng đang có trên database
-        if (soTaiKhoan === 0) { // Nếu bảng người dùng hoàn toàn trống thì tiến hành gieo mầm dữ liệu
-            const hashedAdminPassword = bcrypt.hashSync('admin', 10); // Thực hiện băm (hash) mật khẩu của Admin với độ mạnh salt = 10
-            const hashedTeacherPassword = bcrypt.hashSync('giaovien', 10); // Thực hiện băm mật khẩu của Giảng viên mẫu
-            const hashedStudentPassword = bcrypt.hashSync('sinhvien', 10); // Thực hiện băm mật khẩu của Sinh viên mẫu
+        // 1. Tạo các người dùng mẫu nếu chưa tồn tại trong database
+        const adminExist = await NguoiDungModel.findOne({ id: 'AD001' });
+        if (!adminExist) {
+            const hashedAdminPassword = bcrypt.hashSync('admin', 10);
+            await NguoiDungModel.create({
+                id: 'AD001',
+                role: 'admin',
+                name: 'Quản trị viên HT',
+                email: 'admin',
+                password: hashedAdminPassword,
+                dob: '1990-01-01',
+                phone: '0999888777',
+                readNotifs: []
+            });
+            console.log('Đã khởi tạo tài khoản Admin mẫu vào MongoDB Atlas.');
+        }
 
-            const taiKhoanMau = [
-                { id: 'AD001', role: 'admin', name: 'Quản trị viên HT', email: 'admin', password: hashedAdminPassword, dob: '1990-01-01', phone: '0999888777', readNotifs: [] }, // Tài khoản quản trị hệ thống
-                { id: 'GV001', role: 'giang-vien', name: 'ThS. Nguyễn Văn A', email: 'giaovien', password: hashedTeacherPassword, dob: '1985-05-10', phone: '0988111222', readNotifs: [] }, // Tài khoản giảng viên mẫu
-                { id: 'SV202501', role: 'sinh-vien', name: 'Nguyễn Hữu Quyết', email: 'sinhvien', password: hashedStudentPassword, dob: '2005-01-15', phone: '0901000001', readNotifs: [] } // Tài khoản sinh viên mẫu
-            ];
-            await NguoiDungModel.insertMany(taiKhoanMau); // Lưu mảng tài khoản mẫu vào database MongoDB thông qua Mongoose
-            console.log('Đã khởi tạo tài khoản mẫu vào MongoDB Atlas (mật khẩu đã được mã hóa Bcrypt).'); // In thông báo log thành công
+        const teacherExist = await NguoiDungModel.findOne({ id: 'GV001' });
+        if (!teacherExist) {
+            const hashedTeacherPassword = bcrypt.hashSync('giaovien', 10);
+            await NguoiDungModel.create({
+                id: 'GV001',
+                role: 'giang-vien',
+                name: 'ThS. Nguyễn Văn A',
+                email: 'giaovien',
+                password: hashedTeacherPassword,
+                dob: '1985-05-10',
+                phone: '0988111222',
+                readNotifs: []
+            });
+            console.log('Đã khởi tạo tài khoản Giảng viên mẫu vào MongoDB Atlas.');
+        }
+
+        const studentExist = await NguoiDungModel.findOne({ id: 'SV202501' });
+        if (!studentExist) {
+            const hashedStudentPassword = bcrypt.hashSync('sinhvien', 10);
+            await NguoiDungModel.create({
+                id: 'SV202501',
+                role: 'sinh-vien',
+                name: 'Nguyễn Hữu Quyết',
+                email: 'sinhvien',
+                password: hashedStudentPassword,
+                dob: '2005-01-15',
+                phone: '0901000001',
+                readNotifs: []
+            });
+            console.log('Đã khởi tạo tài khoản Sinh viên mẫu vào MongoDB Atlas.');
         }
 
         // 2. Tạo thông báo mẫu nếu bảng trống
