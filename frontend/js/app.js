@@ -6,6 +6,18 @@ const API_BASE = window.location.origin.startsWith('http')
 // Đường dẫn cơ sở kết nối đến cụm API xác thực của Backend Express
 const DUONG_DAN_API = `${API_BASE}/api/auth`;
 
+// Hàm băm mật khẩu đơn giản ở Client để tránh lưu trữ mật khẩu dưới dạng chữ rõ trong LocalStorage
+function bamMatKhauClient(chuoi) {
+    if (!chuoi) return '';
+    let hash = 0;
+    for (let i = 0; i < chuoi.length; i++) {
+        const char = chuoi.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Chuyển đổi thành số nguyên 32-bit
+    }
+    return 'client_hash_' + Math.abs(hash).toString(16); // Trả về chuỗi băm dạng lục phân
+}
+
 // Ghi đè phương thức fetch toàn cục của trình duyệt để tự động đính kèm ID người gọi (x-requester-id) vào request headers
 const nguyenBanFetch = window.fetch; // Lưu lại hàm fetch nguyên bản của trình duyệt
 window.fetch = function (resource, options = {}) {
@@ -723,9 +735,12 @@ function khoiTaoHoSoCaNhan(nguoiDung) {
             // Lấy giá trị mật khẩu mới
             let matKhauMoi = formSua.elements['password'].value.trim();
             
-            // Cập nhật số điện thoại và ngày sinh (Tuyệt đối không lưu mật khẩu vào LocalStorage)
+            // Cập nhật số điện thoại và ngày sinh (Tuyệt đối không lưu mật khẩu ở dạng rõ vào LocalStorage)
             nguoiDung.phone = formSua.elements['phone'].value.trim();
             nguoiDung.dob = formSua.elements['dob'].value;
+            if (matKhauMoi !== '') {
+                nguoiDung.passwordHash = bamMatKhauClient(matKhauMoi); // Cập nhật mật khẩu băm mới ngoại tuyến
+            }
             
             // Ghi nhận thông tin người dùng đăng nhập mới vào phiên hiện tại
             localStorage.setItem('currentUser', JSON.stringify(nguoiDung)); 
@@ -1354,21 +1369,21 @@ function taoModalChiTietBaiNop() {
 // --------------------------------------------------------------------------
 function khoiTaoDuLieuMau() {
     let dataVersion = localStorage.getItem('DataVersion');
-    // Nếu phiên bản dữ liệu cũ hơn 8, xóa sạch cache để dọn dẹp các trường mật khẩu nhạy cảm và cập nhật dữ liệu mới
-    if (dataVersion !== '8') {
+    // Nếu phiên bản dữ liệu cũ hơn 9, xóa sạch cache để dọn dẹp các trường mật khẩu nhạy cảm và cập nhật dữ liệu mới
+    if (dataVersion !== '9') {
         localStorage.removeItem('Users');
         localStorage.removeItem('Subjects');
         localStorage.removeItem('Classes');
         localStorage.removeItem('Notifications');
-        localStorage.setItem('DataVersion', '8');
+        localStorage.setItem('DataVersion', '9');
     }
 
-    // Gieo mầm dữ liệu tài khoản mẫu cục bộ (Tuyệt đối không lưu mật khẩu ở LocalStorage để bảo mật hệ thống)
+    // Gieo mầm dữ liệu tài khoản mẫu cục bộ (Tuyệt đối không lưu mật khẩu ở dạng rõ tại LocalStorage, mà lưu dạng băm client)
     if (!localStorage.getItem('Users')) {
         ghiCSDL('Users', [
-            { id: 'AD001', role: 'admin', name: 'Quản trị viên HT', email: 'admin', dob: '1990-01-01', phone: '0999888777', readNotifs: [] },
-            { id: 'GV001', role: 'giang-vien', name: 'ThS. Nguyễn Văn A', email: 'giaovien', dob: '1985-05-10', phone: '0988111222', readNotifs: [] },
-            { id: 'SV202501', role: 'sinh-vien', name: 'Nguyễn Hữu Quyết', email: 'sinhvien', dob: '2005-01-15', phone: '0901000001', readNotifs: [] }
+            { id: 'AD001', role: 'admin', name: 'Quản trị viên HT', email: 'admin', dob: '1990-01-01', phone: '0999888777', readNotifs: [], passwordHash: bamMatKhauClient('admin') },
+            { id: 'GV001', role: 'giang-vien', name: 'ThS. Nguyễn Văn A', email: 'giaovien', dob: '1985-05-10', phone: '0988111222', readNotifs: [], passwordHash: bamMatKhauClient('giaovien') },
+            { id: 'SV202501', role: 'sinh-vien', name: 'Nguyễn Hữu Quyết', email: 'sinhvien', dob: '2005-01-15', phone: '0901000001', readNotifs: [], passwordHash: bamMatKhauClient('sinhvien') }
         ]);
     }
     
@@ -1574,16 +1589,19 @@ if (loginForm) {
             
             // Nếu đăng nhập thành công trực tuyến qua MongoDB Atlas
             if (response.ok && data.success) {
+                // Tạo một bản sao dữ liệu sạch, lưu kèm mật khẩu băm để đăng nhập ngoại tuyến lần sau
+                const nguoiDungKemHash = { ...data.user, passwordHash: bamMatKhauClient(passwordValue) };
+                
                 // Lưu thông tin người dùng hiện tại vào LocalStorage
-                localStorage.setItem('currentUser', JSON.stringify(data.user));
+                localStorage.setItem('currentUser', JSON.stringify(nguoiDungKemHash));
                 
                 // Đồng bộ cập nhật thông tin tài khoản này vào CSDL offline (Không bao giờ lưu trường mật khẩu vào LocalStorage)
                 let users = layCSDL('Users');
                 let vt = users.findIndex(u => u.id === data.user.id);
                 if (vt === -1) {
-                    users.push(data.user); // Lưu tài khoản mới không chứa mật khẩu
+                    users.push(nguoiDungKemHash); // Lưu tài khoản mới
                 } else {
-                    users[vt] = { ...users[vt], ...data.user }; // Cập nhật đè dữ liệu mới không chứa mật khẩu
+                    users[vt] = { ...users[vt], ...nguoiDungKemHash }; // Cập nhật đè dữ liệu mới và mật khẩu băm
                 }
                 ghiCSDL('Users', users); // Ghi lại vào LocalStorage
                 
@@ -1594,8 +1612,34 @@ if (loginForm) {
                 alert(data.message || "Sai thông tin đăng nhập!"); // Phản hồi thông báo lỗi từ server
             }
         } catch (error) {
-            // Không thể kết nối đến máy chủ backend (lỗi mạng hoặc mất kết nối internet)
-            alert("Lỗi kết nối máy chủ! Vui lòng kết nối mạng để đăng nhập hệ thống."); // Thông báo yêu cầu kết nối mạng
+            // Không thể kết nối đến máy chủ backend (lỗi mạng hoặc mất kết nối internet) - Chuyển sang đăng nhập ngoại tuyến
+            console.warn("Lỗi kết nối máy chủ! Đang thử xác thực ngoại tuyến qua LocalStorage...", error);
+            
+            let users = layCSDL('Users');
+            let localUser = users.find(u => (u.email === emailValue || u.id === emailValue) && u.role === roleValue);
+            
+            if (localUser) {
+                let hopLe = false;
+                if (localUser.passwordHash) {
+                    // Kiểm tra bằng mật khẩu băm client
+                    hopLe = (localUser.passwordHash === bamMatKhauClient(passwordValue));
+                } else if (localUser.password) {
+                    // Dự phòng cho dữ liệu cũ (nếu có)
+                    hopLe = (localUser.password === passwordValue);
+                }
+                
+                if (hopLe) {
+                    // Đăng nhập ngoại tuyến thành công
+                    localStorage.setItem('currentUser', JSON.stringify(localUser));
+                    alert("Đăng nhập ngoại tuyến thành công (Đang chạy ở chế độ offline)!", () => {
+                        chuyenHuongTrangQuanLy(roleValue);
+                    });
+                } else {
+                    alert("Sai mật khẩu ngoại tuyến!");
+                }
+            } else {
+                alert("Lỗi kết nối máy chủ và không tìm thấy tài khoản ngoại tuyến tương ứng trên trình duyệt!");
+            }
         }
     });
 }

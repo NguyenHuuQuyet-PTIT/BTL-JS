@@ -395,7 +395,7 @@ app.put('/api/nguoi-dung/:id', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vie
         // Nếu thông tin cập nhật hợp lệ thì tiến hành gán đè dữ liệu mới
         if (name !== undefined) nguoiDung.name = name.trim();
         if (email !== undefined) nguoiDung.email = email.toLowerCase().trim();
-        if (password !== undefined && password.trim() !== '') nguoiDung.password = password; // Sửa mật khẩu nếu không rỗng
+        if (password !== undefined && password.trim() !== '') nguoiDung.password = bcrypt.hashSync(password, 10); // Sửa mật khẩu đã băm nếu không rỗng
         if (role !== undefined) nguoiDung.role = role;
         if (dob !== undefined) nguoiDung.dob = dob;
         if (phone !== undefined) nguoiDung.phone = phone.trim();

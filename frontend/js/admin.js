@@ -125,10 +125,11 @@ if (formTaoTK) {
             
             // Xử lý khi API ghi nhận tạo tài khoản thành công
             if (response.ok && data.success) {
-                // Lưu tài khoản mới vào danh sách offline LocalStorage (Tuyệt đối không lưu trường mật khẩu)
+                // Lưu tài khoản mới vào danh sách offline LocalStorage (Tuyệt đối không lưu trường mật khẩu dạng rõ)
                 let users = layCSDL('Users');
                 const cleanUser = { ...taiKhoanGui, readNotifs: [] };
                 delete cleanUser.password; // Xóa mật khẩu khỏi dữ liệu cache cục bộ
+                cleanUser.passwordHash = bamMatKhauClient(passwordVal); // Lưu mật khẩu băm ngoại tuyến
                 users.push(cleanUser);
                 ghiCSDL('Users', users);
                 
@@ -140,8 +141,25 @@ if (formTaoTK) {
                 alert(data.message || "Tạo tài khoản thất bại!");
             }
         } catch (error) {
-            // Không kết nối được server, thông báo yêu cầu trực tuyến
-            alert("Lỗi kết nối máy chủ! Vui lòng kết nối mạng để tạo tài khoản mới.");
+            // Hỗ trợ tạo tài khoản ngoại tuyến khi mất kết nối mạng
+            console.warn("Lỗi kết nối máy chủ, đang lưu tài khoản ngoại tuyến...", error);
+            let users = layCSDL('Users');
+            // Kiểm tra xem ID hoặc Email đã tồn tại trong cache ngoại tuyến hay chưa
+            if (users.some(u => u.id === idVal || u.email === emailVal)) {
+                alert("Lỗi: Mã định danh ID hoặc Email đã tồn tại ở dữ liệu ngoại tuyến!");
+                return;
+            }
+            
+            const cleanUser = { ...taiKhoanGui, readNotifs: [] };
+            delete cleanUser.password; // Không bao giờ lưu mật khẩu rõ
+            cleanUser.passwordHash = bamMatKhauClient(passwordVal); // Lưu mật khẩu dạng băm client
+            users.push(cleanUser);
+            ghiCSDL('Users', users);
+            
+            alert("Lưu tài khoản mới ngoại tuyến thành công (Đang chạy offline)!");
+            dongHopThoai('admCreateAccountModal');
+            formTaoTK.reset();
+            hienThiDanhSachTaiKhoan();
         }
         }
     });
@@ -204,12 +222,15 @@ if (formSuaTK) {
             let data = await response.json();
             
             if (response.ok && data.success) {
-                // Cập nhật thông tin vào danh sách offline LocalStorage (Không lưu mật khẩu vào cache)
+                // Cập nhật thông tin vào danh sách offline LocalStorage (Không lưu mật khẩu dạng rõ vào cache)
                 let users = layCSDL('Users');
                 let vt = users.findIndex(u => u.id === idVal);
                 if (vt > -1) {
                     const cleanUpdate = { ...taiKhoanCapNhat };
-                    delete cleanUpdate.password; // Đảm bảo xóa bỏ trường mật khẩu khỏi cache cục bộ
+                    delete cleanUpdate.password; // Đảm bảo xóa bỏ trường mật khẩu dạng rõ khỏi cache cục bộ
+                    if (passwordVal !== '') {
+                        cleanUpdate.passwordHash = bamMatKhauClient(passwordVal); // Cập nhật mật khẩu băm client mới ngoại tuyến
+                    }
                     users[vt] = { ...users[vt], ...cleanUpdate };
                     ghiCSDL('Users', users);
                 }
@@ -221,8 +242,25 @@ if (formSuaTK) {
                 alert(data.message || "Cập nhật tài khoản thất bại!");
             }
         } catch (error) {
-            // Không kết nối được server khi sửa tài khoản
-            alert("Lỗi kết nối máy chủ! Vui lòng kết nối mạng để cập nhật tài khoản.");
+            // Hỗ trợ cập nhật thông tin tài khoản ngoại tuyến khi mất kết nối mạng
+            console.warn("Lỗi kết nối máy chủ, đang cập nhật tài khoản ngoại tuyến...", error);
+            let users = layCSDL('Users');
+            let vt = users.findIndex(u => u.id === idVal);
+            if (vt > -1) {
+                const cleanUpdate = { ...taiKhoanCapNhat };
+                delete cleanUpdate.password; // Không lưu mật khẩu rõ
+                if (passwordVal !== '') {
+                    cleanUpdate.passwordHash = bamMatKhauClient(passwordVal); // Cập nhật mật khẩu băm client mới ngoại tuyến
+                }
+                users[vt] = { ...users[vt], ...cleanUpdate };
+                ghiCSDL('Users', users);
+                
+                alert("Cập nhật thông tin tài khoản ngoại tuyến thành công (Đang chạy offline)!");
+                dongHopThoai('admEditAccountModal');
+                hienThiDanhSachTaiKhoan();
+            } else {
+                alert("Không tìm thấy tài khoản ngoại tuyến tương ứng để chỉnh sửa!");
+            }
         }
     });
 }
