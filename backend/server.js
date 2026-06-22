@@ -4,6 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 const dns = require('dns');
 const path = require('path');
+const bcrypt = require('bcryptjs'); // Import thư viện BcryptJS để băm và kiểm tra mật khẩu bảo mật
 
 // Cấu hình DNS dự phòng tránh lỗi kết nối MongoDB
 try {
@@ -20,6 +21,38 @@ const LopHocModel = require('./models/LopHoc'); // Thêm model lớp học
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Middleware xác thực quyền hạn dựa trên ID người gọi gửi lên trong headers
+const xacThucQuyenHan = (cacVaiTroChoPhep) => {
+    return async (req, res, next) => {
+        try {
+            // Lấy mã ID người thực hiện yêu cầu từ Custom Headers 'x-requester-id'
+            const requesterId = req.headers['x-requester-id'];
+            
+            // Nếu không có thông tin định danh người gọi, chặn truy cập ngay lập tức để bảo mật
+            if (!requesterId) { // Kiểm tra biến requesterId xem có rỗng không
+                return res.status(401).json({ success: false, message: 'Yêu cầu bị từ chối: Thiếu thông tin định danh x-requester-id trong headers!' }); // Trả về mã lỗi 401 Unauthorized
+            }
+
+            // Tìm thông tin tài khoản người gọi trong database thông qua Mongoose
+            const user = await NguoiDungModel.findOne({ id: requesterId }); // Truy vấn tìm người dùng có mã ID tương ứng
+            
+            // Nếu không tìm thấy người dùng hoặc vai trò không hợp lệ trong danh sách được cấp phép
+            if (!user || !cacVaiTroChoPhep.includes(user.role)) { // Kiểm tra sự tồn tại và vai trò quyền hạn
+                return res.status(403).json({ success: false, message: 'Yêu cầu bị từ chối: Bạn không có quyền truy cập chức năng này!' }); // Trả về mã lỗi 403 Forbidden
+            }
+
+            // Gắn thông tin người dùng vào request để sử dụng tiếp ở các API handler phía sau
+            req.user = user; // Lưu đối tượng user đã tìm thấy vào request
+            
+            // Chuyển sang middleware/handler tiếp theo trong chuỗi Express router
+            next(); // Gọi hàm next() để Express tiếp tục điều phối
+        } catch (err) { // Bắt các lỗi ngoại lệ phát sinh trong quá trình chạy
+            // Xử lý lỗi ngoại lệ hệ thống và trả về mã lỗi 500
+            res.status(500).json({ success: false, message: 'Lỗi kiểm duyệt phân quyền hệ thống.' }); // Phản hồi lỗi hệ thống
+        }
+    };
+};
 
 app.use(cors());
 app.use(express.json({ limit: '100mb' }));
@@ -43,15 +76,19 @@ mongoose.connect(MONGO_URI)
 async function taoDuLieuMau() {
     try {
         // 1. Tạo người dùng mẫu nếu bảng trống
-        const soTaiKhoan = await NguoiDungModel.countDocuments();
-        if (soTaiKhoan === 0) {
+        const soTaiKhoan = await NguoiDungModel.countDocuments(); // Đếm tổng số tài khoản người dùng đang có trên database
+        if (soTaiKhoan === 0) { // Nếu bảng người dùng hoàn toàn trống thì tiến hành gieo mầm dữ liệu
+            const hashedAdminPassword = bcrypt.hashSync('admin', 10); // Thực hiện băm (hash) mật khẩu của Admin với độ mạnh salt = 10
+            const hashedTeacherPassword = bcrypt.hashSync('giaovien', 10); // Thực hiện băm mật khẩu của Giảng viên mẫu
+            const hashedStudentPassword = bcrypt.hashSync('sinhvien', 10); // Thực hiện băm mật khẩu của Sinh viên mẫu
+
             const taiKhoanMau = [
-                { id: 'AD001', role: 'admin', name: 'Quản trị viên HT', email: 'admin', password: 'admin', dob: '1990-01-01', phone: '0999888777', readNotifs: [] },
-                { id: 'GV001', role: 'giang-vien', name: 'ThS. Nguyễn Văn A', email: 'giaovien', password: 'giaovien', dob: '1985-05-10', phone: '0988111222', readNotifs: [] },
-                { id: 'SV202501', role: 'sinh-vien', name: 'Nguyễn Hữu Quyết', email: 'sinhvien', password: 'sinhvien', dob: '2005-01-15', phone: '0901000001', readNotifs: [] }
+                { id: 'AD001', role: 'admin', name: 'Quản trị viên HT', email: 'admin', password: hashedAdminPassword, dob: '1990-01-01', phone: '0999888777', readNotifs: [] }, // Tài khoản quản trị hệ thống
+                { id: 'GV001', role: 'giang-vien', name: 'ThS. Nguyễn Văn A', email: 'giaovien', password: hashedTeacherPassword, dob: '1985-05-10', phone: '0988111222', readNotifs: [] }, // Tài khoản giảng viên mẫu
+                { id: 'SV202501', role: 'sinh-vien', name: 'Nguyễn Hữu Quyết', email: 'sinhvien', password: hashedStudentPassword, dob: '2005-01-15', phone: '0901000001', readNotifs: [] } // Tài khoản sinh viên mẫu
             ];
-            await NguoiDungModel.insertMany(taiKhoanMau);
-            console.log('Đã khởi tạo tài khoản mẫu vào MongoDB Atlas.');
+            await NguoiDungModel.insertMany(taiKhoanMau); // Lưu mảng tài khoản mẫu vào database MongoDB thông qua Mongoose
+            console.log('Đã khởi tạo tài khoản mẫu vào MongoDB Atlas (mật khẩu đã được mã hóa Bcrypt).'); // In thông báo log thành công
         }
 
         // 2. Tạo thông báo mẫu nếu bảng trống
@@ -257,15 +294,18 @@ app.post('/api/auth/dang-ky', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Mã ID này đã tồn tại!' });
         }
 
-        // Tạo một tài khoản người dùng mới dựa trên mô hình NguoiDungModel
+        // Thực hiện băm (hash) mật khẩu đăng ký đầu vào bằng BcryptJS trước khi lưu trữ để bảo mật
+        const matKhauMaHoa = bcrypt.hashSync(password, 10); // Băm mật khẩu người dùng gửi lên với salt rounds = 10
+        
+        // Tạo một tài khoản người dùng mới dựa trên mô hình NguoiDungModel với thông tin đã băm mật khẩu
         const nguoiDungMoi = new NguoiDungModel({
-            id: id.trim(), 
-            name: name.trim(), 
-            email: emailLower,
-            password, 
-            role, 
-            dob: dob || '', 
-            phone: phone ? phone.trim() : '', 
+            id: id.trim(), // Gán mã định danh đã cắt khoảng trắng
+            name: name.trim(), // Gán họ tên đầy đủ đã cắt khoảng trắng
+            email: emailLower, // Gán email đã viết thường
+            password: matKhauMaHoa, // Lưu mật khẩu đã được mã hóa bảo mật thay vì lưu plain text
+            role, // Gán vai trò (admin/sinh-vien/giang-vien)
+            dob: dob || '', // Gán ngày sinh (hoặc chuỗi rỗng)
+            phone: phone ? phone.trim() : '', // Gán số điện thoại
             readNotifs: [] // Ban đầu danh sách thông báo đã đọc là rỗng
         });
         
@@ -295,16 +335,21 @@ app.post('/api/auth/dang-nhap', async (req, res) => {
 
         const input = email.trim(); // Cắt bỏ khoảng trắng thừa của tài khoản đầu vào
         
-        // Tìm tài khoản khớp với Email hoặc Mã số ID, đồng thời khớp cả Mật khẩu và Vai trò yêu cầu
+        // Tìm tài khoản khớp với Email hoặc Mã số ID và khớp với Vai trò, đồng thời gọi thêm trường mật khẩu đã bị ẩn (select: false)
         const nguoiDung = await NguoiDungModel.findOne({
-            $or: [{ email: input.toLowerCase() }, { id: input }],
-            password, 
-            role
-        });
-
+            $or: [{ email: input.toLowerCase() }, { id: input }], // So khớp tài khoản đầu vào là email hoặc mã ID
+            role // Khớp cả vai trò
+        }).select('+password'); // Buộc Mongoose phải nạp thêm trường password (vốn đã bị ẩn bởi select: false trong Schema)
+        
         // Nếu không tìm thấy người dùng phù hợp thì báo sai tài khoản/vai trò
-        if (!nguoiDung) {
-            return res.status(400).json({ success: false, message: 'Thông tin tài khoản hoặc vai trò sai!' });
+        if (!nguoiDung) { // Trường hợp tài khoản hoặc vai trò bị sai lệch
+            return res.status(400).json({ success: false, message: 'Thông tin tài khoản hoặc vai trò sai!' }); // Phản hồi lỗi 400
+        }
+
+        // So khớp mật khẩu đầu vào với mật khẩu đã được mã hóa bằng hàm compareSync của BcryptJS
+        const hopLeMatKhau = bcrypt.compareSync(password, nguoiDung.password); // So sánh mật khẩu rõ với chuỗi đã băm
+        if (!hopLeMatKhau) { // Nếu so khớp thất bại (sai mật khẩu)
+            return res.status(400).json({ success: false, message: 'Thông tin tài khoản hoặc vai trò sai!' }); // Trả về thông báo lỗi đồng nhất
         }
 
         // Trả về mã trạng thái 200 (OK) và đối tượng người dùng đã ẩn mật khẩu để bảo mật
@@ -317,8 +362,8 @@ app.post('/api/auth/dang-nhap', async (req, res) => {
     }
 });
 
-// API lấy toàn bộ danh sách tài khoản người dùng có trên hệ thống
-app.get('/api/nguoi-dung', async (req, res) => {
+// API lấy toàn bộ danh sách tài khoản người dùng có trên hệ thống (Yêu cầu vai trò: admin, giang-vien, sinh-vien)
+app.get('/api/nguoi-dung', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
     try {
         // Lấy toàn bộ tài khoản người dùng từ MongoDB Atlas
         const users = await NguoiDungModel.find({});
@@ -330,10 +375,15 @@ app.get('/api/nguoi-dung', async (req, res) => {
     }
 });
 
-// API cập nhật thông tin chi tiết một tài khoản theo Mã ID định danh
-app.put('/api/nguoi-dung/:id', async (req, res) => {
+// API cập nhật thông tin chi tiết một tài khoản theo Mã ID định danh (Yêu cầu vai trò: admin, giang-vien, sinh-vien)
+app.put('/api/nguoi-dung/:id', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
     try {
         const { id } = req.params; // Lấy mã ID tài khoản từ tham số URL
+        
+        // BẢO MẬT (BOLA): Chỉ cho phép Admin hoặc chính tài khoản sở hữu tự chỉnh sửa thông tin của mình
+        if (req.user.role !== 'admin' && req.user.id !== id) { // Nếu không phải admin và không tự sửa chính mình
+            return res.status(403).json({ success: false, message: 'Bạn không có quyền chỉnh sửa thông tin tài khoản của người khác!' }); // Từ chối với lỗi 403
+        }
         const { name, email, password, role, dob, phone, readNotifs } = req.body; // Các thông tin cần chỉnh sửa
 
         // Tìm người dùng hiện tại có mã ID khớp với tham số
@@ -363,8 +413,8 @@ app.put('/api/nguoi-dung/:id', async (req, res) => {
     }
 });
 
-// API xóa tài khoản người dùng ra khỏi hệ thống theo Mã ID định danh
-app.delete('/api/nguoi-dung/:id', async (req, res) => {
+// API xóa tài khoản người dùng ra khỏi hệ thống theo Mã ID định danh (Yêu cầu vai trò: admin)
+app.delete('/api/nguoi-dung/:id', xacThucQuyenHan(['admin']), async (req, res) => {
     try {
         const { id } = req.params; // Lấy mã ID tài khoản từ tham số trên URL
         
@@ -386,8 +436,8 @@ app.delete('/api/nguoi-dung/:id', async (req, res) => {
 // CÁC ROUTE API DÀNH CHO QUẢN LÝ THÔNG BÁO (SYSTEM NOTIFICATIONS ENDPOINTS)
 // ==========================================================================
 
-// API lấy toàn bộ danh sách thông báo hệ thống và sắp xếp theo thứ tự mới nhất
-app.get('/api/thong-bao', async (req, res) => {
+// API lấy toàn bộ danh sách thông báo hệ thống và sắp xếp theo thứ tự mới nhất (Xác thực quyền hạn: Tất cả tài khoản đã đăng nhập hệ thống đều được đọc)
+app.get('/api/thong-bao', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
     try {
         // Truy vấn danh sách thông báo và sắp xếp theo ngày khởi tạo giảm dần
         const notifications = await ThongBaoModel.find({}).sort({ createdAt: -1 });
@@ -398,8 +448,8 @@ app.get('/api/thong-bao', async (req, res) => {
     }
 });
 
-// API tạo và lưu trữ một thông báo mới (do Admin hoặc Giảng viên gửi)
-app.post('/api/thong-bao', async (req, res) => {
+// API tạo và lưu trữ một thông báo mới (Xác thực quyền hạn: Admin, Giảng viên tạo thông báo hệ thống, Sinh viên gửi thông báo nộp bài)
+app.post('/api/thong-bao', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
     try {
         // Nhận thông tin thông báo từ phần Body của Request
         const { id, senderName, target, text, date, materialId, materialType, submissionId, fileName, link } = req.body;
@@ -429,8 +479,8 @@ app.post('/api/thong-bao', async (req, res) => {
     }
 });
 
-// API cập nhật thông báo trực tuyến theo ID
-app.put('/api/thong-bao/:id', async (req, res) => {
+// API cập nhật thông báo trực tuyến theo ID (Xác thực quyền hạn: Chỉ Admin và Giảng viên được phép sửa đổi thông báo)
+app.put('/api/thong-bao/:id', xacThucQuyenHan(['admin', 'giang-vien']), async (req, res) => {
     try {
         const { id } = req.params; // Lấy ID thông báo từ URL
         const { text, fileName, link } = req.body; // Lấy nội dung mới từ body
@@ -454,8 +504,8 @@ app.put('/api/thong-bao/:id', async (req, res) => {
     }
 });
 
-// API xóa thông báo khỏi hệ thống theo Mã ID thông báo tương ứng
-app.delete('/api/thong-bao/:id', async (req, res) => {
+// API xóa thông báo khỏi hệ thống theo Mã ID thông báo tương ứng (Xác thực quyền hạn: Chỉ Admin và Giảng viên được phép xóa thông báo)
+app.delete('/api/thong-bao/:id', xacThucQuyenHan(['admin', 'giang-vien']), async (req, res) => {
     try {
         const { id } = req.params; // Lấy ID thông báo từ URL
         
@@ -477,8 +527,8 @@ app.delete('/api/thong-bao/:id', async (req, res) => {
 // CÁC ROUTE API DÀNH CHO QUẢN LÝ TÀI LIỆU & BÀI TẬP (MATERIALS ENDPOINTS)
 // ==========================================================================
 
-// API lấy danh sách toàn bộ bài giảng, bài tập và tài liệu môn học
-app.get('/api/tai-lieu', async (req, res) => {
+// API lấy danh sách toàn bộ bài giảng, bài tập và tài liệu môn học (Xác thực quyền hạn: Tất cả tài khoản đã đăng nhập đều được lấy tài liệu)
+app.get('/api/tai-lieu', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
     try {
         // Lấy tất cả tài liệu môn học và sắp xếp theo thời gian mới nhất lên đầu
         const materials = await TaiLieuModel.find({}).sort({ createdAt: -1 });
@@ -489,8 +539,8 @@ app.get('/api/tai-lieu', async (req, res) => {
     }
 });
 
-// API lấy thông tin chi tiết một tài liệu môn học theo Mã ID
-app.get('/api/tai-lieu/:id', async (req, res) => {
+// API lấy thông tin chi tiết một tài liệu môn học theo Mã ID (Xác thực quyền hạn: Tất cả các vai trò hợp lệ đã đăng nhập)
+app.get('/api/tai-lieu/:id', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
     try {
         const { id } = req.params;
         const material = await TaiLieuModel.findOne({ id });
@@ -503,8 +553,8 @@ app.get('/api/tai-lieu/:id', async (req, res) => {
     }
 });
 
-// API đăng tải một tài liệu môn học hoặc bài tập mới từ phía Giảng viên
-app.post('/api/tai-lieu', async (req, res) => {
+// API đăng tải một tài liệu môn học hoặc bài tập mới từ phía Giảng viên (Xác thực quyền hạn: Chỉ Admin hoặc Giảng viên có quyền tải lên tài liệu mới)
+app.post('/api/tai-lieu', xacThucQuyenHan(['admin', 'giang-vien']), async (req, res) => {
     try {
         // Nhận dữ liệu tài liệu truyền từ Client
         const { id, classId, title, type, link, date, description, fileName } = req.body;
@@ -526,8 +576,8 @@ app.post('/api/tai-lieu', async (req, res) => {
     }
 });
 
-// API xóa tài liệu học tập khỏi lớp học theo Mã ID tài liệu được truyền
-app.delete('/api/tai-lieu/:id', async (req, res) => {
+// API xóa tài liệu học tập khỏi lớp học theo Mã ID tài liệu được truyền (Xác thực quyền hạn: Chỉ Admin và Giảng viên được phép xóa tài liệu)
+app.delete('/api/tai-lieu/:id', xacThucQuyenHan(['admin', 'giang-vien']), async (req, res) => {
     try {
         const { id } = req.params; // Lấy ID tài liệu từ tham số truyền
         
@@ -545,8 +595,8 @@ app.delete('/api/tai-lieu/:id', async (req, res) => {
     }
 });
 
-// API cập nhật tài liệu học tập / bài tập theo ID
-app.put('/api/tai-lieu/:id', async (req, res) => {
+// API cập nhật tài liệu học tập / bài tập theo ID (Xác thực quyền hạn: Chỉ Admin và Giảng viên được phép cập nhật tài liệu)
+app.put('/api/tai-lieu/:id', xacThucQuyenHan(['admin', 'giang-vien']), async (req, res) => {
     try {
         const { id } = req.params;
         const { title, type, link, description, fileName } = req.body;
@@ -573,8 +623,8 @@ app.put('/api/tai-lieu/:id', async (req, res) => {
 // CÁC ROUTE API DÀNH CHO NỘP BÀI TẬP TRỰC TUYẾN (ASSIGNMENT SUBMISSIONS ENDPOINTS)
 // ==========================================================================
 
-// API lấy toàn bộ danh sách bài nộp của tất cả sinh viên
-app.get('/api/nop-bai', async (req, res) => {
+// API lấy toàn bộ danh sách bài nộp của tất cả sinh viên (Xác thực quyền hạn: Cả Admin, Giảng viên và Sinh viên đều được phép tải danh sách)
+app.get('/api/nop-bai', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
     try {
         // Lấy danh sách toàn bộ bài làm sinh viên đã nộp lên hệ thống
         const submissions = await NopBaiModel.find({}).sort({ createdAt: -1 });
@@ -585,8 +635,8 @@ app.get('/api/nop-bai', async (req, res) => {
     }
 });
 
-// API lấy chi tiết một bài nộp theo Mã ID
-app.get('/api/nop-bai/:id', async (req, res) => {
+// API lấy chi tiết một bài nộp theo Mã ID (Xác thực quyền hạn: Tất cả các vai trò trong hệ thống đã đăng nhập)
+app.get('/api/nop-bai/:id', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
     try {
         const { id } = req.params;
         const submission = await NopBaiModel.findOne({ id });
@@ -599,8 +649,8 @@ app.get('/api/nop-bai/:id', async (req, res) => {
     }
 });
 
-// API nộp bài tập mới hoặc cập nhật lại liên kết bài làm của Sinh viên
-app.post('/api/nop-bai', async (req, res) => {
+// API nộp bài tập mới hoặc cập nhật lại liên kết bài làm của Sinh viên (Xác thực quyền hạn: Cho phép Sinh viên thực hiện nộp bài tập)
+app.post('/api/nop-bai', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
     try {
         // Nhận dữ liệu nộp bài gửi lên từ form của sinh viên
         const { id, materialId, studentId, studentName, link, date, fileName } = req.body;
@@ -638,8 +688,8 @@ app.post('/api/nop-bai', async (req, res) => {
 // CÁC ROUTE API DÀNH CHO QUẢN LÝ LỚP HỌC (CLASSES ENDPOINTS)
 // ==========================================================================
 
-// API lấy toàn bộ danh sách lớp học phần
-app.get('/api/lop-hoc', async (req, res) => {
+// API lấy toàn bộ danh sách lớp học phần (Xác thực quyền hạn: Tất cả các vai trò hợp lệ đều có quyền xem danh sách lớp học)
+app.get('/api/lop-hoc', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
     try {
         const classes = await LopHocModel.find({});
         res.status(200).json({ success: true, classes });
@@ -648,8 +698,8 @@ app.get('/api/lop-hoc', async (req, res) => {
     }
 });
 
-// API tạo lớp học phần mới
-app.post('/api/lop-hoc', async (req, res) => {
+// API tạo lớp học phần mới (Xác thực quyền hạn: Chỉ Admin mới có quyền tạo lớp học phần mới)
+app.post('/api/lop-hoc', xacThucQuyenHan(['admin']), async (req, res) => {
     try {
         const classData = req.body;
         if (!classData.id || !classData.subjectId || !classData.teacherId) {
@@ -663,8 +713,8 @@ app.post('/api/lop-hoc', async (req, res) => {
     }
 });
 
-// API cập nhật thông tin lớp học phần (tiết học, sinh viên ghi danh, buổi học, điểm số, điểm danh)
-app.put('/api/lop-hoc/:id', async (req, res) => {
+// API cập nhật thông tin lớp học phần (Xác thực quyền hạn: Cho phép Admin, Giảng viên và Sinh viên thực hiện cập nhật theo vai trò được thiết lập)
+app.put('/api/lop-hoc/:id', xacThucQuyenHan(['admin', 'giang-vien', 'sinh-vien']), async (req, res) => {
     try {
         const { id } = req.params;
         const classData = req.body;
@@ -679,8 +729,8 @@ app.put('/api/lop-hoc/:id', async (req, res) => {
     }
 });
 
-// API xóa lớp học phần theo ID
-app.delete('/api/lop-hoc/:id', async (req, res) => {
+// API xóa lớp học phần theo ID (Xác thực quyền hạn: Chỉ Admin mới có quyền xóa lớp học phần khỏi hệ thống)
+app.delete('/api/lop-hoc/:id', xacThucQuyenHan(['admin']), async (req, res) => {
     try {
         const { id } = req.params;
         const result = await LopHocModel.findOneAndDelete({ id });

@@ -1,8 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
-/* ==========================================================================
-    1. HỆ THỐNG MÀU SẮC & BIẾN SỐ CHỦ ĐẠO (CANVA & PREMIUM SAAS)
-   ========================================================================== */
+/* 1. Mau sac chu dao va bien so */
 :root {
     /* Bảng màu rực rỡ phong cách Canva */
     --primary: #8b3dff;           /* Tím hoàng gia Canva */
@@ -46,14 +42,13 @@ html, body {
     scrollbar-width: none; /* Ẩn thanh cuộn đối với Firefox */
 }
 
-/* ==========================================================================
-   2. THIẾT LẬP CƠ BẢN & LỚP TIỆN ÍCH (RESET & UTILITIES)
-   ========================================================================== */
+/* 2. Cau hinh co ban */
 * { 
     margin: 0; 
     padding: 0; 
     box-sizing: border-box; 
-    font-family: 'Outfit', sans-serif; 
+    /* Su dung font chu he thong mac dinh de phu hop voi bai tap lon cua sinh vien */
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
 }
 
 body { 
@@ -111,9 +106,7 @@ body {
 }
 .rounded-full { border-radius: 9999px; } /* Tạo bo góc tròn hoàn hảo */
 
-/* ==========================================================================
-   3. BỐ CỤC HỆ THỐNG CHÍNH (MAIN LAYOUT)
-   ========================================================================== */
+/* 3. Bo cuc chinh */
 .app-container { 
     display: flex; 
     min-height: 100vh; 
@@ -307,9 +300,7 @@ body {
     border-color: var(--primary); 
 }
 
-/* ==========================================================================
-   4. NÚT BẤM HIỆN ĐẠI (PREMIUM BUTTONS & HOVERS)
-   ========================================================================== */
+/* 4. Nut bam */
 .btn-primary, .btn-danger, .action-btn, .btn-logout { 
     cursor: pointer; 
     font-weight: 600; 
@@ -386,9 +377,7 @@ body {
     transform: translateY(-3px) scale(1.02);
 }
 
-/* ==========================================================================
-   5. BIỂU MẪU, BẢNG BIỂU & BIỂU ĐỒ (FORMS & TABLES)
-   ========================================================================== */
+/* 5. Form va bang bieu */
 .input-group { 
     margin-bottom: 20px; 
 }
@@ -498,9 +487,7 @@ canvas {
     max-width: 100%; 
 }
 
-/* ==========================================================================
-   6. THANH ĐIỀU HƯỚNG & MENU PHÂN CHIA CHUYÊN NGHIỆP
-   ========================================================================== */
+/* 6. Menu dieu huong */
 .menu ul { list-style: none; } 
 .menu li { margin-bottom: 6px; }
 
@@ -610,9 +597,7 @@ canvas {
     transition: width 0.3s; 
 }
 
-/* ==========================================
-   8. HỘP THOẠI (MODAL BLUR LAYOUT)
-   ========================================== */
+/* 8. Hop thoai */
 .modal { 
     display: none; 
     position: fixed; 
@@ -722,9 +707,7 @@ canvas {
     height: 16px;
 }
 
-/* ==========================================================================
-   9. HỘP THOẠI THÔNG BÁO TỰ CHẾ ĐẸP MẮT (CUSTOM PREMIUM ALERT MODAL)
-   ========================================================================== */
+/* 9. Hop thoai thong bao */
 .custom-alert-overlay {
     position: fixed;
     top: 0;
@@ -837,9 +820,7 @@ canvas {
     box-shadow: 0 4px 12px rgba(139, 61, 255, 0.15);
 }
 
-/* ==========================================================================
-   10. GIAO DIỆN ĐĂNG NHẬP SAAS CAO CẤP (GLASSMORPHIC LOGIN INTERFACE)
-   ========================================================================== */
+/* 10. Giao dien dang nhap */
 
 /* Nền trang đăng nhập sáng phong cách Canva/Figma */
 .auth-page {
@@ -855,15 +836,9 @@ canvas {
 }
 
 /* Container chứa hệ thống bong bóng động ngũ sắc */
+/* An hoan toan khoi animated-bg de an bong bong dong */
 .animated-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1;
-    overflow: hidden;
-    pointer-events: none;
+    display: none !important;
 }
 
 /* Cấu hình chung cho bong bóng màu */

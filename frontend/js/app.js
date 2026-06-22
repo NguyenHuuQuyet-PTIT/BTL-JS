@@ -6,6 +6,26 @@ const API_BASE = window.location.origin.startsWith('http')
 // Đường dẫn cơ sở kết nối đến cụm API xác thực của Backend Express
 const DUONG_DAN_API = `${API_BASE}/api/auth`;
 
+// Ghi đè phương thức fetch toàn cục của trình duyệt để tự động đính kèm ID người gọi (x-requester-id) vào request headers
+const nguyenBanFetch = window.fetch; // Lưu lại hàm fetch nguyên bản của trình duyệt
+window.fetch = function (resource, options = {}) {
+    // Chỉ can thiệp nếu đường dẫn gọi đến API của hệ thống
+    if (typeof resource === 'string' && resource.startsWith(API_BASE)) {
+        // Lấy thông tin người dùng đăng nhập hiện tại từ LocalStorage
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (user && user.id) {
+            // Khởi tạo đối tượng headers nếu chưa tồn tại
+            if (!options.headers) {
+                options.headers = {};
+            }
+            // Đính kèm ID người dùng vào headers 'x-requester-id' để backend xác thực quyền hạn
+            options.headers['x-requester-id'] = user.id;
+        }
+    }
+    // Gọi lại hàm fetch nguyên bản của trình duyệt với cấu hình mới đã được đính kèm headers
+    return nguyenBanFetch(resource, options);
+};
+
 // Ghi đè hàm alert mặc định của trình duyệt để hiển thị giao diện Canva Glassmorphism
 // --------------------------------------------------------------------------
 function hienThiAlertTuyBien(noiDung, tieuDe = "Thông báo", kieu = "info", callback = null) {
@@ -521,6 +541,55 @@ function moHopThoai(idModal) {
     let el = document.getElementById(idModal);
     // Chuyển thuộc tính hiển thị sang flex để kích hoạt flexbox centering
     if (el) el.style.display = 'flex'; 
+}
+
+// Hàm tạo và hiển thị hộp thoại modal Ủng hộ dự án với mã QR tài trợ động (Xác thực hiển thị trên tất cả các trang)
+function hienThiModalUngHo() {
+    // Tìm kiếm phần tử modal Ủng hộ dự án bằng ID trong cây DOM
+    let modal = document.getElementById('donationModal');
+    // Nếu phần tử modal chưa tồn tại trong trang, tiến hành khởi tạo động cấu trúc HTML của nó
+    if (!modal) {
+        // Tạo một thẻ div mới đại diện cho khung chứa modal
+        modal = document.createElement('div');
+        // Thiết lập ID định danh cho modal
+        modal.id = 'donationModal';
+        // Gán class CSS chung cho modal để đồng bộ phong cách hiển thị
+        modal.className = 'modal';
+        // Mặc định ẩn modal khỏi giao diện khi chưa click
+        modal.style.display = 'none';
+        // Điền mã HTML cấu trúc giao diện mờ kính (glassmorphism) cho hộp thoại
+        modal.innerHTML = `
+            <div class="modal-content glass-card" style="max-width: 420px; text-align: center; padding: 30px 24px; border-radius: var(--border-radius-lg); position: relative; border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: var(--shadow-lg);">
+                <!-- Nút đóng modal góc phải -->
+                <span class="close-modal" onclick="dongHopThoai('donationModal')" style="position: absolute; right: 20px; top: 15px; font-size: 24px; cursor: pointer; color: var(--text-muted); transition: var(--transition);">&times;</span>
+                <!-- Tiêu đề nổi bật thu hút sự chú ý -->
+                <h3 class="font-bold text-xl text-primary mb-10" style="margin-top: 10px;">💖 ỦNG HỘ DỰ ÁN 💖</h3>
+                <!-- Lời nhắn chân thành gửi đến người dùng -->
+                <p class="text-sm text-muted mb-20" style="font-size: 13px; line-height: 1.5;">Nếu bạn yêu thích sản phẩm của tôi, hãy quét mã QR này để gửi một chút đóng góp nhỏ giúp tôi có động lực duy trì và phát triển thêm nhiều chức năng thú vị hơn nữa nhé!</p>
+                <!-- Khung chứa ảnh mã QR có đổ bóng mờ ảo bắt mắt -->
+                <div style="background: #ffffff; padding: 16px; border-radius: var(--border-radius); display: inline-block; box-shadow: var(--shadow); margin-bottom: 20px; border: 1px solid rgba(139, 61, 255, 0.08);">
+                    <!-- Ảnh mã QR thanh toán ngân hàng MB Bank tự động kết nối qua dịch vụ VietQR -->
+                    <img src="https://img.vietqr.io/image/mbbank-0989287807-qr_only.png?accountName=NGUYEN%20HUU%20QUYET&addInfo=Ung%20ho%20du%20an%20Edu%20Report" alt="Mã QR Ủng Hộ" style="width: 220px; height: 220px; display: block; border-radius: 8px;">
+                </div>
+                <!-- Dòng chữ chú thích phụ -->
+                <div class="font-bold text-primary" style="font-size: 15px; margin-bottom: 4px;">MÃ QR THANH TOÁN TÀI TRỢ</div>
+                <div class="text-sm text-muted" style="font-size: 12px;">Nguyễn Hữu Quyết - Lớp Công nghệ Thông tin</div>
+            </div>
+        `;
+        // Thêm phần tử modal vừa tạo vào cuối thẻ body của tài liệu HTML hiện tại
+        document.body.appendChild(modal);
+
+        // Đăng ký sự kiện đóng hộp thoại khi người dùng nhấn chuột ra ngoài vùng thẻ card trắng (nhấn vào vùng tối mờ nền)
+        modal.addEventListener('click', function(e) {
+            // Kiểm tra xem vị trí nhấp chuột có đúng là phần nền mờ hay không
+            if (e.target === modal) {
+                // Gọi hàm đóng hộp thoại để ẩn modal đi
+                dongHopThoai('donationModal');
+            }
+        });
+    }
+    // Chuyển thuộc tính hiển thị sang flex để căn giữa modal lồng trên trang web
+    modal.style.display = 'flex';
 }
 
 // Hàm ẩn hộp thoại modal theo ID phần tử

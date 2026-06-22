@@ -1,10 +1,3 @@
-# BÁO CÁO CHI TIẾT HỆ THỐNG API & KIẾN TRÚC LƯU TRỮ (STORAGE ARCHITECTURE)
-## DỰ ÁN: EDU REPORT LMS (QUẢN LÝ ĐÀO TẠO TRỰC TUYẾN)
-
-Tài liệu này cung cấp cái nhìn toàn diện về kiến trúc truyền tải dữ liệu, cấu trúc lưu trữ và hướng dẫn kiểm tra/triển khai ứng dụng **Edu Report LMS** dành cho cả mục đích phát triển và thuyết trình báo cáo học tập.
-
----
-
 ## 1. TỔNG QUAN KIẾN TRÚC LƯU TRỮ 3 TẦNG (3-TIER STORAGE)
 
 Hệ thống được thiết kế theo mô hình **Client - Server - Database** linh hoạt kết hợp với cơ chế đồng bộ hóa dữ liệu lai:
@@ -210,46 +203,164 @@ function ghiCSDL(key, duLieu) {
 5. **Bước 5:** Nhấn chọn vào dòng URL trang web hiện tại của bạn (Ví dụ: `http://localhost:5000`).
 6. **Bước 6:** Bạn sẽ nhìn thấy bảng dữ liệu gồm hai cột: **Key** (Khóa) và **Value** (Giá trị tương ứng). Bạn có thể bấm vào từng Khóa (như `currentUser`, `Classes`, `Notifications`) để xem nội dung chi tiết bên dưới.
 
+---
+
+## 6. CÁC HÀM TÌM KIẾM VÀ TRUY VẤN DỮ LIỆU CỐT LÕI (SEARCH & FILTER FUNCTIONS)
+
+Hệ thống kết hợp các phương thức tìm kiếm cơ sở dữ liệu trên Backend (thông qua Mongoose ODM) và lọc/tìm kiếm danh mục trên Frontend (thông qua các hàm mảng JavaScript). Dưới đây là chi tiết mã nguồn và ý nghĩa từng dòng:
+
+### A. Tìm kiếm tài khoản khi đăng nhập trên Backend (Mongoose findOne & select)
+Đoạn mã sau nằm trong API đăng nhập tại [server.js](file:///c:/Users/quyet/Desktop/BTL%20%20JS/backend/server.js):
+
+```javascript
+// Tìm tài khoản khớp với Email hoặc Mã số ID và khớp với Vai trò, đồng thời gọi thêm trường mật khẩu đã bị ẩn (select: false)
+const nguoiDung = await NguoiDungModel.findOne({
+    $or: [{ email: input.toLowerCase() }, { id: input }], // So khớp tài khoản đầu vào là email hoặc mã ID
+    role // Khớp cả vai trò
+}).select('+password'); // Buộc Mongoose phải nạp thêm trường password (vốn đã bị ẩn bởi select: false trong Schema)
 ```
-+---------------------------------------------------------------------------------+
-| Developer Tools (F12)                                                           |
-+---------------------------------------------------------------------------------+
-| Elements  Console  Sources  Network  Performance  [Application]  >>             |
-+---------------------------------------------------------------------------------+
-| Application    | Key            | Value                                         |
-| - Storage      | -------------- | --------------------------------------------- |
-|   - Local Sto..| currentUser    | {"id":"SV202501","role":"sinh-vien",...}     |
-|     > http://..| Notifications  | [{"id":"171890123","title":"Bài tập mới",..}]|
-|   - Session S..| Classes        | [{"id":"WEB_CLASS_2026","subjectId":...}]     |
-|   - IndexedDB  |                |                                               |
-+---------------------------------------------------------------------------------+
+
+* **Giải thích chi tiết từng dòng:**
+  - `NguoiDungModel.findOne({ ... })`: Hàm tìm kiếm bất đồng bộ của Mongoose để truy vấn ra **duy nhất một bản ghi (document)** thỏa mãn điều kiện chỉ định từ bảng `users`.
+  - `$or: [{ email: input.toLowerCase() }, { id: input }]`: Sử dụng toán tử điều kiện logic `$or` của MongoDB để chấp nhận đăng nhập bằng một trong hai thông tin: email (đã được chuyển thành chữ thường bằng `.toLowerCase()`) hoặc mã số định danh ID gốc.
+  - `role`: Trường so khớp bổ sung, đảm bảo tài khoản tìm thấy phải thuộc đúng vai trò được chọn tại giao diện đăng nhập (admin, giang-vien, sinh-vien).
+  - `.select('+password')`: Trường mật khẩu `password` trong Mongoose Schema đã được thiết lập `select: false` để tự động loại trừ khỏi kết quả tìm kiếm thông thường. Hàm `.select('+password')` yêu cầu server nạp thêm trường này để phục vụ so sánh băm mật khẩu Bcrypt.
+
+### B. Hàm lọc thông báo hiển thị cho sinh viên ở Frontend (Array filter)
+Đoạn mã lọc danh sách thông báo theo lớp học phần nằm trong file [sinhvien.js](file:///c:/Users/quyet/Desktop/BTL%20%20JS/frontend/js/sinhvien.js) và [app.js](file:///c:/Users/quyet/Desktop/BTL%20%20JS/frontend/js/app.js):
+
+```javascript
+// Tiến hành lọc thông báo dựa trên lớp học và loại thông báo chung
+let tbLoc = thongBao.filter(n => {
+    // Trường hợp sinh viên chọn lọc "Tất cả thông báo" (mặc định)
+    if (giaTriLoc === 'all') {
+        // Chỉ hiển thị thông báo chung toàn trường hoặc thông báo gửi riêng tới lớp học của sinh viên đó
+        return n.target === 'tat-ca-sinh-vien' || dsMaLopCuaToi.includes(n.target);
+    } else {
+        // Nếu chọn một lớp cụ thể, chỉ lấy thông báo gửi riêng cho mã lớp học đó
+        return n.target === giaTriLoc;
+    }
+});
 ```
+
+* **Giải thích chi tiết từng dòng:**
+  - `thongBao.filter(n => { ... })`: Phương thức `.filter()` tạo một mảng con mới từ mảng `thongBao`. Một thông báo `n` được giữ lại nếu hàm callback trả về giá trị `true`.
+  - `if (giaTriLoc === 'all')`: Kiểm tra xem người dùng đang chọn lọc tất cả thông báo hay lọc cụ thể theo lớp.
+  - `return n.target === 'tat-ca-sinh-vien' || dsMaLopCuaToi.includes(n.target)`: Lọc ra các thông báo nhắm mục tiêu là `tat-ca-sinh-vien` hoặc các thông báo có đích đến nằm trong danh sách mã lớp học phần sinh viên đang theo học (`dsMaLopCuaToi`).
+  - `return n.target === giaTriLoc`: Khi lọc một lớp duy nhất, điều kiện này lọc ra chính xác các thông báo có trường `target` trùng khớp với mã lớp đang được chọn trong dropdown.
+
+### C. Hàm tìm kiếm chi tiết một lớp học ở Frontend (Array find)
+Đoạn mã tìm kiếm thông tin chi tiết của một lớp học từ danh sách cache để hiển thị popup nằm tại [sinhvien.js](file:///c:/Users/quyet/Desktop/BTL%20%20JS/frontend/js/sinhvien.js):
+
+```javascript
+// Tìm kiếm lớp học tương ứng theo mã ID lớp
+let lop = lopHocs.find(c => c.id === idLop); 
+```
+
+* **Giải thích chi tiết từng dòng:**
+  - `lopHocs.find(...)`: Phương thức `.find()` của JavaScript duyệt qua mảng `lopHocs` và trả về **phần tử đầu tiên** thỏa mãn biểu thức logic kiểm tra.
+  - `c => c.id === idLop`: So sánh mã định danh lớp học `c.id` với `idLop` được chọn trên giao diện. Nếu khớp, đối tượng lớp học đó sẽ được gán cho biến `lop`, nếu không có kết quả nào khớp sẽ trả về `undefined`.
 
 ---
 
-## 6. HƯỚNG DẪN CẤU HÌNH BIẾN MÔI TRƯỜNG KHI DEPLOY LÊN RENDER/VERCEL
+## 7. CƠ CHẾ BẢO MẬT MÃ HÓA MẬT KHẨU (PASSWORD SECURITY & HASHING)
 
-Khi bạn đưa dự án lên máy chủ trực tuyến, các thông tin bảo mật và cổng kết nối phải được lưu trực tiếp vào trình quản trị của Hosting để mã nguồn đọc qua `process.env`.
+Hệ thống tuân thủ các quy tắc bảo mật thông tin tiêu chuẩn để đảm bảo an toàn tuyệt đối cho tài khoản người dùng:
 
-### A. Triển khai trên Render (Cho Backend Server Express)
-Render là nền tảng phù hợp nhất để host server Node.js chạy liên tục:
-1. Truy cập vào trang quản lý Render Dashboard, chọn Web Service của bạn.
-2. Nhấn vào mục **Environment** ở menu cấu hình bên trái.
-3. Nhấn nút **Add Environment Variable** để thêm 2 biến bắt buộc sau:
+### A. Tại sao KHÔNG lưu mật khẩu (kể cả mật khẩu đã băm) ở LocalStorage?
+* **Rủi ro rò rỉ (XSS Vulnerability):** LocalStorage của trình duyệt rất dễ bị đọc bởi các mã độc JavaScript (nếu trang web có lỗ hổng XSS). Nếu ta lưu mật khẩu ở LocalStorage, kẻ tấn công có thể lấy trộm chuỗi mã hóa này và thực hiện các cuộc tấn công chiếm quyền kiểm soát.
+* **Nguyên lý thiết kế:** Trình duyệt Client sau khi đăng nhập thành công chỉ cần lưu thông tin cá nhân cơ bản để hiển thị lên màn hình (`id`, `name`, `role`, `email`). **Trường mật khẩu hoàn toàn bị xóa bỏ (delete userObj.password)** khỏi bộ nhớ LocalStorage ngay khi nhận phản hồi từ Server để loại trừ mọi khả năng rò rỉ thông tin cá mật.
 
-| Tên biến (Key) | Giá trị (Value) | Giải thích chức năng |
-| :--- | :--- | :--- |
-| `MONGO_URI` | `mongodb+srv://quyetnguyen15112007_db_user:BTL-JS@cluster0.yz79rrw.mongodb.net/edu-report?retryWrites=true&w=majority` | Chuỗi kết nối MongoDB Atlas trực tuyến bảo mật. |
-| `PORT` | `10000` *(Hoặc để trống, Render tự cấu hình)* | Cổng mạng của dịch vụ Web Service Render. |
+### B. Cơ chế băm mật khẩu bằng BcryptJS lưu trên MongoDB Atlas (Backend)
+Để bảo vệ mật khẩu của người dùng không bị đọc trộm kể cả khi cơ sở dữ liệu bị lộ, hệ thống thực hiện băm mật khẩu một chiều bằng thuật toán mã hóa BcryptJS tại Backend Server trước khi lưu trữ vào MongoDB Atlas.
 
-4. Nhấn **Save Changes** để cập nhật. Render sẽ tự động build lại server và kết nối dữ liệu.
+#### 1. Mã nguồn băm mật khẩu khi Đăng ký (`POST /api/auth/dang-ky`):
+Đoạn mã xử lý băm mật khẩu nằm trong file [server.js](file:///c:/Users/quyet/Desktop/BTL%20%20JS/backend/server.js):
 
-### B. Triển khai trên Vercel (Nếu đưa cả dự án lên Vercel)
-Nếu bạn triển khai Express Server dưới dạng Serverless Functions trên Vercel:
-1. Truy cập vào trang dự án trên Vercel Dashboard, chọn tab **Settings**.
-2. Nhấp chọn mục **Environment Variables** từ menu bên trái.
-3. Nhập thông tin biến môi trường vào các ô nhập:
-   - **Key**: `MONGO_URI`
-   - **Value**: `mongodb+srv://quyetnguyen15112007_db_user:BTL-JS@cluster0.yz79rrw.mongodb.net/edu-report?retryWrites=true&w=majority`
-4. Nhấn nút **Add** để lưu biến.
-5. Thực hiện redeploy lại dự án để Vercel áp dụng biến môi trường vào máy chủ Serverless.
+```javascript
+// Thực hiện băm (hash) mật khẩu đăng ký đầu vào bằng BcryptJS trước khi lưu trữ để bảo mật
+const matKhauMaHoa = bcrypt.hashSync(password, 10); // Băm mật khẩu người dùng gửi lên với salt rounds = 10
+```
+
+* **Giải thích chi tiết từng dòng:**
+  - `bcrypt.hashSync(password, 10)`: Hàm băm đồng bộ của thư viện BcryptJS. Nó nhận vào mật khẩu chữ rõ (plain text) từ client và tiến hành tính toán băm thành một chuỗi mã hóa ngẫu nhiên không thể giải mã ngược lại.
+  - `10` (Salt Rounds): Độ phức tạp của quá trình băm (độ mạnh thuật toán). Salt rounds = 10 là mức tối ưu giúp ngăn chặn hiệu quả các cuộc tấn công đoán mật khẩu (brute-force) mà vẫn đảm bảo thời gian xử lý nhanh chóng cho máy chủ.
+
+#### 2. Mã nguồn so sánh mật khẩu khi Đăng nhập (`POST /api/auth/dang-nhap`):
+Đoạn mã xử lý đối chiếu mật khẩu băm khi đăng nhập trong file [server.js](file:///c:/Users/quyet/Desktop/BTL%20%20JS/backend/server.js):
+
+```javascript
+// So khớp mật khẩu đầu vào với mật khẩu đã được mã hóa bằng hàm compareSync của BcryptJS
+const hopLeMatKhau = bcrypt.compareSync(password, nguoiDung.password); // So sánh mật khẩu rõ với chuỗi đã băm
+```
+
+* **Giải thích chi tiết từng dòng:**
+  - `bcrypt.compareSync(password, nguoiDung.password)`: Hàm so sánh đồng bộ của BcryptJS. Nó nhận vào mật khẩu rõ người dùng nhập trên giao diện và chuỗi mật khẩu đã băm (lấy ra từ MongoDB).
+  - Thuật toán Bcrypt sẽ tự động tách muối (salt) từ chuỗi băm cũ, tiến hành băm thử mật khẩu mới nhập và đối chiếu kết quả. Hàm trả về `true` nếu khớp hoàn toàn và `false` nếu sai mật khẩu.
+
+---
+
+## 8. CƠ CHẾ GHI DỮ LIỆU VÀO MONGODB (RAW VS HASHED DATA)
+
+Khi ghi nhận dữ liệu từ các yêu cầu của Client để lưu vào MongoDB Atlas, hệ thống chia dữ liệu làm hai nhóm với cơ chế xử lý khác nhau:
+
+### A. Nhóm dữ liệu thường (Lưu thẳng / Plain Text)
+* **Các trường dữ liệu**: Họ tên, email, ngày sinh, số điện thoại, mã lớp học, tên tài liệu, nội dung thông báo, điểm số, trạng thái điểm danh...
+* **Cơ chế lưu trữ**: Được lưu trữ dưới dạng **chữ rõ ràng (plain text)** hoặc đối tượng gốc trực tiếp vào MongoDB Atlas.
+* **Lý do**: Đây là các dữ liệu nghiệp vụ thông thường, không mang tính chất bảo mật cá nhân nhạy cảm, cần được lưu trữ nguyên bản để máy chủ có thể thực hiện tìm kiếm, sắp xếp, tính toán (ví dụ tính điểm trung bình) và hiển thị chính xác lên giao diện cho người dùng.
+
+### B. Nhóm dữ liệu mật khẩu (Mã hóa băm một chiều / Hashed)
+* **Các trường dữ liệu**: Mật khẩu (`password`).
+* **Cơ chế lưu trữ**: **Tuyệt đối không lưu thẳng**. Mật khẩu bắt buộc phải đi qua hàm băm `bcrypt.hashSync(password, 10)` để chuyển thành chuỗi ký tự mã hóa ngẫu nhiên trước khi ghi vào MongoDB.
+* **Lý do**: Đảm bảo an toàn thông tin cá nhân. Băm một chiều (hashing) là quá trình không thể giải mã ngược lại. Kể cả quản trị viên hệ thống hay kẻ tấn công chiếm được cơ sở dữ liệu cũng không thể biết mật khẩu thật của người dùng là gì.
+
+---
+
+## 9. TỔNG QUAN VỀ KHUNG LÀM VIỆC EXPRESS (EXPRESS.JS OVERVIEW)
+
+### A. Express.js là gì?
+Express là một khung làm việc (framework) tối giản, linh hoạt và chạy cực nhanh dành cho môi trường Node.js trên Backend. Nó cung cấp tập hợp các công cụ mạnh mẽ để xây dựng các ứng dụng web và các cổng API kết nối.
+
+### B. Vai trò của Express trong dự án này:
+1. **Xây dựng hệ thống API RESTful**: Định nghĩa các router tiếp nhận yêu cầu gửi lên từ frontend qua các phương thức HTTP khác nhau (`GET`, `POST`, `PUT`, `DELETE`).
+2. **Xử lý trung gian (Middleware)**: Thực hiện kiểm duyệt phân quyền hệ thống qua `xacThucQuyenHan`, chuyển đổi dữ liệu JSON qua bộ parser.
+3. **Kết nối Cơ sở dữ liệu**: Đóng vai trò cầu nối trung gian điều phối dữ liệu giữa giao diện người dùng và cơ sở dữ liệu MongoDB Atlas (thông qua Mongoose).
+4. **Phục vụ trang tĩnh (Static Files Server)**: Trực tiếp gửi file giao diện giao dịch HTML/CSS/JS (`index.html`) từ thư mục `frontend` đến trình duyệt của người dùng khi truy cập địa chỉ trang web.
+
+---
+
+## 10. CƠ CHẾ TÌM KIẾM DỮ LIỆU - LOCAL STORAGE VS MONGODB
+
+Dự án sử dụng mô hình **lưu trữ lai (Hybrid Storage)**. Việc tìm kiếm dữ liệu được phân chia linh hoạt tùy thuộc vào mục đích hiển thị giao diện hay xác thực hệ thống:
+
+### A. Tìm kiếm hiển thị nhanh trên giao diện (Truy vấn qua LocalStorage)
+Khi sinh viên hoặc giáo viên mở dashboard, hệ thống sẽ thực hiện lọc và tìm kiếm dữ liệu ngay trên bộ nhớ **LocalStorage** của trình duyệt để đảm bảo giao diện hiển thị ngay lập tức (không bị trễ do chờ tải mạng) và hỗ trợ chế độ xem ngoại tuyến (offline).
+
+#### Chứng minh bằng mã nguồn ở Frontend:
+Đoạn mã lọc danh sách lớp học của sinh viên trong file [sinhvien.js](file:///c:/Users/quyet/Desktop/BTL%20%20JS/frontend/js/sinhvien.js):
+
+```javascript
+// Lấy danh sách lớp học và lọc ra những lớp mà sinh viên đăng ký học
+let lopCuaToi = lopHocs.filter(c => c.enrolledStudents.includes(sinhVien.id));
+```
+
+* **Giải thích chi tiết từng dòng:**
+  - `lopHocs`: Là mảng dữ liệu được đọc ra từ LocalStorage thông qua hàm `layCSDL('Classes')`.
+  - `.filter(...)`: Hàm duyệt qua toàn bộ các lớp học offline trong cache LocalStorage.
+  - `c => c.enrolledStudents.includes(sinhVien.id)`: Kiểm tra xem ID của sinh viên hiện tại có nằm trong danh sách đăng ký học phần `enrolledStudents` của lớp `c` hay không. Kết quả lọc này hoàn toàn thực hiện local trên trình duyệt của máy khách mà không cần gửi request lên internet.
+
+### B. Tìm kiếm đồng bộ và xác thực quyền hạn (Truy vấn qua MongoDB)
+Khi người dùng thực hiện các hành động quan trọng như Đăng nhập, Tạo tài khoản hoặc cập nhật hồ sơ, hệ thống bắt buộc phải gửi yêu cầu lên Backend để tìm kiếm và xác thực trực tiếp trên **MongoDB Atlas** (nguồn dữ liệu gốc tuyệt đối) để tránh việc người dùng sửa đổi dữ liệu local giả mạo.
+
+#### Chứng minh bằng mã nguồn ở Backend:
+Đoạn mã kiểm tra ID tài khoản người gọi trong Middleware tại [server.js](file:///c:/Users/quyet/Desktop/BTL%20%20JS/backend/server.js):
+
+```javascript
+// Tìm thông tin tài khoản người gọi trong database thông qua Mongoose
+const user = await NguoiDungModel.findOne({ id: requesterId }); // Truy vấn tìm người dùng có mã ID tương ứng
+```
+
+* **Giải thích chi tiết từng dòng:**
+  - `NguoiDungModel`: Là thực thể Mongoose đại diện cho bảng `users` được kết nối trực tiếp với MongoDB Atlas trực tuyến.
+  - `findOne({ id: requesterId })`: Câu lệnh bất đồng bộ gửi một lệnh truy vấn SELECT đến MongoDB Atlas đám mây để tìm kiếm ra duy nhất một tài khoản có mã `id` khớp với `requesterId` (ID người gửi request được đính kèm ở header).
+  - `await`: Buộc tiến trình máy chủ Express dừng lại chờ phản hồi từ MongoDB Atlas trước khi tiếp tục thực hiện đối chiếu vai trò phân quyền.
