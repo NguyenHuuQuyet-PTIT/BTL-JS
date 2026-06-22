@@ -1667,7 +1667,10 @@ function dongBoDuLieuTuDong() {
 
     // 1. Đồng bộ danh sách người dùng và cập nhật thông tin currentUser mới nhất để tránh stale data
     fetch(`${API_BASE}/api/nguoi-dung`)
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("HTTP error " + res.status);
+            return res.json();
+        })
         .then(data => {
             if (data.success) {
                 ghiCSDL('Users', data.users);
@@ -1694,7 +1697,10 @@ function dongBoDuLieuTuDong() {
 
     // 2. Đồng bộ danh sách thông báo và cập nhật lại hòm thư của từng giao diện
     fetch(`${API_BASE}/api/thong-bao`)
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("HTTP error " + res.status);
+            return res.json();
+        })
         .then(data => {
             if (data.success) {
                 ghiCSDL('Notifications', data.notifications);
@@ -1713,7 +1719,10 @@ function dongBoDuLieuTuDong() {
 
     // 3. Đồng bộ danh sách tài liệu giảng dạy và bài tập lớp học
     fetch(`${API_BASE}/api/tai-lieu`)
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("HTTP error " + res.status);
+            return res.json();
+        })
         .then(data => {
             if (data.success) {
                 ghiCSDL('Materials', data.materials);
@@ -1729,7 +1738,10 @@ function dongBoDuLieuTuDong() {
 
     // 4. Đồng bộ danh sách bài nộp bài tập trực tuyến
     fetch(`${API_BASE}/api/nop-bai`)
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("HTTP error " + res.status);
+            return res.json();
+        })
         .then(data => {
             if (data.success) {
                 ghiCSDL('Submissions', data.submissions);
@@ -1739,7 +1751,10 @@ function dongBoDuLieuTuDong() {
 
     // 5. Đồng bộ danh sách lớp học phần từ server MongoDB Atlas
     fetch(`${API_BASE}/api/lop-hoc`)
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error("HTTP error " + res.status);
+            return res.json();
+        })
         .then(data => {
             if (data.success) {
                 ghiCSDL('Classes', data.classes);

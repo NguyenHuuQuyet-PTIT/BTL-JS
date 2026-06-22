@@ -161,7 +161,6 @@ if (formTaoTK) {
             formTaoTK.reset();
             hienThiDanhSachTaiKhoan();
         }
-        }
     });
 }
 
