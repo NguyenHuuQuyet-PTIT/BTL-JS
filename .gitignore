@@ -11,11 +11,11 @@ yarn-debug.log*
 yarn-error.log*
 
 # Biến môi trường
-#.env KHÔNG ẨN FILE NÀY CHO MNG KHÔNG BỊ LỖI CODE NHA :3
-#.env.local
-#.env.development.local
-#.env.test.local
-#.env.production.local
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 
 # Cấu hình IDE / Editor

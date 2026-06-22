@@ -1,7 +1,7 @@
-// Cấu hình URL cơ sở của backend (Tự động nhận diện chạy localhost hoặc chạy online khi deploy)
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:5000'
-    : 'https://btl-js.onrender.com'; // Thay URL backend thực tế của bạn sau khi deploy lên Render
+// Cấu hình URL cơ sở của backend (Tự động nhận diện chạy localhost hoặc online qua window.location.origin)
+const API_BASE = window.location.origin.startsWith('http')
+    ? window.location.origin
+    : 'https://btl-js.onrender.com'; // Fallback kết nối đến server Render khi mở file HTML tĩnh trực tiếp (file://)
 
 // Đường dẫn cơ sở kết nối đến cụm API xác thực của Backend Express
 const DUONG_DAN_API = `${API_BASE}/api/auth`;
