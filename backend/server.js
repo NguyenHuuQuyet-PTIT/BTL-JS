@@ -111,10 +111,10 @@ mongoose.connect(MONGO_URI)
 
 async function taoDuLieuMau() {
     try {
-        // 1. Tạo các người dùng mẫu nếu chưa tồn tại trong database
-        const adminExist = await NguoiDungModel.findOne({ id: 'AD001' });
-        if (!adminExist) {
-            const hashedAdminPassword = bcrypt.hashSync('admin', 10);
+        // 1. Tạo hoặc đặt lại mật khẩu các người dùng mẫu trong database
+        let admin = await NguoiDungModel.findOne({ id: 'AD001' });
+        const hashedAdminPassword = bcrypt.hashSync('admin', 10);
+        if (!admin) {
             await NguoiDungModel.create({
                 id: 'AD001',
                 role: 'admin',
@@ -126,11 +126,14 @@ async function taoDuLieuMau() {
                 readNotifs: []
             });
             console.log('Đã khởi tạo tài khoản Admin mẫu vào MongoDB Atlas.');
+        } else {
+            admin.password = hashedAdminPassword;
+            await admin.save();
         }
 
-        const teacherExist = await NguoiDungModel.findOne({ id: 'GV001' });
-        if (!teacherExist) {
-            const hashedTeacherPassword = bcrypt.hashSync('giaovien', 10);
+        let teacher = await NguoiDungModel.findOne({ id: 'GV001' });
+        const hashedTeacherPassword = bcrypt.hashSync('giaovien', 10);
+        if (!teacher) {
             await NguoiDungModel.create({
                 id: 'GV001',
                 role: 'giang-vien',
@@ -142,11 +145,14 @@ async function taoDuLieuMau() {
                 readNotifs: []
             });
             console.log('Đã khởi tạo tài khoản Giảng viên mẫu vào MongoDB Atlas.');
+        } else {
+            teacher.password = hashedTeacherPassword;
+            await teacher.save();
         }
 
-        const studentExist = await NguoiDungModel.findOne({ id: 'SV202501' });
-        if (!studentExist) {
-            const hashedStudentPassword = bcrypt.hashSync('sinhvien', 10);
+        let student = await NguoiDungModel.findOne({ id: 'SV202501' });
+        const hashedStudentPassword = bcrypt.hashSync('sinhvien', 10);
+        if (!student) {
             await NguoiDungModel.create({
                 id: 'SV202501',
                 role: 'sinh-vien',
@@ -158,6 +164,9 @@ async function taoDuLieuMau() {
                 readNotifs: []
             });
             console.log('Đã khởi tạo tài khoản Sinh viên mẫu vào MongoDB Atlas.');
+        } else {
+            student.password = hashedStudentPassword;
+            await student.save();
         }
 
         // 2. Tạo thông báo mẫu nếu bảng trống
