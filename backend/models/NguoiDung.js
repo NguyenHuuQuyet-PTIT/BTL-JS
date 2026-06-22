@@ -21,7 +21,8 @@ const NguoiDungSchema = new mongoose.Schema({
     },
     password: {
         type: String,       // Kiểu dữ liệu là chuỗi
-        required: true      // Bắt buộc phải có mật khẩu đăng nhập
+        required: true,     // Bắt buộc phải có mật khẩu đăng nhập
+        select: false       // Mặc định ẩn, không tự động tải trường này trong các câu truy vấn để bảo mật thông tin
     },
     role: {
         type: String,       // Kiểu dữ liệu là chuỗi

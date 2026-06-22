@@ -272,8 +272,10 @@ app.post('/api/auth/dang-ky', async (req, res) => {
         // Thực hiện lưu tài khoản này vào cơ sở dữ liệu MongoDB Atlas
         await nguoiDungMoi.save();
 
-        // Trả về mã trạng thái 201 (Đã khởi tạo) kèm thông tin tài khoản thành công
-        res.status(201).json({ success: true, message: 'Tạo tài khoản thành công.', user: nguoiDungMoi });
+        // Trả về mã trạng thái 201 (Đã khởi tạo) kèm thông tin tài khoản thành công, loại bỏ mật khẩu để bảo mật
+        const userObj = nguoiDungMoi.toObject();
+        delete userObj.password;
+        res.status(201).json({ success: true, message: 'Tạo tài khoản thành công.', user: userObj });
     } catch (error) {
         // Trả về mã trạng thái 500 nếu gặp lỗi hệ thống hoặc kết nối cơ sở dữ liệu
         res.status(500).json({ success: false, message: 'Lỗi máy chủ.' });
@@ -305,8 +307,10 @@ app.post('/api/auth/dang-nhap', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Thông tin tài khoản hoặc vai trò sai!' });
         }
 
-        // Trả về mã trạng thái 200 (OK) và đối tượng người dùng nếu đăng nhập khớp thông tin
-        res.status(200).json({ success: true, user: nguoiDung });
+        // Trả về mã trạng thái 200 (OK) và đối tượng người dùng đã ẩn mật khẩu để bảo mật
+        const userObj = nguoiDung.toObject();
+        delete userObj.password;
+        res.status(200).json({ success: true, user: userObj });
     } catch (error) {
         // Báo lỗi 500 nếu xảy ra sự cố phía máy chủ
         res.status(500).json({ success: false, message: 'Lỗi máy chủ.' });
@@ -349,8 +353,10 @@ app.put('/api/nguoi-dung/:id', async (req, res) => {
 
         // Lưu thông tin chỉnh sửa mới vào database MongoDB
         await nguoiDung.save();
-        // Trả về kết quả cập nhật thành công cho client
-        res.status(200).json({ success: true, message: 'Cập nhật thành công.', user: nguoiDung });
+        // Trả về kết quả cập nhật thành công cho client, loại bỏ mật khẩu để bảo mật
+        const userObj = nguoiDung.toObject();
+        delete userObj.password;
+        res.status(200).json({ success: true, message: 'Cập nhật thành công.', user: userObj });
     } catch (error) {
         // Phản hồi lỗi hệ thống
         res.status(500).json({ success: false, message: 'Lỗi máy chủ.' });
