@@ -1,45 +1,59 @@
-/* 1. Mau sac chu dao va bien so */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+/* 1. Mau sac chu dao va bien so - Figma/Canva Modern Glassmorphism */
 :root {
-    /* Bảng màu rực rỡ phong cách Canva */
-    --primary: #8b3dff;           /* Tím hoàng gia Canva */
-    --primary-hover: #7425f3;     /* Tím đậm khi hover */
-    --primary-light: #f4f0ff;     /* Nền tím pastel */
-    --secondary: #00c4cc;         /* Xanh ngọc Canva (Cyan) */
-    --secondary-hover: #00b0b8;
-    --secondary-light: #e6fafb;
+    /* Bảng màu rực rỡ hiện đại */
+    --primary: #6366f1;           /* Indigo hiện đại */
+    --primary-hover: #4f46e5;     /* Indigo đậm khi hover */
+    --primary-light: #e0e7ff;     /* Nền tím pastel */
+    --secondary: #0ea5e9;         /* Sky Blue */
+    --secondary-hover: #0284c7;
+    --secondary-light: #f0f9ff;
     
     /* Tông màu nền & Chữ cao cấp */
-    --bg-main: #f8f9fd;           /* Nền ứng dụng siêu sạch */
-    --bg-card: rgba(255, 255, 255, 0.9); /* Thẻ kính mờ */
-    --text-main: #0e121d;         /* Chữ đen mun sang trọng */
-    --text-muted: #5e6982;        /* Chữ nhạt xám cool */
-    --border-color: rgba(139, 61, 255, 0.08); /* Viền tím siêu mịn */
+    --bg-main: #f8fafc;           /* Nền ứng dụng siêu sạch */
+    --bg-card: rgba(255, 255, 255, 0.7); /* Thẻ kính mờ */
+    --text-main: #0f172a;         /* Chữ đen Slate mun sang trọng */
+    --text-muted: #64748b;        /* Chữ nhạt xám cool */
+    --border-color: rgba(99, 102, 241, 0.08); /* Viền mịn tím nhạt */
     
     /* Trạng thái hệ thống rực rỡ */
-    --success: #00d28a;           /* Xanh lá tươi trẻ */
-    --warning: #ff9f0a;           /* Cam hổ phách */
-    --danger: #ff453a;            /* Đỏ san hô */
+    --success: #10b981;           /* Xanh lục Emerald */
+    --warning: #f59e0b;           /* Cam hổ phách */
+    --danger: #ef4444;            /* Đỏ Rose */
     
     /* Bo góc hiện đại */
-    --border-radius: 14px;
-    --border-radius-lg: 24px;
+    --border-radius: 16px;
+    --border-radius-lg: 28px;
     
     /* Đổ bóng đa lớp cao cấp (Layered Soft Shadows) */
-    --shadow-sm: 0 4px 12px rgba(139, 61, 255, 0.02);
-    --shadow: 0 12px 36px rgba(139, 61, 255, 0.04), 0 2px 8px rgba(0, 0, 0, 0.01);
-    --shadow-lg: 0 24px 60px rgba(139, 61, 255, 0.12), 0 8px 20px rgba(139, 61, 255, 0.04);
+    --shadow-sm: 0 4px 12px rgba(99, 102, 241, 0.03);
+    --shadow: 0 12px 30px rgba(99, 102, 241, 0.04), 0 2px 8px rgba(0, 0, 0, 0.01);
+    --shadow-lg: 0 24px 60px rgba(99, 102, 241, 0.08), 0 8px 24px rgba(99, 102, 241, 0.03);
     
     /* Chuyển động mượt tự nhiên */
     --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Ẩn hoàn toàn các thanh cuộn trên mọi trình duyệt nhưng vẫn giữ chức năng cuộn */
+/* Thanh cuộn siêu mịn phong cách Figma */
 ::-webkit-scrollbar {
-    display: none; /* Ẩn thanh cuộn đối với Chrome, Safari, Edge và Opera */
+    width: 6px;
+    height: 6px;
+    display: block !important;
 }
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.15);
+    border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.3);
+}
+
 html, body {
-    -ms-overflow-style: none; /* Ẩn thanh cuộn đối với IE và Edge cũ */
-    scrollbar-width: none; /* Ẩn thanh cuộn đối với Firefox */
+    height: 100%;
 }
 
 /* 2. Cau hinh co ban */
@@ -47,8 +61,7 @@ html, body {
     margin: 0; 
     padding: 0; 
     box-sizing: border-box; 
-    /* Su dung font chu he thong mac dinh de phu hop voi bai tap lon cua sinh vien */
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 body { 
@@ -62,63 +75,66 @@ body {
 .flex-row { 
     display: flex; 
     gap: 15px; 
-} /* Sắp xếp các phần tử con theo chiều ngang với khoảng cách 15px */
+}
 
-.flex-wrap { flex-wrap: wrap; } /* Cho phép các phần tử tự động xuống hàng khi tràn */
-.flex-1 { flex: 1; } /* Phần tử tự động chiếm toàn bộ diện tích trống còn lại */
-.align-end { align-items: flex-end; } /* Căn chỉnh phần tử con sát mép dưới */
-.align-center { align-items: center; } /* Căn chỉnh dọc các phần tử con ở chính giữa */
-.justify-between { justify-content: space-between; } /* Phân bổ khoảng cách đều giữa các phần tử sát hai biên */
-.justify-center { justify-content: center; } /* Căn chỉnh các phần tử ở giữa theo chiều ngang */
-.justify-end { justify-content: flex-end; } /* Đẩy các phần tử sát về lề bên phải */
-.text-center { text-align: center; } /* Căn lề văn bản ở giữa */
+.flex-wrap { flex-wrap: wrap; }
+.flex-1 { flex: 1; }
+.align-end { align-items: flex-end; }
+.align-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.justify-end { justify-content: flex-end; }
+.text-center { text-align: center; }
 
-/* Các lớp tiện ích căn khoảng cách (Margin & Padding) */
-.mt-5 { margin-top: 5px; } /* Căn lề trên 5px */
-.mt-10 { margin-top: 10px; } /* Căn lề trên 10px */
-.mt-20 { margin-top: 20px; } /* Căn lề trên 20px */
-.mt-auto { margin-top: auto; } /* Tự động đẩy phần tử lên góc trên cùng hoặc xa nhất có thể */
-.mb-0 { margin-bottom: 0 !important; } /* Loại bỏ căn lề dưới */
-.mb-10 { margin-bottom: 10px; } /* Căn lề dưới 10px */
-.mb-20 { margin-bottom: 20px; } /* Căn lề dưới 20px */
-.p-10 { padding: 10px; } /* Đệm trong 10px */
-.p-20 { padding: 20px; } /* Đệm trong 20px */
-.ml-10 { margin-left: 10px; } /* Căn lề trái 10px */
+/* Các lớp tiện ích căn khoảng cách */
+.mt-5 { margin-top: 5px; }
+.mt-10 { margin-top: 10px; }
+.mt-20 { margin-top: 20px; }
+.mt-auto { margin-top: auto; }
+.mb-0 { margin-bottom: 0 !important; }
+.mb-10 { margin-bottom: 10px; }
+.mb-20 { margin-bottom: 20px; }
+.p-10 { padding: 10px; }
+.p-20 { padding: 20px; }
+.ml-10 { margin-left: 10px; }
 
 /* Các lớp tiện ích định dạng chữ viết & màu sắc */
-.font-bold { font-weight: 600; } /* Định dạng chữ in đậm vừa */
-.text-sm { font-size: 13px; color: var(--text-muted); } /* Định dạng chữ nhỏ kèm tông màu xám nhẹ */
-.text-xl { font-size: 26px; font-weight: 700; color: var(--primary); } /* Định dạng tiêu đề lớn rực rỡ */
-.text-success { color: var(--success) !important; } /* Màu chữ xanh lá biểu thị trạng thái thành công */
-.text-warning { color: var(--warning) !important; } /* Màu chữ vàng cam biểu thị trạng thái cảnh báo/đi muộn */
-.text-danger { color: var(--danger) !important; } /* Màu chữ đỏ biểu thị trạng thái lỗi/vắng mặt */
-.text-muted { color: var(--text-muted); } /* Màu chữ xám mô tả ghi chú phụ */
-.text-primary { color: var(--primary) !important; } /* Màu chữ tím chủ đạo hệ thống */
-.text-white { color: #fff; } /* Màu chữ trắng thuần */
-.bg-light { background: var(--primary-light); } /* Màu nền tím nhạt pastel */
-.bg-gray { background: #e2e8f0; } /* Màu nền xám nhạt */
+.font-bold { font-weight: 600; }
+.text-sm { font-size: 13px; color: var(--text-muted); }
+.text-xl { font-size: 26px; font-weight: 700; color: var(--primary); }
+.text-success { color: var(--success) !important; }
+.text-warning { color: var(--warning) !important; }
+.text-danger { color: var(--danger) !important; }
+.text-muted { color: var(--text-muted); }
+.text-primary { color: var(--primary) !important; }
+.text-white { color: #fff; }
+.bg-light { background: var(--primary-light); }
+.bg-gray { background: #f1f5f9; }
 
-/* Đường gạch phân vùng ngăn chia thông tin */
+/* Đường gạch ngăn chia */
 .border-bottom { 
     border-bottom: 1px solid var(--border-color); 
     padding-bottom: 14px; 
     margin-bottom: 18px;
 }
-.rounded-full { border-radius: 9999px; } /* Tạo bo góc tròn hoàn hảo */
+.rounded-full { border-radius: 9999px; }
 
 /* 3. Bo cuc chinh */
 .app-container { 
     display: flex; 
     min-height: 100vh; 
-    background: radial-gradient(circle at 10% 20%, rgba(139, 61, 255, 0.03) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(0, 196, 204, 0.03) 0%, transparent 40%);
+    background: radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(14, 165, 233, 0.04) 0%, transparent 40%),
+                var(--bg-main);
 }
 
-/* Sidebar tinh tế phong cách SaaS */
+/* Sidebar kính mờ tối giản sang trọng */
 .sidebar { 
     width: 280px; 
-    background: #ffffff; 
-    border-right: 1px solid rgba(139, 61, 255, 0.06); 
+    background: rgba(255, 255, 255, 0.7); 
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid var(--border-color); 
     display: flex; 
     flex-direction: column; 
     justify-content: space-between; 
@@ -126,17 +142,8 @@ body {
     position: sticky; 
     top: 0; 
     height: 100vh; 
-    box-shadow: 4px 0 24px rgba(139, 61, 255, 0.015);
-    overflow-y: auto; /* Cho phép cuộn dọc khi màn hình thấp */
-}
-
-/* Ẩn thanh cuộn mặc định của sidebar để giữ tính thẩm mỹ cao */
-.sidebar::-webkit-scrollbar {
-    width: 4px;
-}
-.sidebar::-webkit-scrollbar-thumb {
-    background: rgba(139, 61, 255, 0.1);
-    border-radius: 99px;
+    box-shadow: 4px 0 30px rgba(99, 102, 241, 0.01);
+    overflow-y: auto;
 }
 
 .sidebar-top {
@@ -156,9 +163,8 @@ body {
 
 .logo h2 {
     font-size: 24px;
-    font-weight: 700;
-    color: var(--primary);
-    letter-spacing: -0.8px;
+    font-weight: 800;
+    letter-spacing: -1px;
     background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -167,15 +173,16 @@ body {
 /* Khối thông tin cá nhân ở Sidebar */
 .user-info-sidebar {
     padding: 18px;
-    background: linear-gradient(135deg, var(--primary-light) 0%, rgba(244, 240, 255, 0.5) 100%);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(14, 165, 233, 0.02) 100%);
     border-radius: var(--border-radius);
     margin-top: auto;
-    border: 1px solid rgba(139, 61, 255, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.08);
     box-shadow: var(--shadow-sm);
 }
 
 .user-info-sidebar .user-name {
     font-size: 15px;
+    font-weight: 700;
     color: var(--primary);
 }
 
@@ -188,7 +195,7 @@ body {
     width: 100%;
 }
 
-/* Header dạng Banner Canva gradient đẹp lộng lẫy */
+/* Header dạng Banner Canva gradient lộng lẫy */
 .top-header { 
     background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); 
     color: #fff; 
@@ -216,22 +223,9 @@ body {
     pointer-events: none;
 }
 
-.top-header::after {
-    content: '';
-    position: absolute;
-    bottom: -60%;
-    left: -10%;
-    width: 250px;
-    height: 250px;
-    border-radius: 50%;
-    background: rgba(0, 196, 204, 0.2);
-    filter: blur(25px);
-    pointer-events: none;
-}
-
 .top-header h1 {
     font-size: 28px;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: -0.8px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -239,9 +233,9 @@ body {
 /* Hộp nội dung nổi (Card Glassmorphic) */
 .border-box { 
     background: var(--bg-card); 
-    backdrop-filter: blur(20px) saturate(190%);
-    -webkit-backdrop-filter: blur(20px) saturate(190%);
-    border: 1px solid rgba(255, 255, 255, 0.8); 
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6); 
     border-radius: var(--border-radius-lg); 
     padding: 28px; 
     box-shadow: var(--shadow);
@@ -252,8 +246,8 @@ body {
 
 .border-box:hover {
     box-shadow: var(--shadow-lg);
-    border-color: rgba(139, 61, 255, 0.2);
-    transform: translateY(-5px);
+    border-color: rgba(99, 102, 241, 0.25);
+    transform: translateY(-6px);
 }
 
 .border-left-dark { 
@@ -270,10 +264,10 @@ body {
     height: 100%;
     background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
     opacity: 0.85;
-    transition: var(--transition); /* Cho phép viền màu biến đổi mượt mà */
+    transition: var(--transition);
 }
 
-/* Khi di chuột vào thẻ kính mờ có viền màu, viền màu sẽ mở rộng nhẹ để nhấn mạnh tiêu điểm */
+/* Khi di chuột vào thẻ kính mờ có viền màu, viền màu sẽ mở rộng nhẹ */
 .border-box.border-left-dark:hover::before {
     width: 8px;
     opacity: 1;
@@ -289,7 +283,7 @@ body {
 .disabled { 
     opacity: 0.6; 
     pointer-events: none; 
-    background: #f8fafc; 
+    background: #f1f5f9; 
 }
 
 .cursor-pointer { 
@@ -300,15 +294,15 @@ body {
     border-color: var(--primary); 
 }
 
-/* 4. Nut bam */
+/* 4. Nut bam tactile thon gon */
 .btn-primary, .btn-danger, .action-btn, .btn-logout { 
     cursor: pointer; 
-    font-weight: 600; 
+    font-weight: 700; 
     border-radius: var(--border-radius); 
     text-align: center; 
     border: 1px solid transparent; 
     padding: 10px 24px; 
-    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     font-size: 14px;
     display: inline-flex;
     align-items: center;
@@ -317,37 +311,34 @@ body {
 }
 
 .btn-primary:active, .btn-danger:active, .action-btn:active, .btn-logout:active {
-    transform: translateY(1px) scale(0.97) !important;
-    box-shadow: none !important;
+    transform: scale(0.97) !important;
 }
 
 .btn-primary { 
-    background: linear-gradient(135deg, var(--primary) 0%, #7425f3 100%); 
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); 
     color: #fff; 
     width: 100%; 
-    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.15);
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.2);
 } 
 
 .btn-primary:hover { 
-    background: linear-gradient(135deg, #7425f3 0%, #6015d0 100%); 
-    box-shadow: 0 8px 20px rgba(139, 61, 255, 0.25);
-    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+    transform: translateY(-2px);
 }
 
 .btn-danger { 
-    background: var(--danger); 
+    background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%); 
     color: #fff; 
     padding: 8px 18px; 
 } 
 
 .btn-danger:hover { 
-    background: #e03b30; 
-    box-shadow: 0 6px 16px rgba(255, 69, 58, 0.25);
-    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.25);
+    transform: translateY(-2px);
 }
 
 .action-btn { 
-    background: var(--primary-light); 
+    background: rgba(99, 102, 241, 0.08); 
     border-color: transparent; 
     color: var(--primary); 
     padding: 8px 18px; 
@@ -356,8 +347,8 @@ body {
 .action-btn:hover { 
     background: var(--primary); 
     color: #fff; 
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 6px 16px rgba(139, 61, 255, 0.18);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.18);
 }
 
 .btn-logout { 
@@ -373,8 +364,8 @@ body {
     background: var(--danger);
     color: #fff;
     border-color: transparent;
-    box-shadow: 0 6px 16px rgba(255, 69, 58, 0.25);
-    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.25);
+    transform: translateY(-2px);
 }
 
 /* 5. Form va bang bieu */
@@ -397,7 +388,7 @@ body {
     padding: 12px 16px; 
     border: 1px solid var(--border-color); 
     border-radius: var(--border-radius); 
-    background-color: #f8f9fa;
+    background-color: #f8fafc;
     transition: var(--transition);
     font-size: 14px;
     color: var(--text-main);
@@ -409,7 +400,7 @@ body {
     outline: none;
     border-color: var(--primary);
     background-color: #fff;
-    box-shadow: 0 0 0 4px rgba(139, 61, 255, 0.16);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
 }
 
 .input-group textarea {
@@ -422,7 +413,7 @@ body {
     align-items: center; 
 }
 
-/* Bảng dữ liệu thiết kế phẳng hiện đại */
+/* Bảng dữ liệu thiết kế phẳng sang xịn */
 .data-table { 
     width: 100%; 
     border-collapse: separate; 
@@ -432,7 +423,7 @@ body {
     border-radius: var(--border-radius); 
     border: 1px solid var(--border-color); 
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(139, 61, 255, 0.02);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.01);
 }
 
 .data-table th, .data-table td { 
@@ -440,19 +431,19 @@ body {
     text-align: left; 
     border-bottom: 1px solid var(--border-color); 
     font-size: 14px; 
-    word-break: break-word; /* Tự động xuống dòng khi chữ quá dài */
-    white-space: normal; /* Cho phép text xuống hàng tự nhiên */
-    overflow-wrap: break-word; /* Ngăn từ dài làm vỡ bảng */
+    word-break: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
 }
 
 .data-table th { 
-    background: #fcfbfe; 
+    background: rgba(99, 102, 241, 0.02); 
     font-weight: 700; 
     color: var(--text-main);
     text-transform: uppercase;
     font-size: 11px;
     letter-spacing: 0.8px;
-    border-bottom: 2px solid rgba(139, 61, 255, 0.1);
+    border-bottom: 2px solid rgba(99, 102, 241, 0.08);
 }
 
 .data-table tr:last-child td {
@@ -460,11 +451,13 @@ body {
 }
 
 .data-table tbody tr {
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .data-table tbody tr:hover {
-    background-color: rgba(139, 61, 255, 0.04);
+    background-color: rgba(99, 102, 241, 0.04) !important;
+    transform: scale(1.004) translateX(4px);
+    box-shadow: var(--shadow-sm);
 }
 
 .charts-grid { 
@@ -487,32 +480,31 @@ canvas {
     max-width: 100%; 
 }
 
-/* 6. Menu dieu huong */
+/* 6. Menu dieu huong Sidebar */
 .menu ul { list-style: none; } 
 .menu li { margin-bottom: 6px; }
 
 .menu a { 
     text-decoration: none; 
     color: var(--text-muted); 
-    font-weight: 500; 
+    font-weight: 600; 
     display: flex; 
     align-items: center;
     padding: 12px 18px; 
     border-radius: var(--border-radius); 
-    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: var(--transition);
 }
 
 .menu a:hover {
     transform: translateX(4px);
-    background: var(--primary-light);
+    background: rgba(99, 102, 241, 0.05);
     color: var(--primary);
 }
 
 .menu li.active a { 
-    background: linear-gradient(90deg, var(--primary-light) 0%, rgba(244, 240, 255, 0.1) 100%); 
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.08) 0%, rgba(255, 255, 255, 0.1) 100%); 
     color: var(--primary); 
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.05);
+    font-weight: 700;
 }
 
 .menu li.active {
@@ -523,7 +515,7 @@ canvas {
 
 .tab-section { display: none; }
 
-/* Tạo hoạt ảnh trượt và mờ dần nhẹ nhàng, mát mắt khi chuyển tab */
+/* Tạo hoạt ảnh trượt và mờ dần nhẹ nhàng */
 @keyframes fadeInUpTab {
     from {
         opacity: 0;
@@ -535,7 +527,6 @@ canvas {
     }
 }
 
-/* Tự động kích hoạt hoạt ảnh chuyển cảnh khi JS hiển thị section (display: block) */
 .tab-section[style*="display: block"],
 .tab-section[style*="display:block"] {
     animation: fadeInUpTab 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -553,7 +544,7 @@ canvas {
     background: none; 
     border: none; 
     font-size: 15px; 
-    font-weight: 600; 
+    font-weight: 700; 
     color: var(--text-muted); 
     cursor: pointer; 
     padding-bottom: 12px; 
@@ -570,9 +561,9 @@ canvas {
     height: 3px; 
     background: var(--primary); 
     border-radius: 99px;
-    transform: scaleX(0); /* Ban đầu co nhỏ lại về 0 theo chiều ngang */
-    transform-origin: bottom left; /* Bắt đầu xuất hiện trượt từ lề bên trái */
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); /* Hiệu ứng gia tốc mượt mà chuẩn SaaS */
+    transform: scaleX(0);
+    transform-origin: bottom left;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sub-menu button.active { 
@@ -580,7 +571,7 @@ canvas {
 }
 
 .sub-menu button.active::after { 
-    transform: scaleX(1); /* Phình to tối đa 100% khi thẻ đang hoạt động */
+    transform: scaleX(1);
 }
 
 .progress-bg { 
@@ -597,7 +588,7 @@ canvas {
     transition: width 0.3s; 
 }
 
-/* 8. Hop thoai */
+/* 8. Hop thoai Modal */
 .modal { 
     display: none; 
     position: fixed; 
@@ -606,32 +597,30 @@ canvas {
     top: 0; 
     width: 100%; 
     height: 100%; 
-    background: rgba(14, 19, 31, 0.2); 
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(15, 23, 42, 0.3); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     transition: var(--transition);
-    
-    /* Sử dụng flexbox để căn giữa hoàn hảo theo cả chiều dọc và ngang */
     justify-content: center;
     align-items: center;
 }
 
 .modal-content { 
-    background: var(--bg-card); 
-    margin: auto; /* Thay 6% auto thành auto để căn giữa mượt mà hơn trong flex container */
+    background: rgba(255, 255, 255, 0.95); 
+    margin: auto; 
     padding: 35px; 
     border-radius: var(--border-radius-lg); 
     width: 90%; 
     max-width: 650px; 
-    max-height: 90vh; /* Giới hạn chiều cao tối đa của hộp thoại */
-    overflow-y: auto; /* Cho phép cuộn dọc khi nội dung vượt quá chiều cao */
-    box-shadow: 0 25px 50px -12px rgba(139, 61, 255, 0.15); 
-    border: 1px solid var(--border-color);
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.1); 
+    border: 1px solid rgba(255, 255, 255, 0.8);
     position: relative;
-    animation: modalFadeIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    animation: modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Hiển thị thanh cuộn mượt mà riêng cho các modal-content để người dùng dễ cuộn dọc */
+/* Thanh cuộn cho modal-content */
 .modal-content::-webkit-scrollbar {
     display: block;
     width: 6px;
@@ -640,15 +629,12 @@ canvas {
     background: transparent;
 }
 .modal-content::-webkit-scrollbar-thumb {
-    background: rgba(139, 61, 255, 0.2);
+    background: rgba(99, 102, 241, 0.2);
     border-radius: 10px;
-}
-.modal-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(139, 61, 255, 0.4);
 }
 
 @keyframes modalFadeIn {
-    from { transform: translateY(-30px); opacity: 0; }
+    from { transform: translateY(30px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
 
@@ -668,7 +654,7 @@ canvas {
     font-size: 18px; 
     font-weight: bold; 
     cursor: pointer; 
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: var(--transition);
     z-index: 100;
 } 
 
@@ -677,23 +663,17 @@ canvas {
     background: var(--danger);
     border-color: var(--danger);
     transform: rotate(90deg);
-    box-shadow: 0 4px 12px rgba(255, 69, 58, 0.35);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
 }
 
-/* Nút tải xuống tệp đính kèm cao cấp */
 .btn-download-premium {
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: var(--transition);
 }
 .btn-download-premium:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(139, 61, 255, 0.35) !important;
-    filter: brightness(1.05);
-}
-.btn-download-premium:active {
-    transform: translateY(0);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35) !important;
 }
 
-/* Custom radio cho điểm danh */
 .radio-group label {
     display: inline-flex;
     align-items: center;
@@ -707,16 +687,16 @@ canvas {
     height: 16px;
 }
 
-/* 9. Hop thoai thong bao */
+/* 9. Hop thoai thong bao Alert/Confirm */
 .custom-alert-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(14, 19, 31, 0.3);
-    backdrop-filter: blur(12px) saturate(180%);
-    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    background: rgba(15, 23, 42, 0.2);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     z-index: 99999;
     display: flex;
     justify-content: center;
@@ -732,14 +712,14 @@ canvas {
 }
 
 .custom-alert-box {
-    background: rgba(255, 255, 255, 0.96);
-    border: 1px solid rgba(139, 61, 255, 0.2);
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.8);
     border-radius: var(--border-radius-lg);
     padding: 35px 30px;
     width: 90%;
     max-width: 400px;
     text-align: center;
-    box-shadow: 0 25px 60px rgba(139, 61, 255, 0.2), 0 10px 20px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 25px 60px rgba(99, 102, 241, 0.15);
     transform: translateY(20px) scale(0.95);
     transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -758,31 +738,29 @@ canvas {
     justify-content: center;
     font-size: 28px;
     font-weight: bold;
-    box-shadow: 0 8px 20px rgba(139, 61, 255, 0.15);
 }
 
-/* Các trạng thái Icon màu sắc */
 .custom-alert-icon.success {
-    background: linear-gradient(135deg, #00d28a 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
     color: white;
-    box-shadow: 0 8px 20px rgba(0, 210, 138, 0.25);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
 }
 
 .custom-alert-icon.error {
-    background: linear-gradient(135deg, #ff453a 0%, #d32f2f 100%);
+    background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
     color: white;
-    box-shadow: 0 8px 20px rgba(255, 69, 58, 0.25);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25);
 }
 
 .custom-alert-icon.info {
-    background: linear-gradient(135deg, var(--primary) 0%, #7425f3 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
     color: white;
-    box-shadow: 0 8px 20px rgba(139, 61, 255, 0.25);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
 }
 
 .custom-alert-title {
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--text-main);
     margin-bottom: 10px;
 }
@@ -796,154 +774,142 @@ canvas {
 }
 
 .custom-alert-btn {
-    background: linear-gradient(135deg, var(--primary) 0%, #7425f3 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
     color: white;
     border: none;
     border-radius: var(--border-radius);
     padding: 12px 30px;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.15);
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
     width: 100%;
 }
 
 .custom-alert-btn:hover {
-    background: linear-gradient(135deg, #7425f3 0%, #6015d0 100%);
-    box-shadow: 0 8px 20px rgba(139, 61, 255, 0.25);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
     transform: translateY(-2px);
-}
-
-.custom-alert-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.15);
 }
 
 /* 10. Giao dien dang nhap */
 
-/* Nền trang đăng nhập sáng phong cách Canva/Figma */
+/* Nền trang đăng nhập Figma/Canva Pastel Mesh */
 .auth-page {
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Nền nhẹ nhàng xanh lá và xanh da trời mượt mà */
-    background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%);
+    background: #f1f5f9;
     position: relative;
-    overflow-y: auto; /* Cho phép cuộn dọc */
+    overflow: hidden;
     padding: 20px;
 }
 
 /* Container chứa hệ thống bong bóng động ngũ sắc */
-/* An hoan toan khoi animated-bg de an bong bong dong */
 .animated-bg {
-    display: none !important;
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+    pointer-events: none;
 }
 
-/* Cấu hình chung cho bong bóng màu */
 .blob {
     position: absolute;
     border-radius: 50%;
-    filter: blur(120px);
-    opacity: 0.65;
+    filter: blur(140px);
+    opacity: 0.6;
     will-change: transform;
 }
 
-/* Bong bóng 1: Xanh ngọc / Cyan */
+/* Bong bóng 1: Purple Glowing */
 .blob-1 {
     width: 550px;
     height: 550px;
-    background: linear-gradient(135deg, #a7f3d0 0%, #06b6d4 100%);
+    background: linear-gradient(135deg, #c7d2fe 0%, #6366f1 100%);
     top: -15%;
     left: -10%;
     animation: float1 18s ease-in-out infinite alternate;
 }
 
-/* Bong bóng 2: Xanh dương nhạt / Indigo */
+/* Bong bóng 2: Sky Teal */
 .blob-2 {
     width: 650px;
     height: 650px;
-    background: linear-gradient(135deg, #bae6fd 0%, #6366f1 100%);
+    background: linear-gradient(135deg, #e0f2fe 0%, #0ea5e9 100%);
     bottom: -15%;
     right: -10%;
     animation: float2 24s ease-in-out infinite alternate-reverse;
 }
 
-/* Bong bóng 3: Xanh mint / Ngọc lục bảo */
+/* Bong bóng 3: Indigo Pink */
 .blob-3 {
     width: 480px;
     height: 480px;
-    background: linear-gradient(135deg, #a7f3d0 0%, #10b981 100%);
+    background: linear-gradient(135deg, #fbcfe8 0%, #ec4899 100%);
     top: 25%;
     right: 10%;
     animation: float3 22s ease-in-out infinite alternate;
 }
 
-/* Bong bóng 4: Xanh da trời / Sky blue */
+/* Bong bóng 4: Teal Mint */
 .blob-4 {
     width: 420px;
     height: 420px;
-    background: linear-gradient(135deg, #e0f2fe 0%, #38bdf8 100%);
+    background: linear-gradient(135deg, #ccfbf1 0%, #14b8a6 100%);
     bottom: 20%;
     left: 5%;
     animation: float4 16s ease-in-out infinite alternate;
 }
 
-/* Bong bóng 5: Xanh ngọc mint nhạt / Soft mint teal */
+/* Bong bóng 5: Yellow Amber */
 .blob-5 {
     width: 380px;
     height: 380px;
-    background: linear-gradient(135deg, #ccfbf1 0%, #14b8a6 100%);
+    background: linear-gradient(135deg, #fef3c7 0%, #f59e0b 100%);
     top: -5%;
     left: 35%;
     animation: float5 20s ease-in-out infinite alternate-reverse;
 }
 
-/* Hiệu ứng trôi nổi, co giãn và xoay nhẹ của từng đốm màu sử dụng translate3d và GPU acceleration */
 @keyframes float1 {
-    0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
-    33% { transform: translate3d(50px, 70px, 0) scale(1.08) rotate(60deg); }
-    66% { transform: translate3d(-30px, 40px, 0) scale(0.92) rotate(120deg); }
-    100% { transform: translate3d(0, 0, 0) scale(1) rotate(180deg); }
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    100% { transform: translate(50px, 70px) scale(1.1) rotate(180deg); }
 }
-
 @keyframes float2 {
-    0% { transform: translate3d(0, 0, 0) scale(1.05) rotate(0deg); }
-    50% { transform: translate3d(-60px, -50px, 0) scale(0.95) rotate(-90deg); }
-    100% { transform: translate3d(0, 0, 0) scale(1.05) rotate(-180deg); }
+    0% { transform: translate(0, 0) scale(1.05) rotate(0deg); }
+    100% { transform: translate(-60px, -50px) scale(0.95) rotate(-180deg); }
 }
-
 @keyframes float3 {
-    0% { transform: translate3d(0, 0, 0) scale(0.95); }
-    50% { transform: translate3d(60px, -30px, 0) scale(1.12); }
-    100% { transform: translate3d(0, 0, 0) scale(0.95); }
+    0% { transform: translate(0, 0) scale(0.95); }
+    100% { transform: translate(60px, -30px) scale(1.1); }
 }
-
 @keyframes float4 {
-    0% { transform: translate3d(0, 0, 0) scale(1); }
-    50% { transform: translate3d(-40px, 50px, 0) scale(0.88); }
-    100% { transform: translate3d(0, 0, 0) scale(1); }
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-40px, 50px) scale(0.9); }
 }
-
 @keyframes float5 {
-    0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
-    50% { transform: translate3d(80px, 80px, 0) scale(1.15) rotate(90deg); }
-    100% { transform: translate3d(0, 0, 0) scale(1) rotate(180deg); }
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    100% { transform: translate(80px, 80px) scale(1.15) rotate(180deg); }
 }
 
-/* Hộp đăng nhập kính mờ sáng (Light Glassmorphism card) */
+/* Hộp đăng nhập kính mờ sáng cao cấp */
 .auth-box {
     width: 100%;
     max-width: 460px;
-    background: rgba(255, 255, 255, 0.55);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(25px) saturate(180%);
-    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(30px) saturate(190%);
+    -webkit-backdrop-filter: blur(30px) saturate(190%);
     border-radius: 28px;
     padding: 45px 40px;
-    box-shadow: 0 30px 60px rgba(139, 61, 255, 0.08), 
-                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    box-shadow: 0 30px 60px rgba(99, 102, 241, 0.08), 
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
     z-index: 10;
     position: relative;
     animation: fadeInCard 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -960,7 +926,6 @@ canvas {
     }
 }
 
-/* Header logo của hệ thống đăng nhập */
 .auth-header {
     text-align: center;
     margin-bottom: 35px;
@@ -969,44 +934,40 @@ canvas {
 .auth-header h1 {
     font-size: 32px;
     font-weight: 800;
-    background: linear-gradient(135deg, #8b3dff 0%, #00c4cc 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -1px;
     margin-bottom: 8px;
-    filter: drop-shadow(0 2px 8px rgba(139, 61, 255, 0.15));
 }
 
 .auth-header p {
     color: var(--text-muted);
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
 }
 
-/* Hộp chọn vai trò sáng (Light Premium Segment Control) */
+/* Hộp chọn vai trò sáng (Segment Control) */
 .role-select-container {
     display: flex;
     position: relative;
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid rgba(139, 61, 255, 0.1);
-    padding: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(99, 102, 241, 0.08);
+    padding: 4px;
     border-radius: 16px;
     margin-bottom: 30px;
-    box-shadow: inset 0 2px 4px rgba(139, 61, 255, 0.03);
 }
 
-/* Nút ẩn của các radio button */
 .role-select-container input[type="radio"] {
     display: none;
 }
 
-/* Giao diện nút nhấn thay thế cho radio */
 .role-label {
     flex: 1;
     text-align: center;
     padding: 12px 0;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-muted);
     cursor: pointer;
     border-radius: 12px;
@@ -1015,110 +976,87 @@ canvas {
     transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Nền trượt khi chọn vai trò (Slide indicator) */
+/* Slider nền trượt */
 .role-slider {
     position: absolute;
-    top: 5px;
-    bottom: 5px;
-    left: 5px; /* Xác định mốc định vị lề trái ban đầu trùng khớp padding */
-    /* Độ rộng chiếm chính xác 1/3 vùng chứa đã trừ đi phần padding của container */
-    width: calc((100% - 10px) / 3);
-    background: linear-gradient(135deg, #8b3dff 0%, #00c4cc 100%);
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: calc((100% - 8px) / 3);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     border-radius: 12px;
     z-index: 1;
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 4px 15px rgba(139, 61, 255, 0.25);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
 }
 
-/* Di chuyển slider dựa trên radio đang check - Sử dụng tỷ lệ phần trăm chính xác để căn giữa chữ */
-#loginRoleStudent:checked ~ .role-slider {
-    transform: translateX(0);
-}
+#loginRoleStudent:checked ~ .role-slider { transform: translateX(0); }
+#loginRoleTeacher:checked ~ .role-slider { transform: translateX(100%); }
+#loginRoleAdmin:checked ~ .role-slider { transform: translateX(200%); }
 
-#loginRoleTeacher:checked ~ .role-slider {
-    transform: translateX(100%);
-}
-
-#loginRoleAdmin:checked ~ .role-slider {
-    transform: translateX(200%);
-}
-
-/* Bật chữ sáng rõ khi vai trò được chọn */
 #loginRoleStudent:checked ~ label[for="loginRoleStudent"],
 #loginRoleTeacher:checked ~ label[for="loginRoleTeacher"],
 #loginRoleAdmin:checked ~ label[for="loginRoleAdmin"] {
     color: #ffffff;
 }
 
-/* Căn chỉnh các ô nhập liệu của form trên nền sáng */
 .auth-box .input-group label {
     color: var(--text-main);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 8px;
-    display: block;
 }
 
 .auth-box .input-group input {
     width: 100%;
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(139, 61, 255, 0.15);
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(99, 102, 241, 0.15);
     color: var(--text-main);
     padding: 14px 18px;
     border-radius: 14px;
     font-size: 15px;
-    transition: all 0.3s ease;
-    box-shadow: inset 0 2px 4px rgba(139, 61, 255, 0.02);
+    transition: var(--transition);
 }
 
 .auth-box .input-group input:focus {
-    border-color: #8b3dff;
+    border-color: var(--primary);
     background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(139, 61, 255, 0.15),
-                inset 0 2px 4px rgba(139, 61, 255, 0.02);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
     outline: none;
 }
 
-/* Nút Submit Đăng nhập dạng lớn lộng lẫy */
 .auth-box .btn-submit {
     width: 100%;
     padding: 16px;
     border: none;
     border-radius: 14px;
-    background: linear-gradient(135deg, #8b3dff 0%, #00c4cc 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     color: #ffffff;
     font-size: 16px;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 8px 25px rgba(139, 61, 255, 0.25);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.2);
+    transition: var(--transition);
     margin-top: 15px;
 }
 
 .auth-box .btn-submit:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(139, 61, 255, 0.35);
+    box-shadow: 0 12px 30px rgba(99, 102, 241, 0.35);
     filter: brightness(1.05);
 }
 
-.auth-box .btn-submit:active {
-    transform: translateY(1px);
-    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.25);
-}
-
-/* Bảng tài khoản Demo dạng ghim kính mờ siêu đẹp */
 .demo-accounts-board {
     margin-top: 35px;
     background: rgba(255, 255, 255, 0.45);
-    border: 1px solid rgba(139, 61, 255, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.1);
     border-radius: 16px;
     padding: 20px;
-    box-shadow: inset 0 2px 4px rgba(139, 61, 255, 0.02);
 }
 
 .demo-title {
-    color: #00b0b8;
-    font-weight: 700;
+    color: var(--secondary-hover);
+    font-weight: 800;
     font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.8px;
@@ -1138,9 +1076,9 @@ canvas {
     align-items: center;
     font-size: 13px;
     color: var(--text-muted);
-    padding: 6px 10px 6px 16px;
+    padding: 8px 12px 8px 16px;
     background: rgba(255, 255, 255, 0.65);
-    border-radius: 8px;
+    border-radius: 10px;
     position: relative;
     overflow: hidden;
 }
@@ -1159,49 +1097,24 @@ canvas {
     color: var(--primary);
 }
 
-.demo-item span {
-    font-family: monospace;
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-/* ==========================================================================
-   11. HIỆU ỨNG CHUYỂN ĐỘNG CAO CẤP TOÀN TRANG (PREMIUM SITE-WIDE ANIMATIONS)
-   ========================================================================== */
-
-/* Thêm hiệu ứng xuất hiện cho các phân vùng tab chính */
+/* 11. HIỆU ỨNG CHUYỂN ĐỘNG CAO CẤP TOÀN TRANG */
 .tab-section {
     display: none;
     animation: premiumFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Thêm hiệu ứng xuất hiện cho các tab con */
 .sub-tab-content {
     animation: premiumFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Hiệu ứng zoom nhẹ khi di chuột qua các hàng của bảng */
-.data-table tbody tr {
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.data-table tbody tr:hover {
-    background-color: rgba(139, 61, 255, 0.05) !important;
-    transform: scale(1.006) translateX(4px);
-    box-shadow: 0 4px 12px rgba(139, 61, 255, 0.04);
-}
-
-/* Hiệu ứng phát sáng nhẹ khi hover vào Auth Box ở trang đăng nhập */
 .auth-box {
-    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: var(--transition);
 }
 .auth-box:hover {
-    border-color: rgba(139, 61, 255, 0.25);
-    box-shadow: 0 40px 90px rgba(139, 61, 255, 0.15), 
-                0 20px 40px rgba(0, 0, 0, 0.02),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    border-color: rgba(99, 102, 241, 0.25);
+    box-shadow: 0 40px 90px rgba(99, 102, 241, 0.15);
 }
 
-/* Hiệu ứng chuyển động trượt nhẹ cho sidebar menu */
 .menu a {
     position: relative;
     overflow: hidden;
@@ -1213,7 +1126,7 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, rgba(139, 61, 255, 0.05) 0%, transparent 100%);
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
     transform: translateX(-100%);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: -1;
@@ -1222,7 +1135,6 @@ canvas {
     transform: translateX(0);
 }
 
-/* Keyframes cho các hiệu ứng chuyển động */
 @keyframes premiumFadeUp {
     from {
         opacity: 0;
@@ -1245,16 +1157,12 @@ canvas {
     }
 }
 
-/* ==========================================================================
-   MODAL XEM CHI TIẾT BÀI TẬP (ASSIGNMENT DETAIL MODAL)
-   ========================================================================== */
-
-/* Hiệu ứng mở modal bài tập với animation trượt lên mượt mà */
+/* MODAL XEM CHI TIẾT BÀI TẬP */
 #assignmentDetailModal .modal-content {
     animation: assignmentModalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-    border-top: 4px solid #f59e0b; /* Đường viền cam vàng đặc trưng bài tập */
-    max-height: 90vh;              /* Giới hạn chiều cao để có scroll khi nội dung dài */
-    overflow-y: auto;              /* Cuộn dọc nội dung khi tràn */
+    border-top: 4px solid var(--warning);
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 @keyframes assignmentModalIn {
@@ -1268,10 +1176,9 @@ canvas {
     }
 }
 
-/* Badge nhãn BÀI TẬP trong danh sách thông báo */
 .notif-badge-assignment {
     display: inline-block;
-    background: linear-gradient(135deg, #f59e0b, #d97706);
+    background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
     color: #fff;
     font-size: 10px;
     font-weight: 800;
@@ -1283,18 +1190,16 @@ canvas {
     box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
 }
 
-/* Phần file đính kèm trong modal bài tập */
 #adm-file-section > div {
-    transition: all 0.3s ease;
+    transition: var(--transition);
 }
 #adm-file-section > div:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15);
 }
 
-/* Nút xem trực tiếp và tải xuống trong modal */
 #adm-file-section button {
-    transition: all 0.25s ease;
+    transition: var(--transition);
     box-shadow: 0 3px 12px rgba(0,0,0,0.15);
 }
 #adm-file-section button:hover {
@@ -1302,62 +1207,42 @@ canvas {
     box-shadow: 0 6px 20px rgba(0,0,0,0.2);
 }
 
-/* Nút nộp bài trong modal bài tập */
 #adm-submit-btn button {
-    transition: all 0.3s ease;
+    transition: var(--transition);
 }
 #adm-submit-btn button:hover {
     transform: translateY(-2px);
-    filter: brightness(1.05);
 }
 
-/* ==========================================================================
-   GIAO DIỆN GIAO BÀI TẬP - PHẦN GIẢNG VIÊN (TEACHER ASSIGNMENT SECTION)
-   ========================================================================== */
-
-/* Form giao bài tập của giảng viên - khung nền đẹp */
+/* GIAO DIỆN GIAO BÀI TẬP - PHẦN GIẢNG VIÊN */
 #tcCreateMaterialForm {
-    background: linear-gradient(135deg, rgba(139,61,255,0.03) 0%, rgba(0,196,204,0.03) 100%);
-    border: 1px solid rgba(139,61,255,0.10);
+    background: linear-gradient(135deg, rgba(99,102,241,0.03) 0%, rgba(14,165,233,0.03) 100%);
+    border: 1px solid rgba(99,102,241,0.10);
     border-radius: 16px;
     padding: 24px;
 }
 
-/* Tiêu đề form tải tài liệu */
-#tcCreateMaterialForm label {
-    font-weight: 600;
-    color: var(--text-main);
-}
-
-/* Input chọn file trong form GV - kiểu đẹp hơn */
 #tcMaterialFile {
     cursor: pointer;
     background: linear-gradient(135deg, #f8f9fd, #ffffff);
-    border: 1.5px dashed rgba(139,61,255,0.3) !important;
+    border: 1.5px dashed rgba(99,102,241,0.3) !important;
     border-radius: 10px !important;
-    transition: border-color 0.25s, background 0.25s;
+    transition: var(--transition);
 }
 #tcMaterialFile:hover {
-    border-color: rgba(139,61,255,0.6) !important;
-    background: rgba(139,61,255,0.03) !important;
+    border-color: rgba(99,102,241,0.6) !important;
+    background: rgba(99,102,241,0.03) !important;
 }
 
-/* Trạng thái file đã chọn - màu nhấn mạnh */
 #fileStatusText {
     font-size: 12px;
     color: var(--primary);
-    font-weight: 600;
+    font-weight: 700;
     margin-top: 4px;
 }
 
-/* Bảng danh sách tài liệu/bài tập trong tab GV - làm sắc nét hơn */
-#tcMaterialList tr:hover {
-    background: rgba(139, 61, 255, 0.03);
-}
-
-/* Nút "Xem bài nộp" - thiết kế nổi bật màu cam */
 .view-submissions-btn {
-    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%) !important;
     color: white !important;
     border: none;
     border-radius: 8px;
@@ -1365,7 +1250,7 @@ canvas {
     font-weight: 700;
     cursor: pointer;
     font-size: 12px;
-    transition: all 0.25s;
+    transition: var(--transition);
     box-shadow: 0 3px 10px rgba(245,158,11,0.3);
 }
 .view-submissions-btn:hover {
@@ -1373,14 +1258,10 @@ canvas {
     box-shadow: 0 5px 15px rgba(245,158,11,0.4);
 }
 
-/* ==========================================================================
-   GIAO DIỆN NỘP BÀI TẬP - PHẦN SINH VIÊN (STUDENT SUBMISSION SECTION)
-   ========================================================================== */
-
-/* Modal nộp bài tập sinh viên - khung glassmorphism đẹp */
+/* GIAO DIỆN NỘP BÀI TẬP - PHẦN SINH VIÊN */
 #submitAssignmentModal .modal-content {
     background: linear-gradient(160deg, #ffffff 0%, #f8f9fd 100%);
-    border-top: 4px solid #10b981; /* Đường xanh lá trên đầu - đặc trưng nộp bài */
+    border-top: 4px solid var(--success);
     border-radius: 20px;
     animation: submitModalIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -1390,39 +1271,35 @@ canvas {
     to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Tiêu đề modal nộp bài */
 #submitAssignmentTitle {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, var(--success), #059669);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     font-size: 20px;
 }
 
-/* Input file trong modal nộp bài SV */
 #stuSubmitFile {
     cursor: pointer;
     border: 1.5px dashed rgba(16,185,129,0.4) !important;
     border-radius: 10px !important;
     background: linear-gradient(135deg, #f0fdf4, #ecfeff) !important;
-    transition: all 0.25s;
+    transition: var(--transition);
 }
 #stuSubmitFile:hover {
     border-color: rgba(16,185,129,0.7) !important;
     background: rgba(16,185,129,0.05) !important;
 }
 
-/* Nhãn trạng thái file SV đã chọn */
 #stuFileStatusText {
     font-size: 12px;
-    color: #10b981;
-    font-weight: 600;
+    color: var(--success);
+    font-weight: 700;
     margin-top: 4px;
 }
 
-/* Nút xác nhận nộp bài - hiệu ứng nổi bật */
 #stuSubmitAssignmentForm button[type="submit"] {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
     border: none;
     border-radius: 12px;
     padding: 13px 32px;
@@ -1430,7 +1307,7 @@ canvas {
     font-weight: 700;
     color: white;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: var(--transition);
     box-shadow: 0 6px 20px rgba(16,185,129,0.35);
     width: auto;
     min-width: 180px;
@@ -1438,19 +1315,11 @@ canvas {
 #stuSubmitAssignmentForm button[type="submit"]:hover {
     transform: translateY(-3px);
     box-shadow: 0 10px 30px rgba(16,185,129,0.45);
-    filter: brightness(1.05);
-}
-#stuSubmitAssignmentForm button[type="submit"]:active {
-    transform: translateY(-1px);
 }
 
-/* ==========================================================================
-   MODAL XEM BÀI NỘP - PHẦN GIẢNG VIÊN (TEACHER VIEW SUBMISSIONS MODAL)
-   ========================================================================== */
-
-/* Modal xem bài nộp - thiết kế premium */
+/* MODAL XEM BÀI NỘP - PHẦN GIẢNG VIÊN */
 #viewSubmissionsModal .modal-content {
-    border-top: 4px solid #8b3dff;
+    border-top: 4px solid var(--primary);
     max-width: 720px;
     animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -1460,38 +1329,27 @@ canvas {
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Tiêu đề modal xem bài nộp */
 #viewSubmissionsTitle {
     font-size: 20px;
     color: var(--primary);
 }
 
-/* Nút xem/tải trong bảng bài nộp - hiệu ứng hover mượt */
 #viewSubmissionsModal button {
-    transition: all 0.22s ease;
+    transition: var(--transition);
 }
 #viewSubmissionsModal button:hover {
     transform: translateY(-2px);
-    filter: brightness(1.08);
-    box-shadow: 0 5px 16px rgba(0,0,0,0.18);
+    box-shadow: 0 5px 16px rgba(0,0,0,0.1);
 }
 
-/* Hàng bảng bài nộp có hover nhẹ */
-#viewSubmissionsModal tr:hover td {
-    background: rgba(139,61,255,0.03);
-}
-
-/* Đặc trưng cho hàng trống chưa có bài nộp */
 #tcSubmissionList td[colspan] {
     padding: 32px;
     text-align: center;
-    color: #a0aec0;
+    color: var(--text-muted);
     font-size: 15px;
 }
 
-/* ==========================================================================
-   12. THIẾT KẾ ĐÁP ỨNG TRÊN MỌI THIẾT BỊ (FULLY RESPONSIVE MEDIA QUERIES)
-   ========================================================================== */
+/* 12. THIẾT KẾ ĐÁP ỨNG TRÊN MỌI THIẾT BỊ (RESPONSIVE MEDIA QUERIES) */
 @media (max-width: 1024px) {
     .sidebar {
         width: 230px;
@@ -1517,9 +1375,9 @@ canvas {
         height: auto;
         position: relative;
         border-right: none;
-        border-bottom: 1px solid rgba(139, 61, 255, 0.06);
+        border-bottom: 1px solid var(--border-color);
         padding: 20px;
-        box-shadow: 0 4px 20px rgba(139, 61, 255, 0.015);
+        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.01);
     }
     .sidebar-top {
         flex-direction: row;
